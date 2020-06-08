@@ -75,27 +75,18 @@ void printWifiStatus()
     Serial.println("------------------------------------------");
 }
 
-bool connectToStoredWifi(int seconds)
+bool disconnectWifi()
+{
+    Serial.println("Deactivating Wifi");
+    return WiFi.disconnect(true, false);
+}
+
+bool connectToStoredWifi()
 {
     Serial.println("Trying to establish to Wifi-Connection.");
-    printWifiStatus();
+    WiFi.mode(WIFI_STA);
     WiFi.begin();
-    int tries = seconds * 2;
-    Serial.print("Connecting...");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        if (tries == 0)
-        {
-            Serial.println("Failed");
-            return false;
-        }
-
-        Serial.print(".");
-        tries--;
-        delay(500);
-    }
-    Serial.println("Connected");
-    return true;
+    return WiFi.waitForConnectResult() == WL_CONNECTED;
 }
 
 void blinkLED()
@@ -114,21 +105,16 @@ void startSimpleHTTPRequest()
     BLEDevice::getScan()->stop();
     delay(10000);
 
-    if (!connectToStoredWifi(60))
+    if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
-        printWifiStatus();
-        delay(1000);
     }
     else
     {
-        digitalWrite(LED_BUILTIN, LOW);
-
-        //Simple Request for Demonstration
         HTTPClient http;
 
-        http.begin("http://jsonplaceholder.typicode.com/comments?id=10");
-        int httpCode = http.GET(); 
+        http.begin("http://httpbin.org/user-agent");
+        int httpCode = http.GET();
 
         Serial.print("ReturnCode: ");
         Serial.println(httpCode);
@@ -143,13 +129,8 @@ void startSimpleHTTPRequest()
         }
 
         http.end();
-        printWifiStatus();
-
-        //Deactivating Wifi
-        Serial.println("Deactivating Wifi");
-        WiFi.disconnect(true, false);
-        delay(5000); 
-        printWifiStatus();
+        delay(1000);
+        //disconnectWifi();
     }
     Serial.println("Starting BLE");
     doScan = true;
@@ -233,7 +214,7 @@ void setup()
     pinMode(KEY_BUILTIN, INPUT); // Button input
 
     //Connection Failed
-    if (!connectToStoredWifi(30))
+    if (!connectToStoredWifi())
     {
         Serial.println("Awaiting Putton Press for Configuration");
         digitalWrite(LED_BUILTIN, HIGH);
@@ -249,9 +230,8 @@ void setup()
         printLocalTime();
 
         //Deactivating Wifi
-        Serial.println("Deactivating Wifi");
-        WiFi.disconnect(true, false);
-        delay(5000);
+        disconnectWifi();
+        delay(1000);
 
         //Setting up Server
         Serial.println("Setting Up Server");
