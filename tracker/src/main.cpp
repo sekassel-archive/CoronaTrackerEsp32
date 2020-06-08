@@ -28,7 +28,7 @@ int startPressed = 0;
 WiFiManager wifiManager;
 Ticker wifiTicker;
 Ticker buttonTicker;
-bool startConfig = false;
+bool waitForConfig = false;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -130,7 +130,7 @@ void startSimpleHTTPRequest()
 
         http.end();
         delay(1000);
-        //disconnectWifi();
+        disconnectWifi();
     }
     Serial.println("Starting BLE");
     doScan = true;
@@ -141,6 +141,7 @@ void startSimpleHTTPRequest()
 void configureWifi()
 {
     Serial.println("Starting WifiManger-Config");
+    buttonTicker.attach_ms(500, blinkLED);
     wifiManager.setConfigPortalTimeout(300); //5 Minutes
     wifiManager.setConnectTimeout(30);       //30 Seconds
     bool res = wifiManager.startConfigPortal();
@@ -161,31 +162,6 @@ void configureWifi()
     //Delay so feedback can be seen on LED
     delay(5000);
     ESP.restart();
-}
-
-void checkButtonPress()
-{
-    buttonState = digitalRead(KEY_BUILTIN); // read the button input
-
-    //Button was pressed
-    if (buttonState == LOW)
-    {
-        //First press
-        if (buttonState != lastButtonState)
-        {
-            startPressed = millis();
-        }
-        else if ((millis() - startPressed) >= BUTTON_PRESS_LENGTH)
-        {
-            Serial.println("Button was pressed for 4 seconds");
-            Serial.println("");
-            buttonTicker.detach();
-            buttonTicker.attach_ms(500, blinkLED);
-            startConfig = true;
-        }
-    }
-
-    lastButtonState = buttonState;
 }
 
 void printLocalTime()
@@ -218,8 +194,7 @@ void setup()
     {
         Serial.println("Awaiting Putton Press for Configuration");
         digitalWrite(LED_BUILTIN, HIGH);
-
-        buttonTicker.attach_ms(500, checkButtonPress);
+        waitForConfig = true;
     }
     else
     {
@@ -272,12 +247,29 @@ void loop()
 {
     if (doScan)
     {
-        Serial.println("Starting Scan...");
+        Serial.print("Starting Scan... Devices Found: ");
         Serial.println((BLEDevice::getScan()->start(1, false)).getCount());
+        delay(10000); //Scan Every 10 Seconds
     }
-    else if (startConfig)
+    else if (waitForConfig)
     {
-        configureWifi();
+        buttonState = digitalRead(KEY_BUILTIN); // read the button input
+
+        //Button was pressed
+        if (buttonState == LOW)
+        {
+            //First press
+            if (buttonState != lastButtonState)
+            {
+                startPressed = millis();
+            }
+            else if ((millis() - startPressed) >= BUTTON_PRESS_LENGTH)
+            {
+                configureWifi();
+            }
+        }
+
+        lastButtonState = buttonState;
+        delay(500);
     }
-    delay(10000); //Scan Every 10 Seconds
 }
