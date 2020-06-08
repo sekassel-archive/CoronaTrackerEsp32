@@ -14,21 +14,21 @@ static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly gene
 
 char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
+const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
 //Wifi Variables
-const static int BUTTON_PRESS_LENGTH = 4000; //4 Seconds
-
-String ssid;
-String password;
+const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;           //60 Seconds
+//const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 int buttonState = 0;
 int lastButtonState = 0;
 int startPressed = 0;
 
-WiFiManager wifiManager;
 Ticker wifiTicker;
 Ticker buttonTicker;
-bool startConfig = false;
+bool waitForConfig = false;
+bool sendHTTPRequest = false;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -51,129 +51,66 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
     }
 };
 
+bool disconnectWifi()
+{
+    Serial.println("Deactivating Wifi");
+    return WiFi.disconnect(true, false);
+}
+
+bool connectToStoredWifi()
+{
+    Serial.println("Trying to establish to Wifi-Connection.");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin();
+    return WiFi.waitForConnectResult() == WL_CONNECTED;
+}
+
 void blinkLED()
 {
     int state = digitalRead(BUILTIN_LED);
     digitalWrite(BUILTIN_LED, !state);
 }
 
-void wifiRequestTest()
+void startSimpleHTTPRequest()
 {
-    Serial.println("Starting A HTTP Request");
-    doScan = false;
-    BLEDevice::getAdvertising()->stop();
-    BLEDevice::getScan()->stop();
-    delay(1000);
-
-    wifiManager.setConfigPortalTimeout(10); //Workaround so that we dont really start the Portal
-    wifiManager.setConnectTimeout(45);      //45 Seconds
-
-    Serial.println(ssid);
-    Serial.println(password);
-
-    //Serial.println(WiFi.begin(ssid.c_str(), password.c_str()));
-    Serial.println(wifiManager.getWiFiSSID().c_str());
-    Serial.println(wifiManager.getWiFiPass().c_str());
-
-    Serial.print("Is Wifi Connected: ");
-    Serial.println(WiFi.isConnected());
-    Serial.print("Wifi AutoReConnect (0 == OFF): ");
-    Serial.println(WiFi.getAutoReconnect());
-    Serial.print("Wifi Mode (0 == OFF): ");
-    Serial.println(WiFi.getMode());
-    Serial.print("Wifi-SSID: ");
-    Serial.println(WiFi.SSID());
-    Serial.print("Wifi-Status: ");
-    Serial.println(WiFi.status());
-    Serial.print("Wifi-Status: ");
-    Serial.println(WiFi.begin());
-
-    /*
-    bool con = true;
-    int i = 0;
-
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        if (i == 30)
-        {
-            con = false;
-            break;
-        }
-        Serial.println(WiFi.status());
-        delay(500);
-        Serial.print(".");
-        i++;
-    }
-    */
-    if (wifiManager.autoConnect())
-    {
-        Serial.print("Is Wifi Connected: ");
-        Serial.println(WiFi.isConnected());
-        Serial.print("Wifi AutoReConnect (0 == OFF): ");
-        Serial.println(WiFi.getAutoReconnect());
-        Serial.print("Wifi Mode (0 == OFF): ");
-        Serial.println(WiFi.getMode());
-        Serial.print("Wifi-SSID: ");
-        Serial.println(WiFi.SSID());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.status());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.begin());
-
-        Serial.println("Sending HTTP...");
-
-        //Simply http Request for demonsttation
-        HTTPClient http;
-
-        http.begin("192.168.178.59:4567/hello"); //Specify the URL
-        int httpCode = http.GET();               //Make the request
-
-        if (httpCode > 0)
-        { //Check for the returning code
-
-            String payload = http.getString();
-            Serial.println(httpCode);
-            Serial.println(payload);
-        }
-        else
-        {
-            Serial.print("Error on HTTP request: ");
-            Serial.println(httpCode);
-        }
-        http.end(); //Free the resources
-
-        delay(1000);
-        Serial.println("Trying to disconnect");
-        wifiManager.disconnect();
-        Serial.println("Hopefully disconnected");
-
-        Serial.print("Is Wifi Connected: ");
-        Serial.println(WiFi.isConnected());
-        Serial.print("Wifi AutoReConnect (0 == OFF): ");
-        Serial.println(WiFi.getAutoReconnect());
-        Serial.print("Wifi Mode (0 == OFF): ");
-        Serial.println(WiFi.getMode());
-        Serial.print("Wifi-SSID: ");
-        Serial.println(WiFi.SSID());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.status());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.begin());
-    }
-    else
+    Serial.println("Sending Simple HTTP Request.");
+    if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
     }
-    Serial.println("was here1");
-    delay(1000);
-    doScan = true;
-    Serial.println("was here");
-    BLEDevice::startAdvertising();
+    else
+    {
+        HTTPClient http;
+
+        http.begin("http://httpbin.org/user-agent");
+        int httpCode = http.GET();
+
+        Serial.print("ReturnCode: ");
+        Serial.println(httpCode);
+        if (httpCode > 0)
+        {
+            Serial.println("---------- Message ----------");
+            String payload = http.getString();
+            Serial.print(payload);
+            Serial.println("-----------------------------");
+        }
+        else
+        {
+            Serial.println("Error on HTTP request");
+        }
+
+        http.end();
+        delay(1000);
+        disconnectWifi();
+    }
 }
 
 void configureWifi()
 {
     Serial.println("Starting WifiManger-Config");
+    buttonTicker.attach_ms(500, blinkLED);
+
+    WiFiManager wifiManager;
     wifiManager.setConfigPortalTimeout(300); //5 Minutes
     wifiManager.setConnectTimeout(30);       //30 Seconds
     bool res = wifiManager.startConfigPortal();
@@ -189,40 +126,15 @@ void configureWifi()
         Serial.println("Could not connect to Wifi");
         digitalWrite(LED_BUILTIN, HIGH);
         wifiManager.resetSettings();
+        //Delay so feedback can be seen on LED
+        delay(5000);
     }
-
-    //Delay so feedback can be seen on LED
-    delay(5000);
     ESP.restart();
-}
-
-void checkButtonPress()
-{
-    buttonState = digitalRead(KEY_BUILTIN); // read the button input
-
-    //Button was pressed
-    if (buttonState == LOW)
-    {
-        //First press
-        if (buttonState != lastButtonState)
-        {
-            startPressed = millis();
-        }
-        else if ((millis() - startPressed) >= BUTTON_PRESS_LENGTH)
-        {
-            Serial.println("Button was pressed for 4 seconds");
-            Serial.println("");
-            buttonTicker.detach();
-            buttonTicker.attach_ms(500, blinkLED);
-            startConfig = true;
-        }
-    }
-
-    lastButtonState = buttonState;
 }
 
 void printLocalTime()
 {
+    Serial.print("Local Time: ");
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
@@ -232,9 +144,17 @@ void printLocalTime()
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
+void setHTTPFlag()
+{
+    doScan = false;
+    sendHTTPRequest = true;
+}
+
 void setup()
 {
-    //wifiManager.resetSettings();
+    //Deletes stored Wifi Credentials if uncommented
+    //WiFiManager manager;
+    //manager.resetSettings();
 
     //Setting up Serial
     Serial.begin(115200);
@@ -245,57 +165,24 @@ void setup()
     pinMode(LED_BUILTIN, OUTPUT);
     pinMode(KEY_BUILTIN, INPUT); // Button input
 
-    //Setting up WifiManger
-    Serial.println("Setting up WifiManager");
-    //Setiings for first connect on startup
-    wifiManager.setConfigPortalTimeout(10); //Workaround so that we dont really start the Portal
-    wifiManager.setConnectTimeout(30);      //30 Seconds
-    wifiManager.setCleanConnect(true);
-
-    //If we already have a network saved we connect to it, otherwise we wait for configuration
-    if (!wifiManager.autoConnect("COVID-AP", "covid-19"))
+    //Connection Failed
+    if (!connectToStoredWifi())
     {
-        delay(1000);
-        Serial.println("Wifi not yet set up. Awaiting Putton Press for Configuration");
+        Serial.println("Awaiting Putton Press for Wifi-Configuration");
         digitalWrite(LED_BUILTIN, HIGH);
-
-        //Setup Config Button
-        buttonTicker.attach_ms(500, checkButtonPress);
+        waitForConfig = true;
     }
     else
     {
-        delay(1000);
-        ssid = wifiManager.getWiFiSSID();
-        password = wifiManager.getWiFiPass();
-        Serial.printf("Wifi already setup.\nSSID: %s, Password: %s\n", ssid.c_str(), password.c_str());
         digitalWrite(LED_BUILTIN, LOW);
 
         //Getting Time
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         printLocalTime();
 
-        //Shutting down Wifi
-        wifiManager.disconnect();
-        //WiFi.disconnect(true, false);
-        //WiFi.mode(WIFI_OFF);
-
-        //WiFi.disconnect(true, false);
+        //Deactivating Wifi
+        disconnectWifi();
         delay(1000);
-
-        WiFi.setAutoReconnect(false);
-
-        Serial.print("Is Wifi Connected: ");
-        Serial.println(WiFi.isConnected());
-        Serial.print("Wifi AutoReConnect (0 == OFF): ");
-        Serial.println(WiFi.getAutoReconnect());
-        Serial.print("Wifi Mode (0 == OFF): ");
-        Serial.println(WiFi.getMode());
-        Serial.print("Wifi-SSID: ");
-        Serial.println(WiFi.SSID());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.status());
-        Serial.print("Wifi-Status: ");
-        Serial.println(WiFi.begin());
 
         //Setting up Server
         Serial.println("Setting Up Server");
@@ -328,7 +215,7 @@ void setup()
         pBLEScan->setWindow(99); // less or equal setInterval value
 
         doScan = true;
-        wifiTicker.attach(60, wifiRequestTest);
+        wifiTicker.attach(60, setHTTPFlag);
     }
 }
 
@@ -337,11 +224,38 @@ void loop()
     if (doScan)
     {
         Serial.println("Starting Scan...");
-        Serial.println((BLEDevice::getScan()->start(1, false)).getCount());
+        int result = (BLEDevice::getScan()->start(1, false)).getCount();
+        Serial.printf("Devices Found: %i\n", result);
+        delay(10000); //Scan Every 10 Seconds
     }
-    else if (startConfig)
+    else if (waitForConfig)
     {
-        configureWifi();
+        buttonState = digitalRead(KEY_BUILTIN); // read the button input
+
+        //Button was pressed
+        if (buttonState == LOW)
+        {
+            //First press
+            if (buttonState != lastButtonState)
+            {
+                startPressed = millis();
+            }
+            else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
+            {
+                configureWifi();
+            }
+        }
+
+        lastButtonState = buttonState;
+        delay(500);
     }
-    delay(10000); //Scan Every 10 Seconds
+    else if (sendHTTPRequest)
+    {
+        wifiTicker.detach();
+        startSimpleHTTPRequest();
+        sendHTTPRequest = false;
+        doScan = true;
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        delay(500);
+    }
 }
