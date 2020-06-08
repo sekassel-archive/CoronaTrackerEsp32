@@ -14,18 +14,17 @@ static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly gene
 
 char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
+const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
 //Wifi Variables
-const static int BUTTON_PRESS_LENGTH = 4000; //4 Seconds
-
-String ssid;
-String password;
+const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;           //60 Seconds
+//const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 int buttonState = 0;
 int lastButtonState = 0;
 int startPressed = 0;
 
-WiFiManager wifiManager;
 Ticker wifiTicker;
 Ticker buttonTicker;
 bool waitForConfig = false;
@@ -51,30 +50,6 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         }
     }
 };
-
-void printWifiStatus()
-{
-    Serial.println("WIFI STATUS:\n------------------------------------------");
-    Serial.print(" - WiFi Status: ");
-    Serial.println(" - [WL_IDLE_STATUS == 0, WL_NO_SSID_AVAIL == 1, WL_SCAN_COMPLETED == 2, WL_CONNECTED == 3, WL_CONNECT_FAILED == 4, WL_CONNECTION_LOST == 5, WL_DISCONNECTED == 6]");
-    Serial.print("- Status: ");
-    Serial.println(WiFi.status());
-    Serial.print(" - Status (Second try): ");
-    Serial.println(WiFi.status());
-    Serial.print("- Mode: ");
-    Serial.println(WiFi.getMode());
-    Serial.print("- Is connected?: ");
-    Serial.println(WiFi.isConnected());
-    Serial.print("- WiFi - SSID: ");
-    Serial.println(WiFi.SSID());
-    Serial.print("- WiFi IP: ");
-    Serial.println(WiFi.localIP());
-    Serial.println("- Wifi Print: ");
-    Serial.println("------------");
-    WiFi.printDiag(Serial);
-    Serial.println("------------");
-    Serial.println("------------------------------------------");
-}
 
 bool disconnectWifi()
 {
@@ -114,8 +89,10 @@ void startSimpleHTTPRequest()
         Serial.println(httpCode);
         if (httpCode > 0)
         {
+            Serial.println("---------- Message ----------");
             String payload = http.getString();
-            Serial.println(payload);
+            Serial.print(payload);
+            Serial.println("-----------------------------");
         }
         else
         {
@@ -132,6 +109,8 @@ void configureWifi()
 {
     Serial.println("Starting WifiManger-Config");
     buttonTicker.attach_ms(500, blinkLED);
+
+    WiFiManager wifiManager;
     wifiManager.setConfigPortalTimeout(300); //5 Minutes
     wifiManager.setConnectTimeout(30);       //30 Seconds
     bool res = wifiManager.startConfigPortal();
@@ -147,15 +126,15 @@ void configureWifi()
         Serial.println("Could not connect to Wifi");
         digitalWrite(LED_BUILTIN, HIGH);
         wifiManager.resetSettings();
+        //Delay so feedback can be seen on LED
+        delay(5000);
     }
-
-    //Delay so feedback can be seen on LED
-    delay(5000);
     ESP.restart();
 }
 
 void printLocalTime()
 {
+    Serial.print("Local Time: ");
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
@@ -165,7 +144,8 @@ void printLocalTime()
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
-void setHTTPFlag() {
+void setHTTPFlag()
+{
     doScan = false;
     sendHTTPRequest = true;
 }
@@ -173,7 +153,8 @@ void setHTTPFlag() {
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
-    //wifiManager.resetSettings();
+    //WiFiManager manager;
+    //manager.resetSettings();
 
     //Setting up Serial
     Serial.begin(115200);
@@ -187,7 +168,7 @@ void setup()
     //Connection Failed
     if (!connectToStoredWifi())
     {
-        Serial.println("Awaiting Putton Press for Configuration");
+        Serial.println("Awaiting Putton Press for Wifi-Configuration");
         digitalWrite(LED_BUILTIN, HIGH);
         waitForConfig = true;
     }
@@ -242,8 +223,9 @@ void loop()
 {
     if (doScan)
     {
-        Serial.print("Starting Scan... Devices Found: ");
-        Serial.println((BLEDevice::getScan()->start(1, false)).getCount());
+        Serial.println("Starting Scan...");
+        int result = (BLEDevice::getScan()->start(1, false)).getCount();
+        Serial.printf("Devices Found: %i\n", result);
         delay(10000); //Scan Every 10 Seconds
     }
     else if (waitForConfig)
@@ -258,7 +240,7 @@ void loop()
             {
                 startPressed = millis();
             }
-            else if ((millis() - startPressed) >= BUTTON_PRESS_LENGTH)
+            else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
             {
                 configureWifi();
             }
@@ -266,12 +248,14 @@ void loop()
 
         lastButtonState = buttonState;
         delay(500);
-    } else if (sendHTTPRequest) {
+    }
+    else if (sendHTTPRequest)
+    {
         wifiTicker.detach();
         startSimpleHTTPRequest();
         sendHTTPRequest = false;
         doScan = true;
-        wifiTicker.attach(60, setHTTPFlag);
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
         delay(500);
     }
 }
