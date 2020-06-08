@@ -29,6 +29,7 @@ WiFiManager wifiManager;
 Ticker wifiTicker;
 Ticker buttonTicker;
 bool waitForConfig = false;
+bool sendHTTPRequest = false;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -97,14 +98,7 @@ void blinkLED()
 
 void startSimpleHTTPRequest()
 {
-    printWifiStatus();
-    wifiTicker.detach();
-    Serial.println("Disabeling BLE");
-    doScan = false;
-    BLEDevice::getAdvertising()->stop();
-    BLEDevice::getScan()->stop();
-    delay(10000);
-
+    Serial.println("Sending Simple HTTP Request.");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
@@ -132,10 +126,6 @@ void startSimpleHTTPRequest()
         delay(1000);
         disconnectWifi();
     }
-    Serial.println("Starting BLE");
-    doScan = true;
-    BLEDevice::startAdvertising();
-    wifiTicker.attach(60, startSimpleHTTPRequest);
 }
 
 void configureWifi()
@@ -173,6 +163,11 @@ void printLocalTime()
         return;
     }
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+}
+
+void setHTTPFlag() {
+    doScan = false;
+    sendHTTPRequest = true;
 }
 
 void setup()
@@ -239,7 +234,7 @@ void setup()
         pBLEScan->setWindow(99); // less or equal setInterval value
 
         doScan = true;
-        wifiTicker.attach(60, startSimpleHTTPRequest);
+        wifiTicker.attach(60, setHTTPFlag);
     }
 }
 
@@ -270,6 +265,13 @@ void loop()
         }
 
         lastButtonState = buttonState;
+        delay(500);
+    } else if (sendHTTPRequest) {
+        wifiTicker.detach();
+        startSimpleHTTPRequest();
+        sendHTTPRequest = false;
+        doScan = true;
+        wifiTicker.attach(60, setHTTPFlag);
         delay(500);
     }
 }
