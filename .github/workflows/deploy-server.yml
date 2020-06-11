@@ -23,6 +23,7 @@ jobs:
 
     - name: Build/Release the Docker image
       run: |
+        cd server
         docker login ${{ secrets.Docker_Registry }} -u ${{ secrets.Docker_User }} -p ${{ secrets.Docker_Pass }}
         docker build -t ${{ secrets.Docker_Registry }}/ctracker:latest .
         docker push ${{ secrets.Docker_Registry }}/ctracker:latest
