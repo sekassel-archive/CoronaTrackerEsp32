@@ -1,3 +1,5 @@
+package de.uniks;
+
 import static spark.Spark.get;
 
 public class Main {
