@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 group 'de.uniks.projektcoronatracker'
@@ -15,4 +16,10 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile "com.sparkjava:spark-core:2.8.0"
     compile 'org.slf4j:slf4j-simple:1.7.21'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'de.uniks.Main'
+    }
 }
