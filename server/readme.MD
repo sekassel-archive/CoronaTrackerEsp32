@@ -10,7 +10,7 @@ docker ps
 ```
 The console should show a running container with the name ```tracker```. 
 
-Server address https://tracing.uniks.de
+Current reachable endpoint https://tracing.uniks.de/hello
 
 
 ## Troubleshooting
