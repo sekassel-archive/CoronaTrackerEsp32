@@ -5,10 +5,12 @@ Avoid pushing wrong or inconsistent code to the master branch.
 Always test you current software with a local docker build.
 ```bash
 docker build -t cTracker:latest .
-docker run -d --name tracker cTracker:latest
+docker run -d -p 4567:4567 --name tracker cTracker:latest
 docker ps
 ```
 The console should show a running container with the name ```tracker```. 
+
+Server address https://tracing.uniks.de
 
 
 ## Troubleshooting

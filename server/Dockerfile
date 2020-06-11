@@ -7,3 +7,4 @@ FROM openjdk:12-alpine
 WORKDIR /server
 COPY --from=builder /server/build/libs .
 EXPOSE 4567
+CMD ["java", "-jar", "server-1.0-SNAPSHOT-all.jar"]
