@@ -1,4 +1,4 @@
-package de.uniks;
+package de.uniks.payload;
 
 import lombok.Data;
 

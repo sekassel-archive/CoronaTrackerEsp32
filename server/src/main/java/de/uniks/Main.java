@@ -2,6 +2,7 @@ package de.uniks;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
