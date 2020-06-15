@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONObject;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -38,10 +40,13 @@ public class Main {
                 return "Request values invalid";
             }
 
-            if(!infections.containsKey(input.getTime())) {
-                infections.put(input.getTime(), new ArrayList<>());
+            //Rounds down to nearest minutes
+            long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.MINUTES).getEpochSecond();
+            if(!infections.containsKey(time)) {
+                infections.put(time, new ArrayList<>());
             }
-            infections.get(input.getTime()).add(input.getId());
+            System.out.println(time);
+            infections.get(time).add(input.getId());
             return "Success!";
         }));
     }
