@@ -1,6 +1,7 @@
 package de.uniks;
 
 import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONObject;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static spark.Spark.get;
 import static spark.Spark.post;
 
@@ -30,9 +32,9 @@ public class Main {
             InfectionPostPayload input;
             try {
                 input = mapper.readValue(request.body(), InfectionPostPayload.class);
-            } catch (JsonParseException e) {
+            } catch (JsonParseException | JsonMappingException e) {
                 response.status(HTTP_BAD_REQUEST);
-                return e.getMessage();
+                return "Request body invalid";
             }
 
             if(!input.isValid()) {
@@ -40,12 +42,16 @@ public class Main {
                 return "Request values invalid";
             }
 
+            if(!input.isAuthenticated()) {
+                response.status(HTTP_UNAUTHORIZED);
+                return "Not authenticated";
+            }
+
             //Rounds down to nearest minutes
             long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.MINUTES).getEpochSecond();
             if(!infections.containsKey(time)) {
                 infections.put(time, new ArrayList<>());
             }
-            System.out.println(time);
             infections.get(time).add(input.getId());
             return "Success!";
         }));
