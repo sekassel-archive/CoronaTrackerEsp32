@@ -21,6 +21,8 @@ const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
 const static int REQUEST_DELAY_SECONDS = 60;           //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
+const String SERVER_URL = "https://tracing.uniks.de";
+
 int buttonState = 0;
 int lastButtonState = 0;
 int startPressed = 0;
@@ -82,7 +84,7 @@ void startSimpleHTTPRequest()
     {
         HTTPClient http;
 
-        http.begin("http://httpbin.org/user-agent");
+        http.begin(SERVER_URL + "/hello");
         int httpCode = http.GET();
 
         Serial.print("ReturnCode: ");
@@ -91,7 +93,7 @@ void startSimpleHTTPRequest()
         {
             Serial.println("---------- Message ----------");
             String payload = http.getString();
-            Serial.print(payload);
+            Serial.println(payload);
             Serial.println("-----------------------------");
         }
         else
