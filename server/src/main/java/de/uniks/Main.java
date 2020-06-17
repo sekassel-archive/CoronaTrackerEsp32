@@ -8,17 +8,16 @@ import org.json.JSONObject;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
-import static spark.Spark.get;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class Main {
 
-    private static HashMap<Long, ArrayList<Integer>> infections = new HashMap<>();
+    private static final String RESETCODE = "resetHashSet";
+    private static HashMap<Long, Set<Integer>> infections = new HashMap<>();
 
     public static void main(String[] args) {
         get("/hello", (request, response) -> "Hello World");
@@ -50,10 +49,18 @@ public class Main {
             //Rounds down to nearest minutes
             long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.MINUTES).getEpochSecond();
             if(!infections.containsKey(time)) {
-                infections.put(time, new ArrayList<>());
+                infections.put(time, new HashSet<Integer>() {
+                });
             }
             infections.get(time).add(input.getId());
             return "Success!";
+        }));
+
+        delete("/infections/:resetCode", ((request, response) -> {
+            if (request.params(":resetCode").equals(RESETCODE)){
+                infections = new HashMap<>();
+            }
+            return "";
         }));
     }
 }
