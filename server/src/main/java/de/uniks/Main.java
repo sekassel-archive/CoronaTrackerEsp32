@@ -10,13 +10,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
+import static java.net.HttpURLConnection.*;
 import static spark.Spark.*;
 
 public class Main {
 
-    private static final String RESETCODE = "resetHashSet";
     private static HashMap<Long, Set<Integer>> infections = new HashMap<>();
 
     public static void main(String[] args) {
@@ -36,19 +34,19 @@ public class Main {
                 return "Request body invalid";
             }
 
-            if(!input.isValid()) {
+            if (!input.isValid()) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request values invalid";
             }
 
-            if(!input.isAuthenticated()) {
+            if (!input.isAuthenticated()) {
                 response.status(HTTP_UNAUTHORIZED);
                 return "Not authenticated";
             }
 
             //Rounds down to nearest minutes
-            long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.MINUTES).getEpochSecond();
-            if(!infections.containsKey(time)) {
+            long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
+            if (!infections.containsKey(time)) {
                 infections.put(time, new HashSet<Integer>() {
                 });
             }
@@ -56,11 +54,97 @@ public class Main {
             return "Success!";
         }));
 
-        delete("/infections/:resetCode", ((request, response) -> {
-            if (request.params(":resetCode").equals(RESETCODE)){
-                infections = new HashMap<>();
+        //For Debugging purposes
+        get("/infections/time/:time", (request, response) -> {
+            long time;
+            try {
+                time = Long.parseLong(request.params(":time"));
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number";
             }
-            return "";
+            time = Instant.ofEpochSecond(time).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
+
+            if (!infections.containsKey(time)) {
+                response.status(HTTP_NOT_FOUND);
+                return "Input not found";
+            }
+            return new JSONObject().put("ids", infections.get(time));
+        });
+
+        get("/infections/id/:id", (request, response) -> {
+            int id;
+            try {
+                id = Integer.parseInt(request.params(":id"));
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number";
+            }
+
+            ArrayList<Long> times = new ArrayList<>();
+            for (Map.Entry<Long, Set<Integer>> entry : infections.entrySet()) {
+                if (entry.getValue().contains(id)) {
+                    times.add(entry.getKey());
+                }
+            }
+
+            if (times.isEmpty()) {
+                response.status(HTTP_NOT_FOUND);
+                return "Input not found";
+            }
+            return new JSONObject().put("times", times);
+        });
+
+        delete("/infections", ((request, response) -> {
+            infections = new HashMap<>();
+            return "Successfully removed all entries";
         }));
+
+        delete("/infections/time/:time", (request, response) -> {
+            long time;
+            try {
+                time = Long.parseLong(request.params(":time"));
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number";
+            }
+            time = Instant.ofEpochSecond(time).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
+
+            if (!infections.containsKey(time)) {
+                response.status(HTTP_NOT_FOUND);
+                return "Input not found";
+            }
+            infections.remove(time);
+            return "Successfully removed " + time;
+        });
+
+        //delete infections->id
+        delete("/infections/id/:id", (request, response) -> {
+            int id;
+            try {
+                id = Integer.parseInt(request.params(":id"));
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number";
+            }
+
+            ArrayList<Long> times = new ArrayList<>();
+            for (Map.Entry<Long, Set<Integer>> entry : infections.entrySet()) {
+                if (entry.getValue().contains(id)) {
+                    times.add(entry.getKey());
+                }
+            }
+
+            if (times.isEmpty()) {
+                response.status(HTTP_NOT_FOUND);
+                return "Input not found";
+            }
+
+            for (long key : times) {
+                infections.remove(key);
+            }
+
+            return "Successfully removed " + id;
+        });
     }
 }
