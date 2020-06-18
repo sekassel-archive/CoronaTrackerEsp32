@@ -141,7 +141,10 @@ public class Main {
             }
 
             for (long key : times) {
-                infections.remove(key);
+                infections.get(key).remove(id);
+                if(infections.get(key).isEmpty()) {
+                    infections.remove(key);
+                }
             }
 
             return "Successfully removed " + id;
