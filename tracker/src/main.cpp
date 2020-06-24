@@ -8,6 +8,10 @@
 #include <WifiManager.h>
 #include <HTTPClient.h>
 
+#define LED_PIN 4
+#define TP_PWR_PIN 25
+#define TP_PIN_PIN 33
+
 //BLE Variables
 static BLEUUID serviceUUID((uint16_t)0xFD68);                    //UUID taken from App
 static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly generated
@@ -67,8 +71,8 @@ bool connectToStoredWifi()
 
 void blinkLED()
 {
-    int state = digitalRead(BUILTIN_LED);
-    digitalWrite(BUILTIN_LED, !state);
+    int state = digitalRead(LED_PIN);
+    digitalWrite(LED_PIN, !state);
 }
 
 void startSimpleHTTPRequest()
@@ -119,12 +123,12 @@ void configureWifi()
     if (res)
     {
         Serial.println("We connected to Wifi...");
-        digitalWrite(LED_BUILTIN, LOW);
+        digitalWrite(LED_PIN, LOW);
     }
     else
     {
         Serial.println("Could not connect to Wifi");
-        digitalWrite(LED_BUILTIN, HIGH);
+        digitalWrite(LED_PIN, HIGH);
         wifiManager.resetSettings();
         //Delay so feedback can be seen on LED
         delay(5000);
@@ -162,19 +166,21 @@ void setup()
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(KEY_BUILTIN, INPUT); // Button input
+    pinMode(LED_PIN, OUTPUT);
+    pinMode(TP_PIN_PIN, INPUT); // Button input
+    pinMode(TP_PWR_PIN, PULLUP);
+    digitalWrite(TP_PWR_PIN, HIGH);
 
     //Connection Failed
     if (!connectToStoredWifi())
     {
         Serial.println("Awaiting Putton Press for Wifi-Configuration");
-        digitalWrite(LED_BUILTIN, HIGH);
+        digitalWrite(LED_PIN, HIGH);
         waitForConfig = true;
     }
     else
     {
-        digitalWrite(LED_BUILTIN, LOW);
+        digitalWrite(LED_PIN, LOW);
 
         //Getting Time
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -230,10 +236,9 @@ void loop()
     }
     else if (waitForConfig)
     {
-        buttonState = digitalRead(KEY_BUILTIN); // read the button input
-
+        buttonState = digitalRead(TP_PIN_PIN); // read the button input
         //Button was pressed
-        if (buttonState == LOW)
+        if (buttonState == HIGH)
         {
             //First press
             if (buttonState != lastButtonState)
