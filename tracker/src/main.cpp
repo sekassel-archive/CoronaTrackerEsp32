@@ -39,6 +39,8 @@ const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
+std::multimap<std::string, time_t> encounterMap;
+
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
     //Called for each advertising BLE server.
@@ -51,6 +53,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.println(advertisedDevice.toString().c_str());
             Serial.print("ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
+
+            encounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
