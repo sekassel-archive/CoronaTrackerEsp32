@@ -22,7 +22,7 @@ const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
-const static int REQUEST_DELAY_SECONDS = 60;           //60 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 int buttonState = 0;
@@ -39,7 +39,7 @@ const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
-std::multimap<std::string, time_t> encounterMap;
+std::multimap<std::string, time_t> recentEncounterMap;
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
@@ -54,7 +54,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.print("ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
 
-            encounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
+            recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
@@ -236,6 +236,19 @@ void loop()
         Serial.println("Starting Scan...");
         int result = (BLEDevice::getScan()->start(1, false)).getCount();
         Serial.printf("Devices Found: %i\n", result);
+
+        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
+
+        //We delete entries that are older than 15 minutes
+        for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
+        {
+            ++next_it;
+            if (it->second < fifteenMinutesAgo)
+            {
+                recentEncounterMap.erase(it);
+            }
+        }
+        
         delay(10000); //Scan Every 10 Seconds
     }
     else if (waitForConfig)
