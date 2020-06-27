@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Ticker.h>
+#include "SPIFFS.h"
 
 //BLE Libraries
 #include <BLEDevice.h>
@@ -194,6 +195,28 @@ void setup()
         disconnectWifi();
         delay(1000);
 
+        Serial.println("Initializing SPIFFS");
+        if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
+        {
+            Serial.println("Initializing failed");
+            while (1)
+                ;
+        }
+
+        if (!SPIFFS.exists("/encounters.txt"))
+        {
+            Serial.println("Creating File");
+            File file = SPIFFS.open("/encounters.txt");
+
+            if (!file)
+            {
+                Serial.println("There was an error creating the file");
+                while (1)
+                    ;
+            }
+            file.close();
+        }
+
         //Setting up Server
         Serial.println("Setting Up Server");
         BLEDevice::init("CovidTracker");
@@ -237,8 +260,22 @@ void loop()
         int result = (BLEDevice::getScan()->start(1, false)).getCount();
         Serial.printf("Devices Found: %i\n", result);
 
-        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
+        File file = SPIFFS.open("/encounters.txt", FILE_APPEND);
+        if (file)
+        {   
+            //TODO: Write IDs on flash if enough encounters happend
+            if (file.print(""))
+            {
+                Serial.println("Successfully printed!");
+            }
+        }
+        else
+        {
+            Serial.println("Could not open File!");
+        }
+        file.close();
 
+        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
         //We delete entries that are older than 15 minutes
         for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
         {
