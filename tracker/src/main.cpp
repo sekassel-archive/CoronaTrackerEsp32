@@ -7,6 +7,7 @@
 //WiFi Libraries
 #include <WifiManager.h>
 #include <HTTPClient.h>
+#include <ArduinoJSON.h>
 
 #define LED_PIN 4
 #define TP_PWR_PIN 25
@@ -22,7 +23,7 @@ const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
-const static int REQUEST_DELAY_SECONDS = 60;           //60 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 const String SERVER_URL = "https://tracing.uniks.de";
@@ -88,7 +89,7 @@ void startSimpleHTTPRequest()
     {
         HTTPClient http;
 
-        http.begin(SERVER_URL + "/hello");
+        http.begin(SERVER_URL + "/infections");
         int httpCode = http.GET();
 
         Serial.print("ReturnCode: ");
@@ -96,9 +97,37 @@ void startSimpleHTTPRequest()
         if (httpCode > 0)
         {
             Serial.println("---------- Message ----------");
-            String payload = http.getString();
-            Serial.println(payload);
+            String response = http.getString();
+            Serial.println(response);
             Serial.println("-----------------------------");
+
+            //TODO: Maybe calculate approximate size beforehand
+            DynamicJsonDocument doc(2048);
+            DeserializationError err = deserializeJson(doc, response);
+
+            if (!err)
+            {
+                JsonObject responseJSON = doc.as<JsonObject>();
+                for(JsonPair pair : responseJSON) {
+                    Serial.print(pair.key().c_str());
+                    Serial.print(" : ");
+                    if(pair.value().is<JsonArray>()) {
+                        JsonArray array = pair.value().as<JsonArray>();
+                        for (JsonVariant elem : array)
+                        {
+                            if(elem.is<long>()) {
+                                long l = elem;
+                                Serial.printf("%ld ", l);
+                            }
+                        }
+                    }
+                    Serial.println();
+                }
+            }
+            else
+            {
+                Serial.printf("deserializeJson() failed with code %s\n", err.c_str());
+            }
         }
         else
         {
