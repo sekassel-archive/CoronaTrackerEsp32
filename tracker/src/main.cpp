@@ -252,6 +252,41 @@ void setup()
     }
 }
 
+bool fileContainsString(const char* path, std::string str)
+{
+    int index = 0;
+    int len = str.length();
+
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
+    {
+        return false;
+    }
+
+    if (len == 0)
+    {
+        return false;
+    }
+
+    while (file.available())
+    {
+        char c = file.read();
+        if (c != str[index])
+        {
+            index = 0;
+        }
+
+        if (c == str[index])
+        {
+            if (++index >= len)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void loop()
 {
     if (doScan)
@@ -265,16 +300,16 @@ void loop()
         {
             for (auto it = recentEncounterMap.begin(), end = recentEncounterMap.end(); it != end; it = recentEncounterMap.upper_bound(it->first))
             {
-                if (recentEncounterMap.count(it->first) >= 10)
+                if (recentEncounterMap.count(it->first) >= 10 && !fileContainsString("/encounters.txt", it->first))
                 {
                     std::string stringToAppend = it->first + ";";
-                    if (file.println(it->first.c_str()))
+                    if (file.print(stringToAppend.c_str()))
                     {
-                        Serial.println("Successfully printed!");
+                        Serial.printf("Successfully added %s to file.\n", it->first.c_str());
                     }
                     else
                     {
-                        Serial.printf("Could not print id: %s\n", it->first.c_str());
+                        Serial.printf("Could not print id to file: %s\n", it->first.c_str());
                     }
                 }
             }
