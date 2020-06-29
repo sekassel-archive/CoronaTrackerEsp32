@@ -202,8 +202,9 @@ void setup()
         if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
         {
             Serial.println("Initializing failed");
-            while (1)
-                ;
+            digitalWrite(LED_PIN, HIGH);
+            delay(10000);
+            ESP.restart();
         }
 
         //Remove comment to reset file
@@ -217,8 +218,9 @@ void setup()
             if (!file)
             {
                 Serial.println("There was an error creating the file");
-                while (1)
-                    ;
+                digitalWrite(LED_PIN, HIGH);
+                delay(10000);
+                ESP.restart();
             }
             file.close();
         }
