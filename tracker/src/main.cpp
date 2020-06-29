@@ -262,30 +262,39 @@ void loop()
 
         File file = SPIFFS.open("/encounters.txt", FILE_APPEND);
         if (file)
-        {   
-            //TODO: Write IDs on flash if enough encounters happend
-            if (file.print(""))
+        {
+            for (auto it = recentEncounterMap.begin(), end = recentEncounterMap.end(); it != end; it = recentEncounterMap.upper_bound(it->first))
             {
-                Serial.println("Successfully printed!");
+                if (recentEncounterMap.count(it->first) >= 10)
+                {
+                    std::string stringToAppend = it->first + ";";
+                    if (file.println(it->first.c_str()))
+                    {
+                        Serial.println("Successfully printed!");
+                    }
+                    else
+                    {
+                        Serial.printf("Could not print id: %s\n", it->first.c_str());
+                    }
+                }
+            }
+
+            //We delete entries that are older than 15 minutes
+            time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
+            for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
+            {
+                ++next_it;
+                if (it->second < fifteenMinutesAgo)
+                {
+                    recentEncounterMap.erase(it);
+                }
             }
         }
         else
         {
-            Serial.println("Could not open File!");
+            Serial.println("Could not open encounters.txt");
         }
         file.close();
-
-        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
-        //We delete entries that are older than 15 minutes
-        for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
-        {
-            ++next_it;
-            if (it->second < fifteenMinutesAgo)
-            {
-                recentEncounterMap.erase(it);
-            }
-        }
-        
         delay(10000); //Scan Every 10 Seconds
     }
     else if (waitForConfig)
