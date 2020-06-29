@@ -21,6 +21,9 @@ char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
+const char *path = "/encounters.txt";
+const int ENCOUNTERS_NEEDED = 10;
+
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
 const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
@@ -203,10 +206,13 @@ void setup()
                 ;
         }
 
-        if (!SPIFFS.exists("/encounters.txt"))
+        //Remove comment to reset file
+        //SPIFFS.remove(path);
+
+        if (!SPIFFS.exists(path))
         {
             Serial.println("Creating File");
-            File file = SPIFFS.open("/encounters.txt");
+            File file = SPIFFS.open(path);
 
             if (!file)
             {
@@ -252,7 +258,7 @@ void setup()
     }
 }
 
-bool fileContainsString(const char* path, std::string str)
+bool fileContainsString(const char *path, std::string str)
 {
     int index = 0;
     int len = str.length();
@@ -295,12 +301,12 @@ void loop()
         int result = (BLEDevice::getScan()->start(1, false)).getCount();
         Serial.printf("Devices Found: %i\n", result);
 
-        File file = SPIFFS.open("/encounters.txt", FILE_APPEND);
+        File file = SPIFFS.open(path, FILE_APPEND);
         if (file)
         {
             for (auto it = recentEncounterMap.begin(), end = recentEncounterMap.end(); it != end; it = recentEncounterMap.upper_bound(it->first))
             {
-                if (recentEncounterMap.count(it->first) >= 10 && !fileContainsString("/encounters.txt", it->first))
+                if (recentEncounterMap.count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(path, it->first))
                 {
                     std::string stringToAppend = it->first + ";";
                     if (file.print(stringToAppend.c_str()))
