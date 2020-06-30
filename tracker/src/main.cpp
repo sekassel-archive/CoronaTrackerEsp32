@@ -434,6 +434,4 @@ void loop()
         initBLE();
         delay(500);
     }
-    Serial.print("Heapsize: ");
-    Serial.println(ESP.getFreeHeap());
 }
