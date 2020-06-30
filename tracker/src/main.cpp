@@ -15,8 +15,7 @@
 #define TP_PIN_PIN 33
 
 //BLE Variables
-static BLEUUID serviceUUID((uint16_t)0xFD68);                    //UUID taken from App
-static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly generated
+static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 
 char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
@@ -57,14 +56,15 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         if (advertisedDevice.haveServiceData() && advertisedDevice.getServiceDataUUID().equals(serviceUUID))
         {
             Serial.print("Found Covid Device: ");
-            Serial.println(advertisedDevice.toString().c_str());
-            Serial.print("ID: ");
+            Serial.print(advertisedDevice.toString().c_str());
+            Serial.print(" --> ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
 
             recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
+MyAdvertisedDeviceCallbacks myCallbacks;
 
 bool disconnectWifi()
 {
@@ -193,6 +193,50 @@ void setHTTPFlag()
     sendHTTPRequest = true;
 }
 
+BLEServer* pServer;
+BLEService* pService;
+BLEAdvertising* pAdvertising;
+BLEScan* pBLEScan;
+
+void initBLE()
+{
+    //Setting up Server
+    Serial.println("Setting Up Server");
+    BLEDevice::init("CovidTracker");
+    pServer = BLEDevice::createServer();
+    pService = pServer->createService(serviceUUID);
+    pService->start();
+
+    //Service Data
+    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+    oAdvertisementData.setServiceData(serviceUUID, device_id);
+
+    Serial.println("Setting up Advertisment");
+    pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(serviceUUID);
+    pAdvertising->setAdvertisementData(oAdvertisementData);
+    pAdvertising->setMinPreferred(0x06);
+    pAdvertising->setMinPreferred(0x12);
+    pAdvertising->start();
+
+    //Setting up Scan
+    Serial.println("Setting up Scan");
+    pBLEScan = BLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    pBLEScan->setInterval(100);
+    pBLEScan->setWindow(99); // less or equal setInterval value
+}
+
+void deinitBLE()
+{
+    pAdvertising->stop();
+    pBLEScan->stop();
+    BLEDevice::deinit(false);
+    delete pServer;
+    delete pService;
+}
+
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
@@ -256,35 +300,8 @@ void setup()
             file.close();
         }
 
-        //Setting up Server
-        Serial.println("Setting Up Server");
-        BLEDevice::init("CovidTracker");
-        BLEServer *pServer = BLEDevice::createServer();
-        BLEService *pService = pServer->createService(serviceUUID);
-        //Characteristic is not present in app
-        BLECharacteristic *pCharacteristic = pService->createCharacteristic(charUUID, BLECharacteristic::PROPERTY_BROADCAST);
-        pCharacteristic->setValue(device_id);
-        pService->start();
-
-        //Service Data
-        BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-        oAdvertisementData.setServiceData(serviceUUID, device_id);
-
-        Serial.println("Setting up Advertisment");
-        BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-        pAdvertising->addServiceUUID(serviceUUID);
-        pAdvertising->setAdvertisementData(oAdvertisementData);
-        pAdvertising->setMinPreferred(0x06);
-        pAdvertising->setMinPreferred(0x12);
-        BLEDevice::startAdvertising();
-
-        //Setting up Scan
-        Serial.println("Setting up Scan");
-        BLEScan *pBLEScan = BLEDevice::getScan();
-        pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-        pBLEScan->setInterval(100);
-        pBLEScan->setWindow(99); // less or equal setInterval value
+        Serial.println("Initializing BLE");
+        initBLE();
 
         doScan = true;
         wifiTicker.attach(60, setHTTPFlag);
@@ -394,10 +411,12 @@ void loop()
     else if (sendHTTPRequest)
     {
         wifiTicker.detach();
+        deinitBLE();
         startSimpleHTTPRequest();
         sendHTTPRequest = false;
         doScan = true;
         wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        initBLE();
         delay(500);
     }
 }
