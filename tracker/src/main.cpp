@@ -17,7 +17,7 @@
 //BLE Variables
 static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 
-char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
+int device_id; //ID to be braodcasted
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
@@ -259,7 +259,7 @@ void initBLE()
 
     //Service Data
     BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    oAdvertisementData.setServiceData(serviceUUID, device_id);
+    oAdvertisementData.setServiceData(serviceUUID, String(device_id, DEC).c_str());
 
     Serial.println("Setting up Advertisment");
     pAdvertising = BLEDevice::getAdvertising();
@@ -296,6 +296,11 @@ void setup()
     //Setting up Serial
     Serial.begin(115200);
     Serial.println("Serial initialized");
+
+    randomSeed(analogRead(0));
+    device_id = random(100000000, 999999999);
+    Serial.print("Device ID: ");
+    Serial.println(device_id);
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
