@@ -198,6 +198,48 @@ void requestInfections()
     }
 }
 
+void uploadInfections()
+{
+    Serial.println("Trying to upload own id.");
+    if (!connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi - Retrying later");
+    }
+    else
+    {
+        HTTPClient http;
+
+        http.begin(SERVER_URL + "/infections");
+        http.addHeader("Content-Type", "application/json");
+
+        String httpRequestData;
+        DynamicJsonDocument doc(256);
+
+        doc["time"] = time(NULL);
+        doc["id"] = device_id;
+        doc["authData"] = 1234;
+
+        serializeJson(doc, httpRequestData);
+
+        int httpCode = http.POST(httpRequestData);
+
+        Serial.print("ReturnCode: ");
+        Serial.println(httpCode);
+        if (httpCode == 200)
+        {
+            Serial.println("Uploaded our Data");
+        }
+        else
+        {
+            Serial.println("Error on HTTP request");
+        }
+
+        http.end();
+        delay(1000);
+        disconnectWifi();
+    }
+}
+
 void configureWifi()
 {
     Serial.println("Starting WifiManger-Config");
