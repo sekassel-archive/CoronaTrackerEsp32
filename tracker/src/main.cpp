@@ -9,9 +9,16 @@
 #include <WifiManager.h>
 #include <HTTPClient.h>
 
+//display Libraries
+#include <SPI.h>
+#include <TFT_eSPI.h>
+#include <Wire.h>
+
 #define LED_PIN 4
 #define TP_PWR_PIN 25
 #define TP_PIN_PIN 33
+
+TFT_eSPI tft = TFT_eSPI();
 
 //BLE Variables
 static BLEUUID serviceUUID((uint16_t)0xFD68);                    //UUID taken from App
@@ -44,6 +51,24 @@ const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
 std::multimap<std::string, time_t> recentEncounterMap;
+
+/*  Before you can use the display on the esp32devOTA you have to change two lines.
+*   Follow Step 3 of the following URL.
+*   https://github.com/Xinyuan-LilyGO/LilyGo-T-Wristband/blob/master/examples/T-Wristband-LSM9DS1/README.MD
+*   TODO 
+*   tracker\.pio\libdeps\esp32devOTA\TFT_eSPI\User_Setup_Select.h 
+*   have to be in the gitignore.
+*/
+void tftInit()
+{
+    tft.init();
+    tft.setRotation(1);
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE);
+
+    tft.setTextSize(1);//With size equals to 1, you can print 10 lines and about 27 characters per line
+    tft.setCursor(0, 0);
+}
 
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
@@ -144,6 +169,12 @@ void configureWifi()
     ESP.restart();
 }
 
+void showLocalTimeOnDisplay(struct tm timeinfo){
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.print(&timeinfo, "%A\n%B %d %Y\n%H:%M:%S");//could look better when centered
+}
+
 void printLocalTime()
 {
     Serial.print("Local Time: ");
@@ -154,6 +185,7 @@ void printLocalTime()
         return;
     }
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    showLocalTimeOnDisplay(timeinfo);
 }
 
 void setHTTPFlag()
@@ -162,15 +194,24 @@ void setHTTPFlag()
     sendHTTPRequest = true;
 }
 
+void showStartWifiMessageOnDisplay(){
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.print("Press Button\nfor 4 Seconds\nto start \nWifi-\nConfiguration");
+}
+
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
     //WiFiManager manager;
-    //manager.resetSettings();
+    // manager.resetSettings();
 
     //Setting up Serial
     Serial.begin(115200);
     Serial.println("Serial initialized");
+
+    //initialize display
+    tftInit();
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
@@ -182,9 +223,10 @@ void setup()
     //Connection Failed
     if (!connectToStoredWifi())
     {
-        Serial.println("Awaiting Putton Press for Wifi-Configuration");
+        Serial.println("Awaiting Button Press for Wifi-Configuration");
         digitalWrite(LED_PIN, HIGH);
         waitForConfig = true;
+        showStartWifiMessageOnDisplay();
     }
     else
     {
