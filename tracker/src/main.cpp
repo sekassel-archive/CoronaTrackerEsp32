@@ -8,14 +8,14 @@
 //WiFi Libraries
 #include <WifiManager.h>
 #include <HTTPClient.h>
+#include <ArduinoJSON.h>
 
 #define LED_PIN 4
 #define TP_PWR_PIN 25
 #define TP_PIN_PIN 33
 
 //BLE Variables
-static BLEUUID serviceUUID((uint16_t)0xFD68);                    //UUID taken from App
-static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly generated
+static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 
 char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
@@ -28,6 +28,8 @@ const int ENCOUNTERS_NEEDED = 10;
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
 const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
+
+const String SERVER_URL = "https://tracing.uniks.de";
 
 int buttonState = 0;
 int lastButtonState = 0;
@@ -54,14 +56,15 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         if (advertisedDevice.haveServiceData() && advertisedDevice.getServiceDataUUID().equals(serviceUUID))
         {
             Serial.print("Found Covid Device: ");
-            Serial.println(advertisedDevice.toString().c_str());
-            Serial.print("ID: ");
+            Serial.print(advertisedDevice.toString().c_str());
+            Serial.print(" --> ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
 
             recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
+MyAdvertisedDeviceCallbacks myCallbacks;
 
 bool disconnectWifi()
 {
@@ -83,9 +86,44 @@ void blinkLED()
     digitalWrite(LED_PIN, !state);
 }
 
-void startSimpleHTTPRequest()
+bool fileContainsString(const char *path, std::string str)
 {
-    Serial.println("Sending Simple HTTP Request.");
+    int index = 0;
+    int len = str.length();
+
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
+    {
+        return false;
+    }
+
+    if (len == 0)
+    {
+        return false;
+    }
+
+    while (file.available())
+    {
+        char c = file.read();
+        if (c != str[index])
+        {
+            index = 0;
+        }
+
+        if (c == str[index])
+        {
+            if (++index >= len)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void requestInfections()
+{
+    Serial.println("Requesting infections from server.");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
@@ -94,7 +132,7 @@ void startSimpleHTTPRequest()
     {
         HTTPClient http;
 
-        http.begin("http://httpbin.org/user-agent");
+        http.begin(SERVER_URL + "/infections");
         int httpCode = http.GET();
 
         Serial.print("ReturnCode: ");
@@ -102,9 +140,52 @@ void startSimpleHTTPRequest()
         if (httpCode > 0)
         {
             Serial.println("---------- Message ----------");
-            String payload = http.getString();
-            Serial.print(payload);
+            String response = http.getString();
+            Serial.println(response);
             Serial.println("-----------------------------");
+
+            //TODO: Maybe calculate approximate size beforehand
+            DynamicJsonDocument doc(2048);
+            DeserializationError err = deserializeJson(doc, response);
+
+            if (!err)
+            {
+                bool metInfected = false;
+                JsonObject responseJSON = doc.as<JsonObject>();
+                for (JsonPair pair : responseJSON)
+                {
+                    Serial.print(pair.key().c_str());
+                    Serial.print(" : ");
+                    if (pair.value().is<JsonArray>())
+                    {
+                        JsonArray array = pair.value().as<JsonArray>();
+                        for (JsonVariant elem : array)
+                        {
+                            if (elem.is<long>())
+                            {
+                                long l = elem;
+                                Serial.printf("%ld ", l);
+
+                                if (fileContainsString(path, String(l).c_str()))
+                                {
+                                    Serial.print("(I) ");
+                                    metInfected = true;
+                                }
+                            }
+                        }
+                    }
+                    Serial.println();
+                }
+
+                if (metInfected)
+                {
+                    Serial.println("User has met someone infected!");
+                }
+            }
+            else
+            {
+                Serial.printf("deserializeJson() failed with code %s\n", err.c_str());
+            }
         }
         else
         {
@@ -160,6 +241,50 @@ void setHTTPFlag()
 {
     doScan = false;
     sendHTTPRequest = true;
+}
+
+BLEServer *pServer;
+BLEService *pService;
+BLEAdvertising *pAdvertising;
+BLEScan *pBLEScan;
+
+void initBLE()
+{
+    //Setting up Server
+    Serial.println("Setting Up Server");
+    BLEDevice::init("CovidTracker");
+    pServer = BLEDevice::createServer();
+    pService = pServer->createService(serviceUUID);
+    pService->start();
+
+    //Service Data
+    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+    oAdvertisementData.setServiceData(serviceUUID, device_id);
+
+    Serial.println("Setting up Advertisment");
+    pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(serviceUUID);
+    pAdvertising->setAdvertisementData(oAdvertisementData);
+    pAdvertising->setMinPreferred(0x06);
+    pAdvertising->setMinPreferred(0x12);
+    pAdvertising->start();
+
+    //Setting up Scan
+    Serial.println("Setting up Scan");
+    pBLEScan = BLEDevice::getScan();
+    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+    pBLEScan->setInterval(100);
+    pBLEScan->setWindow(99); // less or equal setInterval value
+}
+
+void deinitBLE()
+{
+    pAdvertising->stop();
+    pBLEScan->stop();
+    BLEDevice::deinit(false);
+    delete pServer;
+    delete pService;
 }
 
 void setup()
@@ -225,74 +350,12 @@ void setup()
             file.close();
         }
 
-        //Setting up Server
-        Serial.println("Setting Up Server");
-        BLEDevice::init("CovidTracker");
-        BLEServer *pServer = BLEDevice::createServer();
-        BLEService *pService = pServer->createService(serviceUUID);
-        //Characteristic is not present in app
-        BLECharacteristic *pCharacteristic = pService->createCharacteristic(charUUID, BLECharacteristic::PROPERTY_BROADCAST);
-        pCharacteristic->setValue(device_id);
-        pService->start();
-
-        //Service Data
-        BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-        oAdvertisementData.setServiceData(serviceUUID, device_id);
-
-        Serial.println("Setting up Advertisment");
-        BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-        pAdvertising->addServiceUUID(serviceUUID);
-        pAdvertising->setAdvertisementData(oAdvertisementData);
-        pAdvertising->setMinPreferred(0x06);
-        pAdvertising->setMinPreferred(0x12);
-        BLEDevice::startAdvertising();
-
-        //Setting up Scan
-        Serial.println("Setting up Scan");
-        BLEScan *pBLEScan = BLEDevice::getScan();
-        pBLEScan->setAdvertisedDeviceCallbacks(new MyAdvertisedDeviceCallbacks());
-        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-        pBLEScan->setInterval(100);
-        pBLEScan->setWindow(99); // less or equal setInterval value
+        Serial.println("Initializing BLE");
+        initBLE();
 
         doScan = true;
-        wifiTicker.attach(60, setHTTPFlag);
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
     }
-}
-
-bool fileContainsString(const char *path, std::string str)
-{
-    int index = 0;
-    int len = str.length();
-
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
-    {
-        return false;
-    }
-
-    if (len == 0)
-    {
-        return false;
-    }
-
-    while (file.available())
-    {
-        char c = file.read();
-        if (c != str[index])
-        {
-            index = 0;
-        }
-
-        if (c == str[index])
-        {
-            if (++index >= len)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 void loop()
@@ -363,10 +426,12 @@ void loop()
     else if (sendHTTPRequest)
     {
         wifiTicker.detach();
-        startSimpleHTTPRequest();
+        deinitBLE();
+        requestInfections();
         sendHTTPRequest = false;
         doScan = true;
         wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        initBLE();
         delay(500);
     }
 }
