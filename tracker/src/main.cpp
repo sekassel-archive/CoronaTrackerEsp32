@@ -86,9 +86,44 @@ void blinkLED()
     digitalWrite(LED_PIN, !state);
 }
 
-void startSimpleHTTPRequest()
+bool fileContainsString(const char *path, std::string str)
 {
-    Serial.println("Sending Simple HTTP Request.");
+    int index = 0;
+    int len = str.length();
+
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
+    {
+        return false;
+    }
+
+    if (len == 0)
+    {
+        return false;
+    }
+
+    while (file.available())
+    {
+        char c = file.read();
+        if (c != str[index])
+        {
+            index = 0;
+        }
+
+        if (c == str[index])
+        {
+            if (++index >= len)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void requestInfections()
+{
+    Serial.println("Requesting infections from server.");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
@@ -115,21 +150,36 @@ void startSimpleHTTPRequest()
 
             if (!err)
             {
+                bool metInfected = false;
                 JsonObject responseJSON = doc.as<JsonObject>();
-                for(JsonPair pair : responseJSON) {
+                for (JsonPair pair : responseJSON)
+                {
                     Serial.print(pair.key().c_str());
                     Serial.print(" : ");
-                    if(pair.value().is<JsonArray>()) {
+                    if (pair.value().is<JsonArray>())
+                    {
                         JsonArray array = pair.value().as<JsonArray>();
                         for (JsonVariant elem : array)
                         {
-                            if(elem.is<long>()) {
+                            if (elem.is<long>())
+                            {
                                 long l = elem;
                                 Serial.printf("%ld ", l);
+
+                                if (fileContainsString(path, String(l).c_str()))
+                                {
+                                    Serial.print("(I) ");
+                                    metInfected = true;
+                                }
                             }
                         }
                     }
                     Serial.println();
+                }
+
+                if (metInfected)
+                {
+                    Serial.println("User has met someone infected!");
                 }
             }
             else
@@ -193,10 +243,10 @@ void setHTTPFlag()
     sendHTTPRequest = true;
 }
 
-BLEServer* pServer;
-BLEService* pService;
-BLEAdvertising* pAdvertising;
-BLEScan* pBLEScan;
+BLEServer *pServer;
+BLEService *pService;
+BLEAdvertising *pAdvertising;
+BLEScan *pBLEScan;
 
 void initBLE()
 {
@@ -304,43 +354,8 @@ void setup()
         initBLE();
 
         doScan = true;
-        wifiTicker.attach(60, setHTTPFlag);
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
     }
-}
-
-bool fileContainsString(const char *path, std::string str)
-{
-    int index = 0;
-    int len = str.length();
-
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
-    {
-        return false;
-    }
-
-    if (len == 0)
-    {
-        return false;
-    }
-
-    while (file.available())
-    {
-        char c = file.read();
-        if (c != str[index])
-        {
-            index = 0;
-        }
-
-        if (c == str[index])
-        {
-            if (++index >= len)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 void loop()
@@ -412,11 +427,13 @@ void loop()
     {
         wifiTicker.detach();
         deinitBLE();
-        startSimpleHTTPRequest();
+        requestInfections();
         sendHTTPRequest = false;
         doScan = true;
         wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
         initBLE();
         delay(500);
     }
+    Serial.print("Heapsize: ");
+    Serial.println(ESP.getFreeHeap());
 }
