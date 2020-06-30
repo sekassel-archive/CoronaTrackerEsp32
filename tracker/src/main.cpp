@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Ticker.h>
+#include "SPIFFS.h"
 
 //BLE Libraries
 #include <BLEDevice.h>
@@ -20,6 +21,9 @@ static BLEUUID charUUID("ae733f1d-b5b6-4e95-b688-ae2acb5133e2"); //Randomly gene
 char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
+
+const char *path = "/encounters.txt";
+const int ENCOUNTERS_NEEDED = 10;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -42,6 +46,8 @@ const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
+std::multimap<std::string, time_t> recentEncounterMap;
+
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
     //Called for each advertising BLE server.
@@ -54,6 +60,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.println(advertisedDevice.toString().c_str());
             Serial.print("ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
+
+            recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
@@ -221,6 +229,33 @@ void setup()
         disconnectWifi();
         delay(1000);
 
+        Serial.println("Initializing SPIFFS");
+        if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
+        {
+            Serial.println("Initializing failed");
+            digitalWrite(LED_PIN, HIGH);
+            delay(10000);
+            ESP.restart();
+        }
+
+        //Remove comment to reset file
+        //SPIFFS.remove(path);
+
+        if (!SPIFFS.exists(path))
+        {
+            Serial.println("Creating File");
+            File file = SPIFFS.open(path);
+
+            if (!file)
+            {
+                Serial.println("There was an error creating the file");
+                digitalWrite(LED_PIN, HIGH);
+                delay(10000);
+                ESP.restart();
+            }
+            file.close();
+        }
+
         //Setting up Server
         Serial.println("Setting Up Server");
         BLEDevice::init("CovidTracker");
@@ -256,6 +291,41 @@ void setup()
     }
 }
 
+bool fileContainsString(const char *path, std::string str)
+{
+    int index = 0;
+    int len = str.length();
+
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
+    {
+        return false;
+    }
+
+    if (len == 0)
+    {
+        return false;
+    }
+
+    while (file.available())
+    {
+        char c = file.read();
+        if (c != str[index])
+        {
+            index = 0;
+        }
+
+        if (c == str[index])
+        {
+            if (++index >= len)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void loop()
 {
     if (doScan)
@@ -263,6 +333,42 @@ void loop()
         Serial.println("Starting Scan...");
         int result = (BLEDevice::getScan()->start(1, false)).getCount();
         Serial.printf("Devices Found: %i\n", result);
+
+        File file = SPIFFS.open(path, FILE_APPEND);
+        if (file)
+        {
+            for (auto it = recentEncounterMap.begin(), end = recentEncounterMap.end(); it != end; it = recentEncounterMap.upper_bound(it->first))
+            {
+                if (recentEncounterMap.count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(path, it->first))
+                {
+                    std::string stringToAppend = it->first + ";";
+                    if (file.print(stringToAppend.c_str()))
+                    {
+                        Serial.printf("Successfully added %s to file.\n", it->first.c_str());
+                    }
+                    else
+                    {
+                        Serial.printf("Could not print id to file: %s\n", it->first.c_str());
+                    }
+                }
+            }
+
+            //We delete entries that are older than 15 minutes
+            time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
+            for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
+            {
+                ++next_it;
+                if (it->second < fifteenMinutesAgo)
+                {
+                    recentEncounterMap.erase(it);
+                }
+            }
+        }
+        else
+        {
+            Serial.println("Could not open encounters.txt");
+        }
+        file.close();
         delay(10000); //Scan Every 10 Seconds
     }
     else if (waitForConfig)
