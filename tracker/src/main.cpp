@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Ticker.h>
 #include "SPIFFS.h"
+#include <EasyButton.h>
 
 //BLE Libraries
 #include <BLEDevice.h>
@@ -38,7 +39,10 @@ int startPressed = 0;
 Ticker wifiTicker;
 Ticker buttonTicker;
 bool waitForConfig = false;
-bool sendHTTPRequest = false;
+bool requestFlag = false;
+bool upload = false;
+
+EasyButton upload_button(TP_PIN_PIN, 100, true, false);
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -279,10 +283,25 @@ void printLocalTime()
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
 }
 
-void setHTTPFlag()
+void setRequestFlag()
 {
+    Serial.println("Set Request Flag");
     doScan = false;
-    sendHTTPRequest = true;
+    requestFlag = true;
+}
+
+void buttonISR()
+{
+    upload_button.read();
+}
+
+void setUploadFlag()
+{
+    Serial.println("Setting Upload Flag");
+    wifiTicker.detach();
+    doScan = false;
+    requestFlag = false;
+    upload = true;
 }
 
 BLEServer *pServer;
@@ -400,13 +419,24 @@ void setup()
         Serial.println("Initializing BLE");
         initBLE();
 
+        Serial.print("Initializing Upload Button.. ");
+        upload_button.begin();
+        if (upload_button.supportsInterrupt())
+        {
+            upload_button.enableInterrupt(buttonISR);
+            upload_button.onPressedFor(4000, setUploadFlag);
+            Serial.println("Button initialized with interrupts");
+        }
+
         doScan = true;
-        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setRequestFlag);
     }
 }
 
 void loop()
 {
+    upload_button.update();
+    
     if (doScan)
     {
         Serial.println("Starting Scan...");
@@ -470,15 +500,26 @@ void loop()
         lastButtonState = buttonState;
         delay(500);
     }
-    else if (sendHTTPRequest)
+    else if (requestFlag)
     {
         wifiTicker.detach();
         deinitBLE();
         requestInfections();
-        sendHTTPRequest = false;
+        requestFlag = false;
         doScan = true;
-        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setRequestFlag);
         initBLE();
         delay(500);
+    }
+    else if (upload)
+    {
+        digitalWrite(LED_PIN, HIGH);
+        deinitBLE();
+        uploadInfections();
+        upload = false;
+        doScan = true;
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setRequestFlag);
+        initBLE();
+        digitalWrite(LED_PIN, LOW);
     }
 }
