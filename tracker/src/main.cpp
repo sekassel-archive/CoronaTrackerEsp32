@@ -253,8 +253,8 @@ void requestInfections()
                 else
                 {
                     Serial.println("You are not infected.");
-                    showIsInfectedOnDisplay(metInfected);
                 }
+                showIsInfectedOnDisplay(metInfected);
             }
             else
             {
