@@ -277,10 +277,15 @@ void configureWifi()
     Serial.println("Starting WifiManger-Config");
     buttonTicker.attach_ms(500, blinkLED);
 
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(0, 0);
+    tft.print("Connect to\n\"Tracker\"\non your phone");
+
     WiFiManager wifiManager;
     wifiManager.setConfigPortalTimeout(300); //5 Minutes
     wifiManager.setConnectTimeout(30);       //30 Seconds
-    bool res = wifiManager.startConfigPortal();
+    bool res = wifiManager.startConfigPortal("Coronatracker");
 
     buttonTicker.detach();
     if (res)
