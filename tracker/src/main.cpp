@@ -314,7 +314,6 @@ void showLocalTimeOnDisplay(struct tm timeinfo)
 
 bool initializeTime()
 {
-    tft.setTextSize(2);
     struct tm timeinfo;
     int start = millis();
     const int WAITTIME = 180000; //3 Minutes
