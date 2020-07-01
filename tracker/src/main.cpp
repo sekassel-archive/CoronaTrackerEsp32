@@ -225,16 +225,23 @@ void configureWifi()
     ESP.restart();
 }
 
-void printLocalTime()
+bool initializeTime()
 {
-    Serial.print("Local Time: ");
     struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
-    {
-        Serial.println("Failed to obtain time");
-        return;
-    }
+    int start = millis();
+    const int WAITTIME = 180000; //3 Minutes
+
+    do {
+        if((millis() - start) >= WAITTIME) {
+            return false;
+        }
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        delay(500);
+
+    } while(!getLocalTime(&timeinfo));
+    Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    return true;
 }
 
 void setHTTPFlag()
@@ -316,8 +323,13 @@ void setup()
         digitalWrite(LED_PIN, LOW);
 
         //Getting Time
-        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-        printLocalTime();
+        Serial.println("Initializing Time");
+        if(!initializeTime()) {
+            Serial.println("Initializing failed");
+            digitalWrite(LED_PIN, HIGH);
+            delay(10000);
+            ESP.restart();
+        }
 
         //Deactivating Wifi
         disconnectWifi();
