@@ -312,19 +312,26 @@ void showLocalTimeOnDisplay(struct tm timeinfo)
     delay(10000);
 }
 
-void initializeTime()
+bool initializeTime()
 {
-    Serial.print("Initializing Time...");
     struct tm timeinfo;
+    int start = millis();
+    const int WAITTIME = 180000; //3 Minutes
+
     do
     {
+        if ((millis() - start) >= WAITTIME)
+        {
+            return false;
+        }
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         delay(500);
-        Serial.print(".");
+
     } while (!getLocalTime(&timeinfo));
-    Serial.print("\nLocal Time: ");
+    Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
     showLocalTimeOnDisplay(timeinfo);
+    return true;
 }
 
 void setHTTPFlag()
@@ -400,7 +407,6 @@ void showRequestDelayOnDisplay()
     if (request_delay_seconds + currentHoursInSeconds + currentMinutesInSeconds + timeinfo.tm_sec >= DAY)
     {
         timeinfo.tm_wday += 1;
-
     }
 
     if ((request_delay_seconds % HOUR) + currentMinutesInSeconds + timeinfo.tm_sec >= HOUR)
@@ -476,7 +482,14 @@ void setup()
         digitalWrite(LED_PIN, LOW);
 
         //Getting Time
-        initializeTime();
+        Serial.println("Initializing Time");
+        if (!initializeTime())
+        {
+            Serial.println("Initializing failed");
+            digitalWrite(LED_PIN, HIGH);
+            delay(10000);
+            ESP.restart();
+        }
 
         //Deactivating Wifi
         disconnectWifi();
