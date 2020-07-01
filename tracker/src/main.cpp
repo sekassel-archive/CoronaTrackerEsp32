@@ -33,7 +33,7 @@ const int ENCOUNTERS_NEEDED = 10;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
-const static int REQUEST_DELAY_SECONDS = 60;              //60 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 //Time Constants
@@ -151,6 +151,45 @@ bool fileContainsString(const char *path, std::string str)
     return false;
 }
 
+void showIsInfectedOnDisplay(bool metInfected)
+{
+    if (!metInfected)
+    {
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextSize(2);
+        tft.setCursor(0, 1);
+        tft.print("\nEverything\nis fine.");
+        delay(10000);
+    }
+    else
+    {
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextSize(2);
+        tft.setCursor(0, 1);
+        tft.print("You've met\nsomeone who\nis infected.\nPlease go\nquarantine.");
+        while (true)
+        {
+            buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            //Button was pressed
+            if (buttonState == HIGH)
+            {
+                //First press
+                if (buttonState != lastButtonState)
+                {
+                    startPressed = millis();
+                }
+                else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
+                {
+                    break;
+                }
+            }
+
+            lastButtonState = buttonState;
+            delay(500);
+        }
+    }
+}
+
 void requestInfections()
 {
     Serial.println("Requesting infections from server.");
@@ -210,6 +249,11 @@ void requestInfections()
                 if (metInfected)
                 {
                     Serial.println("User has met someone infected!");
+                }
+                else
+                {
+                    Serial.println("You are not infected.");
+                    showIsInfectedOnDisplay(metInfected);
                 }
             }
             else
@@ -463,9 +507,8 @@ void setup()
         Serial.println("Initializing BLE");
         initBLE();
 
-        doScan = true;
-        showRequestDelayOnDisplay();
-        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        //Start a request upon startup
+        sendHTTPRequest = true;
     }
 }
 
