@@ -319,16 +319,18 @@ bool initializeTime()
     int start = millis();
     const int WAITTIME = 180000; //3 Minutes
 
-    do {
-        if((millis() - start) >= WAITTIME) {
+    do
+    {
+        if ((millis() - start) >= WAITTIME)
+        {
             return false;
         }
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         delay(500);
 
-    } while(!getLocalTime(&timeinfo));
+    } while (!getLocalTime(&timeinfo));
     Serial.print("Local Time: ");
-    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S"); 
+    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
     showLocalTimeOnDisplay(timeinfo);
     return true;
 }
@@ -406,7 +408,6 @@ void showRequestDelayOnDisplay()
     if (request_delay_seconds + currentHoursInSeconds + currentMinutesInSeconds + timeinfo.tm_sec >= DAY)
     {
         timeinfo.tm_wday += 1;
-
     }
 
     if ((request_delay_seconds % HOUR) + currentMinutesInSeconds + timeinfo.tm_sec >= HOUR)
@@ -483,7 +484,8 @@ void setup()
 
         //Getting Time
         Serial.println("Initializing Time");
-        if(!initializeTime()) {
+        if (!initializeTime())
+        {
             Serial.println("Initializing failed");
             digitalWrite(LED_PIN, HIGH);
             delay(10000);
