@@ -33,8 +33,13 @@ const int ENCOUNTERS_NEEDED = 10;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
-const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
+const static int REQUEST_DELAY_SECONDS = 60;              //60 Seconds
 //const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
+
+//Time Constants
+const static int HOUR = 3600;
+const static int MINUTE = 60;
+const static int DAY = 86400;
 
 const String SERVER_URL = "https://tracing.uniks.de";
 
@@ -68,7 +73,7 @@ void tftInit()
     tft.fillScreen(TFT_BLACK);
     tft.setTextColor(TFT_WHITE);
 
-    tft.setTextSize(1);//With size equals to 1, you can print 10 lines and about 27 characters per line
+    tft.setTextSize(1); //With size equals to 1, you can print 10 lines and about 27 characters per line
     tft.setCursor(0, 0);
 }
 
@@ -250,21 +255,25 @@ void configureWifi()
     ESP.restart();
 }
 
-void showLocalTimeOnDisplay(struct tm timeinfo){
+void showLocalTimeOnDisplay(struct tm timeinfo)
+{
     tft.fillScreen(TFT_BLACK);
     tft.setTextSize(2);
-    tft.print(&timeinfo, "%A\n%B %d %Y\n%H:%M:%S");//could look better when centered
+    tft.print(&timeinfo, "%A\n%B %d %Y\n%H:%M:%S"); //could look better when centered
+    delay(10000);
 }
 
-void printLocalTime()
+void initializeTime()
 {
-    Serial.print("Local Time: ");
+    Serial.print("Initializing Time...");
     struct tm timeinfo;
-    if (!getLocalTime(&timeinfo))
+    do
     {
-        Serial.println("Failed to obtain time");
-        return;
-    }
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        delay(500);
+        Serial.print(".");
+    } while (!getLocalTime(&timeinfo));
+    Serial.print("\nLocal Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
     showLocalTimeOnDisplay(timeinfo);
 }
@@ -275,7 +284,8 @@ void setHTTPFlag()
     sendHTTPRequest = true;
 }
 
-void showStartWifiMessageOnDisplay(){
+void showStartWifiMessageOnDisplay()
+{
     tft.fillScreen(TFT_BLACK);
     tft.setTextSize(2);
     tft.print("Press Button\nfor 4 Seconds\nto start \nWifi-\nConfiguration");
@@ -325,6 +335,65 @@ void deinitBLE()
     delete pService;
 }
 
+void showRequestDelayOnDisplay()
+{
+    struct tm timeinfo;
+    Serial.printf("Time get: %d\n", getLocalTime(&timeinfo));
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextSize(2);
+    tft.setCursor(0, 0);
+    tft.print("Next Wifi-\nConnection:\n");
+    //convert REQUEST_DELAY_SECONDS into hour, minute format
+    int currentHoursInSeconds = timeinfo.tm_hour * HOUR;
+    int currentMinutesInSeconds = timeinfo.tm_min * MINUTE;
+    int request_delay_seconds = REQUEST_DELAY_SECONDS;
+
+    if (request_delay_seconds + currentHoursInSeconds + currentMinutesInSeconds + timeinfo.tm_sec >= DAY)
+    {
+        timeinfo.tm_wday += 1;
+
+    }
+
+    if ((request_delay_seconds % HOUR) + currentMinutesInSeconds + timeinfo.tm_sec >= HOUR)
+    {
+        timeinfo.tm_hour = (timeinfo.tm_hour + (request_delay_seconds / HOUR) + 1) % 24;
+        request_delay_seconds = REQUEST_DELAY_SECONDS % HOUR;
+
+        if ((request_delay_seconds % MINUTE) + timeinfo.tm_sec >= MINUTE)
+        {
+            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE) + 1) % 60;
+            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
+            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
+        }
+        else
+        {
+            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE)) % 60;
+            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
+            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
+        }
+    }
+    else
+    {
+        timeinfo.tm_hour = (timeinfo.tm_hour + (request_delay_seconds / HOUR)) % 24;
+        request_delay_seconds = REQUEST_DELAY_SECONDS % HOUR;
+
+        if ((request_delay_seconds % MINUTE) + timeinfo.tm_sec >= MINUTE)
+        {
+            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE) + 1) % 60;
+            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
+            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
+        }
+        else
+        {
+            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE)) % 60;
+            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
+            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
+        }
+    }
+
+    tft.print(&timeinfo, "%H:%M:%S\n%A");
+}
+
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
@@ -358,8 +427,7 @@ void setup()
         digitalWrite(LED_PIN, LOW);
 
         //Getting Time
-        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-        printLocalTime();
+        initializeTime();
 
         //Deactivating Wifi
         disconnectWifi();
@@ -396,6 +464,7 @@ void setup()
         initBLE();
 
         doScan = true;
+        showRequestDelayOnDisplay();
         wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
     }
 }
@@ -470,6 +539,7 @@ void loop()
         wifiTicker.detach();
         deinitBLE();
         requestInfections();
+        showRequestDelayOnDisplay();
         sendHTTPRequest = false;
         doScan = true;
         wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
