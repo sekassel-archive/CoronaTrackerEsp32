@@ -1,4 +1,4 @@
-#include "ble.h"
+#include "coronatracker-ble.h"
 
 static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 char device_id[30] = "Hallo Welt COVID";      //ID to be braodcasted
