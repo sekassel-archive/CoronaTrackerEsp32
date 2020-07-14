@@ -2,8 +2,7 @@
 #include <Ticker.h>
 #include "SPIFFS.h"
 
-//BLE Libraries
-#include <BLEDevice.h>
+#include "ble.h"
 
 //WiFi Libraries
 #include <WifiManager.h>
@@ -21,10 +20,6 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
-//BLE Variables
-static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
-
-char device_id[30] = "Hallo Welt COVID"; //ID to be braodcasted
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
@@ -57,8 +52,6 @@ const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
-std::multimap<std::string, time_t> recentEncounterMap;
-
 /*  Before you can use the display on the esp32devOTA you have to change two lines.
 *   Follow Step 3 of the following URL.
 *   https://github.com/Xinyuan-LilyGO/LilyGo-T-Wristband/blob/master/examples/T-Wristband-LSM9DS1/README.MD
@@ -76,25 +69,6 @@ void tftInit()
     tft.setTextSize(1); //With size equals to 1, you can print 10 lines and about 27 characters per line
     tft.setCursor(0, 0);
 }
-
-class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
-{
-    //Called for each advertising BLE server.
-    void onResult(BLEAdvertisedDevice advertisedDevice)
-    {
-        //Checking for other Coviddevices
-        if (advertisedDevice.haveServiceData() && advertisedDevice.getServiceDataUUID().equals(serviceUUID))
-        {
-            Serial.print("Found Covid Device: ");
-            Serial.print(advertisedDevice.toString().c_str());
-            Serial.print(" --> ID: ");
-            Serial.println(advertisedDevice.getServiceData().c_str());
-
-            recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
-        }
-    }
-};
-MyAdvertisedDeviceCallbacks myCallbacks;
 
 bool disconnectWifi()
 {
@@ -347,50 +321,6 @@ void showStartWifiMessageOnDisplay()
     tft.print("Press Button\nfor 4 Seconds\nto start \nWifi-\nConfiguration");
 }
 
-BLEServer *pServer;
-BLEService *pService;
-BLEAdvertising *pAdvertising;
-BLEScan *pBLEScan;
-
-void initBLE()
-{
-    //Setting up Server
-    Serial.println("Setting Up Server");
-    BLEDevice::init("CovidTracker");
-    pServer = BLEDevice::createServer();
-    pService = pServer->createService(serviceUUID);
-    pService->start();
-
-    //Service Data
-    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    oAdvertisementData.setServiceData(serviceUUID, device_id);
-
-    Serial.println("Setting up Advertisment");
-    pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(serviceUUID);
-    pAdvertising->setAdvertisementData(oAdvertisementData);
-    pAdvertising->setMinPreferred(0x06);
-    pAdvertising->setMinPreferred(0x12);
-    pAdvertising->start();
-
-    //Setting up Scan
-    Serial.println("Setting up Scan");
-    pBLEScan = BLEDevice::getScan();
-    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(100);
-    pBLEScan->setWindow(99); // less or equal setInterval value
-}
-
-void deinitBLE()
-{
-    pAdvertising->stop();
-    pBLEScan->stop();
-    BLEDevice::deinit(false);
-    delete pServer;
-    delete pService;
-}
-
 void showRequestDelayOnDisplay()
 {
     struct tm timeinfo;
@@ -535,15 +465,15 @@ void loop()
     if (doScan)
     {
         Serial.println("Starting Scan...");
-        int result = (BLEDevice::getScan()->start(1, false)).getCount();
-        Serial.printf("Devices Found: %i\n", result);
+        scanForCovidDevices((uint32_t)1);
 
         File file = SPIFFS.open(path, FILE_APPEND);
         if (file)
         {
-            for (auto it = recentEncounterMap.begin(), end = recentEncounterMap.end(); it != end; it = recentEncounterMap.upper_bound(it->first))
+            auto recentEncounters = getRecentEncounters();
+            for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
             {
-                if (recentEncounterMap.count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(path, it->first))
+                if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(path, it->first))
                 {
                     std::string stringToAppend = it->first + ";";
                     if (file.print(stringToAppend.c_str()))
@@ -559,12 +489,12 @@ void loop()
 
             //We delete entries that are older than 15 minutes
             time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
-            for (auto it = recentEncounterMap.cbegin(), next_it = it; it != recentEncounterMap.cend(); it = next_it)
+            for (auto it = recentEncounters->cbegin(), next_it = it; it != recentEncounters->cend(); it = next_it)
             {
                 ++next_it;
                 if (it->second < fifteenMinutesAgo)
                 {
-                    recentEncounterMap.erase(it);
+                    recentEncounters->erase(it);
                 }
             }
         }
