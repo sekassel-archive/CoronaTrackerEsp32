@@ -7,5 +7,5 @@
 
 bool disconnectWifi();
 bool connectToStoredWifi();
-bool requestInfections();
+std::pair<bool, std::vector<long>> requestInfections();
 bool configureWifi();

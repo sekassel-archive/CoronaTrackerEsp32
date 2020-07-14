@@ -1,5 +1,4 @@
 #include "coronatracker-wifi.h"
-#include "coronatracker-spiffs.h"
 
 bool disconnectWifi()
 {
@@ -15,18 +14,19 @@ bool connectToStoredWifi()
     return WiFi.waitForConnectResult() == WL_CONNECTED;
 }
 
-//TODO Give back Error if occuring
-bool requestInfections()
+std::pair<bool, std::vector<long>> requestInfections()
 {
     Serial.println("Requesting infections from server.");
+
+    std::vector<long> infectionVector;
+
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi - Retrying later");
-        return false;
+        return std::make_pair(false, infectionVector);;
     }
     else
     {
-        bool metInfected = false;
         HTTPClient http;
 
         http.begin(String(SERVER_URL) + "/infections");
@@ -50,8 +50,6 @@ bool requestInfections()
                 JsonObject responseJSON = doc.as<JsonObject>();
                 for (JsonPair pair : responseJSON)
                 {
-                    Serial.print(pair.key().c_str());
-                    Serial.print(" : ");
                     if (pair.value().is<JsonArray>())
                     {
                         JsonArray array = pair.value().as<JsonArray>();
@@ -59,44 +57,27 @@ bool requestInfections()
                         {
                             if (elem.is<long>())
                             {
-                                long l = elem;
-                                Serial.printf("%ld ", l);
-
-                                if (fileContainsString(String(l).c_str()))
-                                {
-                                    Serial.print("(I) ");
-                                    metInfected = true;
-                                }
+                                infectionVector.push_back(elem);
                             }
                         }
                     }
-                    Serial.println();
-                }
-
-                if (metInfected)
-                {
-                    Serial.println("User has met someone infected!");
-                }
-                else
-                {
-                    Serial.println("You are not infected.");
                 }
             }
             else
             {
                 Serial.printf("deserializeJson() failed with code %s\n", err.c_str());
+                return std::make_pair(false, infectionVector);;
             }
         }
         else
         {
             Serial.println("Error on HTTP request");
+            return std::make_pair(false, infectionVector);;
         }
-
         http.end();
-        delay(1000);
         disconnectWifi();
 
-        return metInfected;
+        return std::make_pair(true, infectionVector);
     }
 }
 

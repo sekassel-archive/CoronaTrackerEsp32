@@ -353,8 +353,26 @@ void loop()
     {
         wifiTicker.detach();
         deinitBLE();
-        bool metInfected = requestInfections();
-        showIsInfectedOnDisplay(metInfected);
+        auto result = requestInfections();
+        if (!result.first)
+        {
+            Serial.println("Failed to request infections");
+        }
+        else
+        {
+            auto infectionVector = result.second;
+            bool metInfected = false;
+
+            for (long id : infectionVector)
+            {
+                if (fileContainsString(String(id).c_str()))
+                {
+                    Serial.printf("User has me someone infected: %ld\n", id);
+                    metInfected = true;
+                }
+            }
+            showIsInfectedOnDisplay(metInfected);
+        }
         showRequestDelayOnDisplay();
         sendHTTPRequest = false;
         doScan = true;
