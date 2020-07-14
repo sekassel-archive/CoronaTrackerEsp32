@@ -3,11 +3,8 @@
 #include "SPIFFS.h"
 
 #include "coronatracker-ble.h"
-
-//WiFi Libraries
-#include <WifiManager.h>
-#include <HTTPClient.h>
-#include <ArduinoJSON.h>
+#include "coronatracker-wifi.h"
+#include "coronatracker-file.h"
 
 //display Libraries
 #include <SPI.h>
@@ -23,7 +20,7 @@ TFT_eSPI tft = TFT_eSPI();
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
-const char *path = "/encounters.txt";
+
 const int ENCOUNTERS_NEEDED = 10;
 
 //Wifi Variables
@@ -35,8 +32,6 @@ const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
 const static int HOUR = 3600;
 const static int MINUTE = 60;
 const static int DAY = 86400;
-
-const String SERVER_URL = "https://tracing.uniks.de";
 
 int buttonState = 0;
 int lastButtonState = 0;
@@ -70,59 +65,10 @@ void tftInit()
     tft.setCursor(0, 0);
 }
 
-bool disconnectWifi()
-{
-    Serial.println("Deactivating Wifi");
-    return WiFi.disconnect(true, false);
-}
-
-bool connectToStoredWifi()
-{
-    Serial.println("Trying to establish to Wifi-Connection.");
-    WiFi.mode(WIFI_STA);
-    WiFi.begin();
-    return WiFi.waitForConnectResult() == WL_CONNECTED;
-}
-
 void blinkLED()
 {
     int state = digitalRead(LED_PIN);
     digitalWrite(LED_PIN, !state);
-}
-
-bool fileContainsString(const char *path, std::string str)
-{
-    int index = 0;
-    int len = str.length();
-
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
-    {
-        return false;
-    }
-
-    if (len == 0)
-    {
-        return false;
-    }
-
-    while (file.available())
-    {
-        char c = file.read();
-        if (c != str[index])
-        {
-            index = 0;
-        }
-
-        if (c == str[index])
-        {
-            if (++index >= len)
-            {
-                return true;
-            }
-        }
-    }
-    return false;
 }
 
 void showIsInfectedOnDisplay(bool metInfected)
@@ -162,120 +108,6 @@ void showIsInfectedOnDisplay(bool metInfected)
             delay(500);
         }
     }
-}
-
-void requestInfections()
-{
-    Serial.println("Requesting infections from server.");
-    if (!connectToStoredWifi())
-    {
-        Serial.println("Could not Connect to Wifi - Retrying later");
-    }
-    else
-    {
-        HTTPClient http;
-
-        http.begin(SERVER_URL + "/infections");
-        int httpCode = http.GET();
-
-        Serial.print("ReturnCode: ");
-        Serial.println(httpCode);
-        if (httpCode > 0)
-        {
-            Serial.println("---------- Message ----------");
-            String response = http.getString();
-            Serial.println(response);
-            Serial.println("-----------------------------");
-
-            //TODO: Maybe calculate approximate size beforehand
-            DynamicJsonDocument doc(2048);
-            DeserializationError err = deserializeJson(doc, response);
-
-            if (!err)
-            {
-                bool metInfected = false;
-                JsonObject responseJSON = doc.as<JsonObject>();
-                for (JsonPair pair : responseJSON)
-                {
-                    Serial.print(pair.key().c_str());
-                    Serial.print(" : ");
-                    if (pair.value().is<JsonArray>())
-                    {
-                        JsonArray array = pair.value().as<JsonArray>();
-                        for (JsonVariant elem : array)
-                        {
-                            if (elem.is<long>())
-                            {
-                                long l = elem;
-                                Serial.printf("%ld ", l);
-
-                                if (fileContainsString(path, String(l).c_str()))
-                                {
-                                    Serial.print("(I) ");
-                                    metInfected = true;
-                                }
-                            }
-                        }
-                    }
-                    Serial.println();
-                }
-
-                if (metInfected)
-                {
-                    Serial.println("User has met someone infected!");
-                }
-                else
-                {
-                    Serial.println("You are not infected.");
-                }
-                showIsInfectedOnDisplay(metInfected);
-            }
-            else
-            {
-                Serial.printf("deserializeJson() failed with code %s\n", err.c_str());
-            }
-        }
-        else
-        {
-            Serial.println("Error on HTTP request");
-        }
-
-        http.end();
-        delay(1000);
-        disconnectWifi();
-    }
-}
-
-void configureWifi()
-{
-    Serial.println("Starting WifiManger-Config");
-    buttonTicker.attach_ms(500, blinkLED);
-
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextSize(2);
-    tft.setCursor(0, 0);
-    tft.print("Connect to\n\"Tracker\"\non your phone");
-
-    WiFiManager wifiManager;
-    wifiManager.setConfigPortalTimeout(300); //5 Minutes
-    wifiManager.setConnectTimeout(30);       //30 Seconds
-    bool res = wifiManager.startConfigPortal("Coronatracker");
-
-    buttonTicker.detach();
-    if (res)
-    {
-        Serial.println("We connected to Wifi...");
-        digitalWrite(LED_PIN, LOW);
-    }
-    else
-    {
-        Serial.println("Could not connect to Wifi");
-        digitalWrite(LED_PIN, HIGH);
-        wifiManager.resetSettings();
-        //Delay so feedback can be seen on LED
-        delay(5000);
-    }
-    ESP.restart();
 }
 
 void showLocalTimeOnDisplay(struct tm timeinfo)
@@ -437,10 +269,10 @@ void setup()
         //Remove comment to reset file
         //SPIFFS.remove(path);
 
-        if (!SPIFFS.exists(path))
+        if (!SPIFFS.exists(ENCOUNTERS_PATH))
         {
             Serial.println("Creating File");
-            File file = SPIFFS.open(path);
+            File file = SPIFFS.open(ENCOUNTERS_PATH);
 
             if (!file)
             {
@@ -467,13 +299,13 @@ void loop()
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)1);
 
-        File file = SPIFFS.open(path, FILE_APPEND);
+        File file = SPIFFS.open(ENCOUNTERS_PATH, FILE_APPEND);
         if (file)
         {
             auto recentEncounters = getRecentEncounters();
             for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
             {
-                if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(path, it->first))
+                if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(it->first, ENCOUNTERS_PATH))
                 {
                     std::string stringToAppend = it->first + ";";
                     if (file.print(stringToAppend.c_str()))
@@ -518,7 +350,29 @@ void loop()
             }
             else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
             {
-                configureWifi();
+                Serial.println("Starting WifiManger-Config");
+                buttonTicker.attach_ms(500, blinkLED);
+
+                tft.fillScreen(TFT_BLACK);
+                tft.setTextSize(2);
+                tft.setCursor(0, 0);
+                tft.print("Connect to\n\"Tracker\"\non your phone");
+                bool res = configureWifi();
+
+                buttonTicker.detach();
+                if (res)
+                {
+                    Serial.println("We connected to Wifi...");
+                    digitalWrite(LED_PIN, LOW);
+                }
+                else
+                {
+                    Serial.println("Could not connect to Wifi");
+                    digitalWrite(LED_PIN, HIGH);
+                    //Delay so feedback can be seen on LED
+                    delay(5000);
+                }
+                ESP.restart();
             }
         }
 
@@ -529,7 +383,8 @@ void loop()
     {
         wifiTicker.detach();
         deinitBLE();
-        requestInfections();
+        bool metInfected = requestInfections();
+        showIsInfectedOnDisplay(metInfected);
         showRequestDelayOnDisplay();
         sendHTTPRequest = false;
         doScan = true;
