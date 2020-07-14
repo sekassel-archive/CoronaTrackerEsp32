@@ -1,5 +1,5 @@
 #include "coronatracker-wifi.h"
-#include "coronatracker-file.h"
+#include "coronatracker-spiffs.h"
 
 bool disconnectWifi()
 {

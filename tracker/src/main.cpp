@@ -1,10 +1,9 @@
 #include <Arduino.h>
 #include <Ticker.h>
-#include "SPIFFS.h"
 
 #include "coronatracker-ble.h"
 #include "coronatracker-wifi.h"
-#include "coronatracker-file.h"
+#include "coronatracker-spiffs.h"
 
 //display Libraries
 #include <SPI.h>
@@ -19,7 +18,6 @@ TFT_eSPI tft = TFT_eSPI();
 
 bool doScan = false;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
-
 
 const int ENCOUNTERS_NEEDED = 10;
 
@@ -258,30 +256,11 @@ void setup()
         delay(1000);
 
         Serial.println("Initializing SPIFFS");
-        if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
+        if (!initSPIFFS())
         {
-            Serial.println("Initializing failed");
             digitalWrite(LED_PIN, HIGH);
             delay(10000);
             ESP.restart();
-        }
-
-        //Remove comment to reset file
-        //SPIFFS.remove(path);
-
-        if (!SPIFFS.exists(ENCOUNTERS_PATH))
-        {
-            Serial.println("Creating File");
-            File file = SPIFFS.open(ENCOUNTERS_PATH);
-
-            if (!file)
-            {
-                Serial.println("There was an error creating the file");
-                digitalWrite(LED_PIN, HIGH);
-                delay(10000);
-                ESP.restart();
-            }
-            file.close();
         }
 
         Serial.println("Initializing BLE");
@@ -299,42 +278,33 @@ void loop()
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)1);
 
-        File file = SPIFFS.open(ENCOUNTERS_PATH, FILE_APPEND);
-        if (file)
+        auto recentEncounters = getRecentEncounters();
+        for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
         {
-            auto recentEncounters = getRecentEncounters();
-            for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
+            if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(it->first, ENCOUNTERS_PATH))
             {
-                if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(it->first, ENCOUNTERS_PATH))
+                std::string stringToAppend = it->first + ";";
+                if (writeIDtoFile(stringToAppend))
                 {
-                    std::string stringToAppend = it->first + ";";
-                    if (file.print(stringToAppend.c_str()))
-                    {
-                        Serial.printf("Successfully added %s to file.\n", it->first.c_str());
-                    }
-                    else
-                    {
-                        Serial.printf("Could not print id to file: %s\n", it->first.c_str());
-                    }
+                    Serial.printf("Successfully added %s to file.\n", it->first.c_str());
+                }
+                else
+                {
+                    Serial.printf("Could not print id to file: %s\n", it->first.c_str());
                 }
             }
+        }
 
-            //We delete entries that are older than 15 minutes
-            time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
-            for (auto it = recentEncounters->cbegin(), next_it = it; it != recentEncounters->cend(); it = next_it)
+        //We delete entries that are older than 15 minutes
+        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
+        for (auto it = recentEncounters->cbegin(), next_it = it; it != recentEncounters->cend(); it = next_it)
+        {
+            ++next_it;
+            if (it->second < fifteenMinutesAgo)
             {
-                ++next_it;
-                if (it->second < fifteenMinutesAgo)
-                {
-                    recentEncounters->erase(it);
-                }
+                recentEncounters->erase(it);
             }
         }
-        else
-        {
-            Serial.println("Could not open encounters.txt");
-        }
-        file.close();
         delay(10000); //Scan Every 10 Seconds
     }
     else if (waitForConfig)
