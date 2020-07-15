@@ -155,32 +155,31 @@ void setup()
     }
     else
     {
+        digitalWrite(LED_PIN, LOW);
         if (firstBoot)
         {
             firstBoot = false;
 
+            //Getting Time
+            if (!connectToStoredWifi())
+            {
+                Serial.println("Could not connect to Wifi!");
+            }
+
+            Serial.println("Initializing Time");
+            if (!initializeTime())
+            {
+                restartAfterErrorWithDelay("Time initialize failed");
+            }
+
+            Serial.println("Disconnecting Wifi");
+            if (!disconnectWifi())
+            {
+                Serial.println("Disconnect Failed");
+            }
+
             //Start a request upon first boot
             setNextAction(ACTION_INFECTION_REQUEST);
-        }
-
-        //Getting Time
-        if (!connectToStoredWifi())
-        {
-            Serial.println("Could not connect to Wifi!");
-        }
-        digitalWrite(LED_PIN, LOW);
-
-        //TODO Test if time needs to be reinitialized or not
-        Serial.println("Initializing Time");
-        if (!initializeTime())
-        {
-            restartAfterErrorWithDelay("Time initialize failed");
-        }
-
-        Serial.println("Disconnecting Wifi");
-        if (!disconnectWifi())
-        {
-            Serial.println("Disconnect Failed");
         }
 
         //TODO Test if init needed after deep sleep
