@@ -68,6 +68,14 @@ void setHTTPFlag()
     sendHTTPRequest = true;
 }
 
+void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
+{
+    digitalWrite(LED_PIN, HIGH);
+    Serial.println(errorMessage);
+    delay(delayMS);
+    ESP.restart();
+}
+
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
@@ -104,26 +112,26 @@ void setup()
         Serial.println("Initializing Time");
         if (!initializeTime())
         {
-            Serial.println("Initializing failed");
-            digitalWrite(LED_PIN, HIGH);
-            delay(10000);
-            ESP.restart();
+            restartAfterErrorWithDelay("Time initialize failed");
         }
 
-        //Deactivating Wifi
-        disconnectWifi();
-        delay(1000);
+        Serial.println("Disconnecting Wifi");
+        if (!disconnectWifi())
+        {
+            Serial.println("Disconnect Failed");
+        }
 
         Serial.println("Initializing SPIFFS");
         if (!initSPIFFS())
         {
-            digitalWrite(LED_PIN, HIGH);
-            delay(10000);
-            ESP.restart();
+            restartAfterErrorWithDelay("SPIFFS initialize failed");
         }
 
         Serial.println("Initializing BLE");
-        initBLE();
+        if (!initBLE())
+        {
+            restartAfterErrorWithDelay("BLE initialize failed");
+        }
 
         //Start a request upon startup
         sendHTTPRequest = true;
