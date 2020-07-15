@@ -10,7 +10,13 @@
 #define TP_PWR_PIN 25
 #define TP_PIN_PIN 33
 
-bool doScan = false;
+#define ACTION_NOTHING 0
+#define ACTION_ADVERTISE 1
+#define ACTION_SCAN 2
+#define ACTION_WIFI_CONFIG 3
+#define ACTION_INFECTION_REQUEST 4
+
+int nextAction = 0;
 const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
 
 const int ENCOUNTERS_NEEDED = 10;
@@ -26,8 +32,6 @@ int startPressed = 0;
 
 Ticker wifiTicker;
 Ticker buttonTicker;
-bool waitForConfig = false;
-bool sendHTTPRequest = false;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -62,18 +66,38 @@ bool initializeTime()
     return true;
 }
 
-void setHTTPFlag()
-{
-    doScan = false;
-    sendHTTPRequest = true;
-}
-
 void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
 {
     digitalWrite(LED_PIN, HIGH);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
+}
+
+void setNextAction(int action)
+{
+    switch (action)
+    {
+    case ACTION_SCAN:
+        Serial.println("Next: Scanning");
+        nextAction = ACTION_SCAN;
+        break;
+    case ACTION_WIFI_CONFIG:
+        Serial.println("Next: Wifi-Config");
+        nextAction = ACTION_WIFI_CONFIG;
+        break;
+    case ACTION_INFECTION_REQUEST:
+        Serial.println("Next: Infection-Request");
+        nextAction = ACTION_INFECTION_REQUEST;
+        break;
+    case ACTION_ADVERTISE:
+        Serial.println("Next: Advertising");
+        nextAction = ACTION_ADVERTISE;
+        break;
+    default:
+        nextAction = ACTION_NOTHING;
+        break;
+    }
 }
 
 void setup()
@@ -101,7 +125,7 @@ void setup()
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
         digitalWrite(LED_PIN, HIGH);
-        waitForConfig = true;
+        setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
@@ -134,13 +158,13 @@ void setup()
         }
 
         //Start a request upon startup
-        sendHTTPRequest = true;
+        setNextAction(ACTION_INFECTION_REQUEST);
     }
 }
 
 void loop()
 {
-    if (doScan)
+    if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)1);
@@ -174,7 +198,7 @@ void loop()
         }
         delay(10000); //Scan Every 10 Seconds
     }
-    else if (waitForConfig)
+    else if (nextAction == ACTION_WIFI_CONFIG)
     {
         buttonState = digitalRead(TP_PIN_PIN); // read the button input
         //Button was pressed
@@ -213,7 +237,7 @@ void loop()
         lastButtonState = buttonState;
         delay(500);
     }
-    else if (sendHTTPRequest)
+    else if (nextAction == ACTION_INFECTION_REQUEST)
     {
         wifiTicker.detach();
         deinitBLE();
@@ -239,9 +263,8 @@ void loop()
             delay(10000);
         }
         showRequestDelayOnDisplay();
-        sendHTTPRequest = false;
-        doScan = true;
-        wifiTicker.attach(REQUEST_DELAY_SECONDS, setHTTPFlag);
+        nextAction = ACTION_SCAN;
+        wifiTicker.attach(REQUEST_DELAY_SECONDS, setNextAction, ACTION_INFECTION_REQUEST);
         initBLE();
         delay(500);
     }
