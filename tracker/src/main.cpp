@@ -160,10 +160,7 @@ void setup()
         //Start a request upon startup
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-}
 
-void loop()
-{
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
@@ -268,4 +265,11 @@ void loop()
         initBLE();
         delay(500);
     }
+    //TODO: Go into deep sleep instead
+    ESP.restart();
+}
+
+void loop()
+{
+    //Never called
 }
