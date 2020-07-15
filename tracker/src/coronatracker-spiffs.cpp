@@ -1,17 +1,17 @@
 #include "coronatracker-spiffs.h"
 
-bool initSPIFFS()
+bool initSPIFFS(bool createEncountersFile)
 {
-    if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
+    if (!SPIFFS.begin(true))
     {
         Serial.println("Initializing failed");
         return false;
     }
 
     //Remove comment to reset file
-    //SPIFFS.remove(path);
+    //SPIFFS.remove(ENCOUNTERS_PATH);
 
-    if (!SPIFFS.exists(ENCOUNTERS_PATH))
+    if (createEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH))
     {
         Serial.println("Creating File");
         File file = SPIFFS.open(ENCOUNTERS_PATH);
@@ -63,7 +63,7 @@ bool fileContainsString(std::string str, const char *path)
 
 bool writeIDtoFile(std::string id, const char *path)
 {
-    File file = SPIFFS.open(ENCOUNTERS_PATH, FILE_APPEND);
+    File file = SPIFFS.open(path, FILE_APPEND);
     if (!file)
     {
         return false;

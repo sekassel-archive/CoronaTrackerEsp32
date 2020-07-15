@@ -178,15 +178,20 @@ void setup()
                 Serial.println("Disconnect Failed");
             }
 
+            Serial.println("Initializing SPIFFS");
+            if (!initSPIFFS(true))
+            {
+                restartAfterErrorWithDelay("SPIFFS initialize failed");
+            }
+
             //Start a request upon first boot
             setNextAction(ACTION_INFECTION_REQUEST);
         }
 
-        //TODO Test if init needed after deep sleep
         if (nextAction != ACTION_ADVERTISE)
         {
             Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS())
+            if (!initSPIFFS(false))
             {
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
@@ -312,7 +317,7 @@ void setup()
             }
             showIsInfectedOnDisplay(metInfected);
             //TODO Change Behaviour on Infection
-            delay(60000);
+            delay(10000);
         }
         showRequestDelayOnDisplay();
     }
