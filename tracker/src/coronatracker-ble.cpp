@@ -28,7 +28,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
-void initBLE()
+bool initBLE()
 {
     //Setting up Server
     Serial.println("Setting Up Server");
@@ -56,6 +56,8 @@ void initBLE()
     pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
     pBLEScan->setInterval(100);
     pBLEScan->setWindow(99); // less or equal setInterval value
+
+    return true;
 }
 
 void deinitBLE()
