@@ -16,21 +16,26 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-int nextAction = 0;
-const static int SCAN_DELAY_MILLISECONDS = 10000; //10 Seconds
+#define SLEEP_INTERVAL 100000 //In microseconds --> 100 milliseconds
+
+#define BOOTS_UNTIL_SCAN 500
+#define BOOTS_UNTIL_INFECTION_REQUEST 30000
+
+//Saved during deep sleep mode
+RTC_DATA_ATTR int nextAction = 0;
+RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR bool firstBoot = true;
 
 const int ENCOUNTERS_NEEDED = 10;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
-const static int REQUEST_DELAY_SECONDS = 60;                //60 Seconds
-//const static int REQUEST_DELAY_SECONDS = 3600; // 1hour -> Final Time
 
 int buttonState = 0;
 int lastButtonState = 0;
 int startPressed = 0;
 
-Ticker wifiTicker;
 Ticker buttonTicker;
 
 //Time Variables
@@ -62,7 +67,7 @@ bool initializeTime()
     } while (!getLocalTime(&timeinfo));
     Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    showLocalTimeOnDisplay(timeinfo);
+    //showLocalTimeOnDisplay(timeinfo);
     return true;
 }
 
@@ -100,6 +105,28 @@ void setNextAction(int action)
     }
 }
 
+void goIntoDeepSleep()
+{
+    bootCount++;
+
+    //Every 500th boot equals roughly every Minute. Every 30000th boot equals (very) roughly 1 hour. This does not factor in constant times to sleep/wake up.
+    if (bootCount % BOOTS_UNTIL_INFECTION_REQUEST == 0)
+    {
+        setNextAction(ACTION_INFECTION_REQUEST);
+    }
+    else if (bootCount % 5 == 0)
+    {
+        setNextAction(ACTION_SCAN);
+    }
+    else
+    {
+        setNextAction(ACTION_ADVERTISE);
+    }
+
+    esp_sleep_enable_timer_wakeup(SLEEP_INTERVAL);
+    esp_deep_sleep_start();
+}
+
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
@@ -110,9 +137,6 @@ void setup()
     Serial.begin(115200);
     Serial.println("Serial initialized");
 
-    // initialize display
-    tftInit(REQUEST_DELAY_SECONDS);
-
     //Setting up pinModes
     Serial.println("Setting up pinModes");
     pinMode(LED_PIN, OUTPUT);
@@ -120,19 +144,33 @@ void setup()
     pinMode(TP_PWR_PIN, PULLUP);
     digitalWrite(TP_PWR_PIN, HIGH);
 
-    //Connection Failed
-    if (!connectToStoredWifi())
+    //Wifi not initialized
+    if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
+        tftInit();
         digitalWrite(LED_PIN, HIGH);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        digitalWrite(LED_PIN, LOW);
+        if (firstBoot)
+        {
+            firstBoot = false;
+
+            //Start a request upon first boot
+            setNextAction(ACTION_INFECTION_REQUEST);
+        }
 
         //Getting Time
+        if (!connectToStoredWifi())
+        {
+            Serial.println("Could not connect to Wifi!");
+        }
+        digitalWrite(LED_PIN, LOW);
+
+        //TODO Test if time needs to be reinitialized or not
         Serial.println("Initializing Time");
         if (!initializeTime())
         {
@@ -145,20 +183,29 @@ void setup()
             Serial.println("Disconnect Failed");
         }
 
-        Serial.println("Initializing SPIFFS");
-        if (!initSPIFFS())
+        //TODO Test if init needed after deep sleep
+        if (nextAction != ACTION_ADVERTISE)
         {
-            restartAfterErrorWithDelay("SPIFFS initialize failed");
+            Serial.println("Initializing SPIFFS");
+            if (!initSPIFFS())
+            {
+                restartAfterErrorWithDelay("SPIFFS initialize failed");
+            }
         }
 
-        Serial.println("Initializing BLE");
-        if (!initBLE())
+        if (nextAction == ACTION_ADVERTISE || nextAction == ACTION_SCAN)
         {
-            restartAfterErrorWithDelay("BLE initialize failed");
+            Serial.println("Initializing BLE");
+            if (!initBLE())
+            {
+                restartAfterErrorWithDelay("BLE initialize failed");
+            }
         }
 
-        //Start a request upon startup
-        setNextAction(ACTION_INFECTION_REQUEST);
+        if (nextAction == ACTION_INFECTION_REQUEST)
+        {
+            tftInit();
+        }
     }
 
     if (nextAction == ACTION_SCAN)
@@ -166,6 +213,7 @@ void setup()
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)1);
 
+        //TODO Maybe move recentEncounters to Main
         auto recentEncounters = getRecentEncounters();
         for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
         {
@@ -193,51 +241,58 @@ void setup()
                 recentEncounters->erase(it);
             }
         }
-        delay(10000); //Scan Every 10 Seconds
+
+        for (auto it = recentEncounters->cbegin(); it != recentEncounters->cend(); ++it)
+        {
+            Serial.printf("%s -> %ld\n", it->first.c_str(), it->second);
+        }
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
-        buttonState = digitalRead(TP_PIN_PIN); // read the button input
-        //Button was pressed
-        if (buttonState == HIGH)
+        while (true)
         {
-            //First press
-            if (buttonState != lastButtonState)
+            buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            //Button was pressed
+            if (buttonState == HIGH)
             {
-                startPressed = millis();
-            }
-            else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
-            {
-                Serial.println("Starting WifiManger-Config");
-                buttonTicker.attach_ms(500, blinkLED);
-
-                configureWifiMessageOnDisplay();
-                bool res = configureWifi();
-
-                buttonTicker.detach();
-                if (res)
+                //First press
+                if (buttonState != lastButtonState)
                 {
-                    Serial.println("We connected to Wifi...");
-                    digitalWrite(LED_PIN, LOW);
+                    startPressed = millis();
                 }
-                else
+                else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
                 {
-                    Serial.println("Could not connect to Wifi");
-                    digitalWrite(LED_PIN, HIGH);
-                    //Delay so feedback can be seen on LED
-                    delay(5000);
+                    Serial.println("Starting WifiManger-Config");
+                    buttonTicker.attach_ms(500, blinkLED);
+
+                    configureWifiMessageOnDisplay();
+                    bool res = configureWifi();
+
+                    buttonTicker.detach();
+                    if (res)
+                    {
+                        Serial.println("We connected to Wifi...");
+                        wifiInitialized = true;
+                        digitalWrite(LED_PIN, LOW);
+                    }
+                    else
+                    {
+                        Serial.println("Could not connect to Wifi");
+                        digitalWrite(LED_PIN, HIGH);
+                        //Delay so feedback can be seen on LED
+                        delay(5000);
+                    }
+                    disconnectWifi();
+                    break;
+                    //ESP.restart(); //Loop exit
                 }
-                ESP.restart();
             }
+            lastButtonState = buttonState;
+            delay(500);
         }
-
-        lastButtonState = buttonState;
-        delay(500);
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        wifiTicker.detach();
-        deinitBLE();
         auto result = requestInfections();
         if (!result.first)
         {
@@ -257,16 +312,12 @@ void setup()
                 }
             }
             showIsInfectedOnDisplay(metInfected);
-            delay(10000);
+            //TODO Change Behaviour on Infection
+            delay(60000);
         }
         showRequestDelayOnDisplay();
-        nextAction = ACTION_SCAN;
-        wifiTicker.attach(REQUEST_DELAY_SECONDS, setNextAction, ACTION_INFECTION_REQUEST);
-        initBLE();
-        delay(500);
     }
-    //TODO: Go into deep sleep instead
-    ESP.restart();
+    goIntoDeepSleep();
 }
 
 void loop()

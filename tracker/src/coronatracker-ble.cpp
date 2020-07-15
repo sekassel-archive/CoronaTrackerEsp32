@@ -2,6 +2,9 @@
 
 static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 char device_id[30] = "Hallo Welt COVID";      //ID to be braodcasted
+
+//TODO Move to main
+//TODO Is now resettet after every sleep,either store on flash or in rtc memory
 std::multimap<std::string, time_t> recentEncounterMap;
 
 BLEServer *pServer;
@@ -28,6 +31,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
+//TODO Seperate Scan and Advertisment per poarameters
 bool initBLE()
 {
     //Setting up Server
