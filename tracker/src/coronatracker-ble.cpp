@@ -31,8 +31,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
-//TODO Seperate Scan and Advertisment per poarameters
-bool initBLE()
+bool initBLE(bool initScan, bool initAdvertisment)
 {
     //Setting up Server
     Serial.println("Setting Up Server");
@@ -42,32 +41,45 @@ bool initBLE()
     pService->start();
 
     //Service Data
-    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    oAdvertisementData.setServiceData(serviceUUID, device_id);
+    if (initAdvertisment)
+    {
+        BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+        oAdvertisementData.setServiceData(serviceUUID, device_id);
 
-    Serial.println("Setting up Advertisment");
-    pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(serviceUUID);
-    pAdvertising->setAdvertisementData(oAdvertisementData);
-    pAdvertising->setMinPreferred(0x06);
-    pAdvertising->setMinPreferred(0x12);
-    pAdvertising->start();
-
+        Serial.println("Setting up Advertisment");
+        pAdvertising = BLEDevice::getAdvertising();
+        pAdvertising->addServiceUUID(serviceUUID);
+        pAdvertising->setAdvertisementData(oAdvertisementData);
+        pAdvertising->setMinPreferred(0x06);
+        pAdvertising->setMinPreferred(0x12);
+        pAdvertising->start();
+    }
     //Setting up Scan
-    Serial.println("Setting up Scan");
-    pBLEScan = BLEDevice::getScan();
-    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(100);
-    pBLEScan->setWindow(99); // less or equal setInterval value
+    if (initScan)
+    {
+
+        Serial.println("Setting up Scan");
+        pBLEScan = BLEDevice::getScan();
+        pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+        pBLEScan->setInterval(100);
+        pBLEScan->setWindow(99); // less or equal setInterval value
+    }
 
     return true;
 }
 
 void deinitBLE()
 {
-    pAdvertising->stop();
-    pBLEScan->stop();
+    if (pAdvertising != nullptr)
+    {
+        pAdvertising->stop();
+    }
+    if (pBLEScan != nullptr)
+    {
+        pBLEScan->stop();
+    }
+
     BLEDevice::deinit(false);
     delete pServer;
     delete pService;

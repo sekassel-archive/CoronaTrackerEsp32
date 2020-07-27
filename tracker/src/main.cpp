@@ -21,6 +21,8 @@
 #define BOOTS_UNTIL_SCAN 500
 #define BOOTS_UNTIL_INFECTION_REQUEST 30000
 
+#define SCAN_TIME 1
+
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
@@ -114,7 +116,7 @@ void goIntoDeepSleep()
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % 5 == 0)
+    else if (bootCount % BOOTS_UNTIL_SCAN == 0)
     {
         setNextAction(ACTION_SCAN);
     }
@@ -200,7 +202,7 @@ void setup()
         if (nextAction == ACTION_ADVERTISE || nextAction == ACTION_SCAN)
         {
             Serial.println("Initializing BLE");
-            if (!initBLE())
+            if (!initBLE(nextAction == ACTION_SCAN, nextAction == ACTION_ADVERTISE))
             {
                 restartAfterErrorWithDelay("BLE initialize failed");
             }
@@ -215,7 +217,7 @@ void setup()
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
-        scanForCovidDevices((uint32_t)1);
+        scanForCovidDevices((uint32_t) SCAN_TIME);
 
         //TODO Maybe move recentEncounters to Main
         auto recentEncounters = getRecentEncounters();
@@ -250,6 +252,9 @@ void setup()
         {
             Serial.printf("%s -> %ld\n", it->first.c_str(), it->second);
         }
+    }
+    else if (nextAction == ACTION_ADVERTISE) {
+        delay(100);
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
