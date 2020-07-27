@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONObject;
 
+import java.math.BigInteger;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -15,7 +16,7 @@ import static spark.Spark.*;
 
 public class Main {
 
-    private static HashMap<Long, Set<Integer>> infections = new HashMap<>();
+    private static HashMap<Long, Set<BigInteger>> infections = new HashMap<>();
 
     public static void main(String[] args) {
         get("/hello", (request, response) -> "Hello World");
@@ -47,8 +48,7 @@ public class Main {
             //Rounds down to nearest minutes
             long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
             if (!infections.containsKey(time)) {
-                infections.put(time, new HashSet<Integer>() {
-                });
+                infections.put(time, new HashSet<>());
             }
             infections.get(time).add(input.getId());
             return "Success!";
@@ -73,16 +73,16 @@ public class Main {
         });
 
         get("/infections/id/:id", (request, response) -> {
-            int id;
+            BigInteger id;
             try {
-                id = Integer.parseInt(request.params(":id"));
+                id = new BigInteger(request.params(":id"));
             } catch (NumberFormatException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Input must be number";
             }
 
             ArrayList<Long> times = new ArrayList<>();
-            for (Map.Entry<Long, Set<Integer>> entry : infections.entrySet()) {
+            for (Map.Entry<Long, Set<BigInteger>> entry : infections.entrySet()) {
                 if (entry.getValue().contains(id)) {
                     times.add(entry.getKey());
                 }
@@ -120,16 +120,16 @@ public class Main {
 
         //delete infections->id
         delete("/infections/id/:id", (request, response) -> {
-            int id;
+            BigInteger id;
             try {
-                id = Integer.parseInt(request.params(":id"));
+                id = new BigInteger(request.params(":id"));
             } catch (NumberFormatException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Input must be number";
             }
 
             ArrayList<Long> times = new ArrayList<>();
-            for (Map.Entry<Long, Set<Integer>> entry : infections.entrySet()) {
+            for (Map.Entry<Long, Set<BigInteger>> entry : infections.entrySet()) {
                 if (entry.getValue().contains(id)) {
                     times.add(entry.getKey());
                 }
