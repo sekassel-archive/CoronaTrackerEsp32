@@ -1,6 +1,7 @@
 package de.uniks;
 
 import de.uniks.proto.Exportkey;
+import javafx.util.Pair;
 import org.json.JSONArray;
 import spark.utils.IOUtils;
 
@@ -14,9 +15,10 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -25,40 +27,51 @@ public class CWARequests {
     private static final String infections_url = "https://svc90.main.px.t-online.de/version/v1/diagnosis-keys/country/DE/date/";
     private static final String dates_url = "https://svc90.main.px.t-online.de/version/v1/diagnosis-keys/country/DE/date";
 
-    public static List<BigInteger> getAllInfectionKeys() throws IOException, InterruptedException {
+    private static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    public static Map<Long, List<BigInteger>> getAllInfectionKeys() throws IOException, InterruptedException {
         String[] dates = getInfectionDates();
-        List<BigInteger> keys = new ArrayList<>();
-        HttpClient client = HttpClient.newHttpClient();
+        Map<Long, List<BigInteger>> keyMap = new HashMap<>();
 
         for (String date : dates) {
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(infections_url + date))
-                    .GET()
-                    .build();
-            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-
-            FileOutputStream fos = new FileOutputStream("response.zip");
-            fos.write(response.body());
-            fos.close();
-
-            ZipFile zip = new ZipFile("response.zip");
-            ZipEntry exportEntry = zip.getEntry("export.bin");
-
-            byte[] bodyData = IOUtils.toByteArray(zip.getInputStream(exportEntry));
-
-            zip.close();
-            Files.delete(Paths.get("response.zip"));
-
-            byte[] exportData = Arrays.copyOfRange(bodyData, 16, bodyData.length);
-
-            Exportkey.TemporaryExposureKeyExport export = Exportkey.TemporaryExposureKeyExport.parseFrom(exportData);
-            List<Exportkey.TemporaryExposureKey> keysList = export.getKeysList();
-
-            for (Exportkey.TemporaryExposureKey key : keysList) {
-                keys.add(new BigInteger(key.getKeyData().toByteArray()));
-            }
+            Pair<Long, List<BigInteger>> keys = getInfectionKeys(date);
+            keyMap.put(keys.getKey(), keys.getValue());
         }
-        return keys;
+        return keyMap;
+    }
+
+    public static Pair<Long, List<BigInteger>> getInfectionKeys(String date) throws DateTimeParseException, IOException, InterruptedException {
+        LocalDate.parse(date, dateFormatter);
+        List<BigInteger> keys = new ArrayList<>();
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(infections_url + date))
+                .GET()
+                .build();
+        HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+        FileOutputStream fos = new FileOutputStream("response.zip");
+        fos.write(response.body());
+        fos.close();
+
+        ZipFile zip = new ZipFile("response.zip");
+        ZipEntry exportEntry = zip.getEntry("export.bin");
+
+        byte[] bodyData = IOUtils.toByteArray(zip.getInputStream(exportEntry));
+
+        zip.close();
+        Files.delete(Paths.get("response.zip"));
+
+        byte[] exportData = Arrays.copyOfRange(bodyData, 16, bodyData.length);
+
+        Exportkey.TemporaryExposureKeyExport export = Exportkey.TemporaryExposureKeyExport.parseFrom(exportData);
+        List<Exportkey.TemporaryExposureKey> keysList = export.getKeysList();
+
+        for (Exportkey.TemporaryExposureKey key : keysList) {
+            keys.add(new BigInteger(key.getKeyData().toByteArray()));
+        }
+        return new Pair<>(export.getStartTimestamp(), keys);
     }
 
     private static String[] getInfectionDates() throws IOException, InterruptedException {
