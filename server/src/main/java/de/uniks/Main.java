@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.payload.InfectionPostPayload;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -63,7 +64,8 @@ public class Main {
             return "Success!";
         }));
 
-        //For Debugging purposes
+        get("/infections/time", (request, response) -> new JSONArray(infections.keySet().toArray()));
+
         get("/infections/time/:time", (request, response) -> {
             long time;
             try {
@@ -78,7 +80,7 @@ public class Main {
                 response.status(HTTP_NOT_FOUND);
                 return "Input not found";
             }
-            return new JSONObject().put("ids", infections.get(time));
+            return new JSONArray(infections.get(time));
         });
 
         get("/infections/id/:id", (request, response) -> {
@@ -101,11 +103,11 @@ public class Main {
                 response.status(HTTP_NOT_FOUND);
                 return "Input not found";
             }
-            return new JSONObject().put("times", times);
+            return new JSONArray(times);
         });
 
         delete("/infections", ((request, response) -> {
-            infections = new ConcurrentHashMap<>();
+            infections.clear();
             return "Successfully removed all entries";
         }));
 
