@@ -64,7 +64,13 @@ public class Main {
             return "Success!";
         }));
 
-        get("/infections/time", (request, response) -> new JSONArray(infections.keySet().toArray()));
+        get("/infections/time", (request, response) -> {
+            JSONObject json = new JSONObject();
+            for (Long key : infections.keySet()) {
+                json.put(key.toString(), infections.get(key).size());
+            }
+            return json;
+        });
 
         get("/infections/time/:time", (request, response) -> {
             long time;
