@@ -6,17 +6,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import static java.net.HttpURLConnection.*;
 import static spark.Spark.*;
 
 public class Main {
 
-    private static HashMap<Long, Set<BigInteger>> infections = new HashMap<>();
+    private static ConcurrentHashMap<Long, Set<BigInteger>> infections = new ConcurrentHashMap<>();
+    private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
         get("/hello", (request, response) -> "Hello World");
@@ -45,10 +54,10 @@ public class Main {
                 return "Not authenticated";
             }
 
-            //Rounds down to nearest minutes
+            //Rounds down to nearest day
             long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
             if (!infections.containsKey(time)) {
-                infections.put(time, new HashSet<>());
+                infections.put(time, ConcurrentHashMap.newKeySet());
             }
             infections.get(time).add(input.getId());
             return "Success!";
@@ -96,7 +105,7 @@ public class Main {
         });
 
         delete("/infections", ((request, response) -> {
-            infections = new HashMap<>();
+            infections = new ConcurrentHashMap<>();
             return "Successfully removed all entries";
         }));
 
@@ -142,12 +151,42 @@ public class Main {
 
             for (long key : times) {
                 infections.get(key).remove(id);
-                if(infections.get(key).isEmpty()) {
+                if (infections.get(key).isEmpty()) {
                     infections.remove(key);
                 }
             }
 
             return "Successfully removed " + id;
         });
+
+        get("/cwa/status", (request, response) -> cwaStatus);
+
+        executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
+    }
+
+    private static String cwaStatus;
+
+    private static void updateCWAKeys() {
+        Map<Long, List<BigInteger>> keyMap;
+        try {
+            keyMap = CWARequests.getAllInfectionKeys();
+        } catch (IOException | InterruptedException e) {
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            cwaStatus = e.getMessage() + "\n" + sw.toString();
+            return;
+        }
+        for (Map.Entry<Long, List<BigInteger>> entry : keyMap.entrySet()) {
+            Long time = entry.getKey();
+
+            if (!infections.containsKey(time)) {
+                infections.put(time, ConcurrentHashMap.newKeySet());
+            }
+            Set<BigInteger> idSet = infections.get(time);
+            idSet.addAll(entry.getValue());
+        }
+
+        cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
+                .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
     }
 }

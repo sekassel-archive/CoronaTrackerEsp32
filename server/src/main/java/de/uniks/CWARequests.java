@@ -40,7 +40,7 @@ public class CWARequests {
         return keyMap;
     }
 
-    public static Pair<Long, List<BigInteger>> getInfectionKeys(String date) throws DateTimeParseException, IOException, InterruptedException {
+    private static Pair<Long, List<BigInteger>> getInfectionKeys(String date) throws DateTimeParseException, IOException, InterruptedException {
         LocalDate.parse(date, dateFormatter);
         List<BigInteger> keys = new ArrayList<>();
 
