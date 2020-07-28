@@ -24,8 +24,10 @@ import java.util.zip.ZipFile;
 
 public class CWARequests {
 
-    private static final String infections_url = "https://svc90.main.px.t-online.de/version/v1/diagnosis-keys/country/DE/date/";
     private static final String dates_url = "https://svc90.main.px.t-online.de/version/v1/diagnosis-keys/country/DE/date";
+    private static final String infections_url = dates_url + "/";
+    private static final String ZIP_TEMPORARY = "response.zip";
+    private static final String EXPORT_BIN = "export.bin";
 
     private static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -51,17 +53,17 @@ public class CWARequests {
                 .build();
         HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-        FileOutputStream fos = new FileOutputStream("response.zip");
+        FileOutputStream fos = new FileOutputStream(ZIP_TEMPORARY);
         fos.write(response.body());
         fos.close();
 
-        ZipFile zip = new ZipFile("response.zip");
-        ZipEntry exportEntry = zip.getEntry("export.bin");
+        ZipFile zip = new ZipFile(ZIP_TEMPORARY);
+        ZipEntry exportEntry = zip.getEntry(EXPORT_BIN);
 
         byte[] bodyData = IOUtils.toByteArray(zip.getInputStream(exportEntry));
 
         zip.close();
-        Files.delete(Paths.get("response.zip"));
+        Files.delete(Paths.get(ZIP_TEMPORARY));
 
         byte[] exportData = Arrays.copyOfRange(bodyData, 16, bodyData.length);
 
