@@ -47,8 +47,10 @@ const int daylightOffset_sec = 3600;
 
 void blinkLED()
 {
-    int state = digitalRead(LED_PIN);
-    digitalWrite(LED_PIN, !state);
+    // int state = digitalRead(LED_PIN);
+    // digitalWrite(LED_PIN, !state);
+    int state = digitalRead(BUILTIN_LED);
+    digitalWrite(BUILTIN_LED, !state);
 }
 
 bool initializeTime()
@@ -75,7 +77,8 @@ bool initializeTime()
 
 void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
 {
-    digitalWrite(LED_PIN, HIGH);
+    // digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_BUILTIN, HIGH);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
@@ -141,23 +144,28 @@ void setup()
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(TP_PIN_PIN, INPUT); // Button input
-    pinMode(TP_PWR_PIN, PULLUP);
-    digitalWrite(TP_PWR_PIN, HIGH);
+
+    pinMode(LED_BUILTIN, OUTPUT);
+    pinMode(KEY_BUILTIN, INPUT); // Button input
+    // pinMode(LED_PIN, OUTPUT);
+    // pinMode(TP_PIN_PIN, INPUT); // Button input
+    // pinMode(TP_PWR_PIN, PULLUP);
+    // digitalWrite(TP_PWR_PIN, HIGH);
 
     //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
         tftInit();
-        digitalWrite(LED_PIN, HIGH);
+        // digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        digitalWrite(LED_PIN, LOW);
+        // digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
         if (firstBoot)
         {
             firstBoot = false;
@@ -260,9 +268,10 @@ void setup()
     {
         while (true)
         {
-            buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            // buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            buttonState = digitalRead(KEY_BUILTIN); // read the button input
             //Button was pressed
-            if (buttonState == HIGH)
+            if (buttonState == /*HIGH*/ LOW)
             {
                 //First press
                 if (buttonState != lastButtonState)
@@ -282,12 +291,14 @@ void setup()
                     {
                         Serial.println("We connected to Wifi...");
                         wifiInitialized = true;
-                        digitalWrite(LED_PIN, LOW);
+                        // digitalWrite(LED_PIN, LOW);
+                        digitalWrite(LED_BUILTIN, LOW);
                     }
                     else
                     {
                         Serial.println("Could not connect to Wifi");
-                        digitalWrite(LED_PIN, HIGH);
+                        // digitalWrite(LED_PIN, HIGH);
+                        digitalWrite(LED_BUILTIN, HIGH);
                         //Delay so feedback can be seen on LED
                         delay(5000);
                     }
