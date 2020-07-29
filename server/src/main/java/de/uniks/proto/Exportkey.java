@@ -18,8 +18,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Time window of keys in this file based on arrival to server, in UTC
-     * seconds
+     * Time window of keys in this batch based on arrival to server, in UTC seconds.
      * </pre>
      *
      * <code>optional fixed64 start_timestamp = 1;</code>
@@ -28,8 +27,7 @@ public final class Exportkey {
     boolean hasStartTimestamp();
     /**
      * <pre>
-     * Time window of keys in this file based on arrival to server, in UTC
-     * seconds
+     * Time window of keys in this batch based on arrival to server, in UTC seconds.
      * </pre>
      *
      * <code>optional fixed64 start_timestamp = 1;</code>
@@ -50,7 +48,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -59,7 +57,7 @@ public final class Exportkey {
     boolean hasRegion();
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -68,7 +66,7 @@ public final class Exportkey {
     java.lang.String getRegion();
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -79,8 +77,8 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-     * Note: Not yet supported on iOS. Use values of 1 for both.
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+     * Note: Not yet supported on iOS.
      * </pre>
      *
      * <code>optional int32 batch_num = 4;</code>
@@ -89,8 +87,8 @@ public final class Exportkey {
     boolean hasBatchNum();
     /**
      * <pre>
-     * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-     * Note: Not yet supported on iOS. Use values of 1 for both.
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+     * Note: Not yet supported on iOS.
      * </pre>
      *
      * <code>optional int32 batch_num = 4;</code>
@@ -111,7 +109,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -120,7 +118,7 @@ public final class Exportkey {
         getSignatureInfosList();
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -128,7 +126,7 @@ public final class Exportkey {
     Exportkey.SignatureInfo getSignatureInfos(int index);
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -136,7 +134,7 @@ public final class Exportkey {
     int getSignatureInfosCount();
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -145,7 +143,7 @@ public final class Exportkey {
         getSignatureInfosOrBuilderList();
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -155,7 +153,9 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -164,7 +164,9 @@ public final class Exportkey {
         getKeysList();
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -172,7 +174,9 @@ public final class Exportkey {
     Exportkey.TemporaryExposureKey getKeys(int index);
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -180,7 +184,9 @@ public final class Exportkey {
     int getKeysCount();
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -189,12 +195,68 @@ public final class Exportkey {
         getKeysOrBuilderList();
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
      */
     Exportkey.TemporaryExposureKeyOrBuilder getKeysOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    java.util.List<Exportkey.TemporaryExposureKey> 
+        getRevisedKeysList();
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    Exportkey.TemporaryExposureKey getRevisedKeys(int index);
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    int getRevisedKeysCount();
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    java.util.List<? extends Exportkey.TemporaryExposureKeyOrBuilder> 
+        getRevisedKeysOrBuilderList();
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    Exportkey.TemporaryExposureKeyOrBuilder getRevisedKeysOrBuilder(
         int index);
   }
   /**
@@ -221,6 +283,7 @@ public final class Exportkey {
       region_ = "";
       signatureInfos_ = java.util.Collections.emptyList();
       keys_ = java.util.Collections.emptyList();
+      revisedKeys_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -298,6 +361,15 @@ public final class Exportkey {
                   input.readMessage(Exportkey.TemporaryExposureKey.PARSER, extensionRegistry));
               break;
             }
+            case 66: {
+              if (!((mutable_bitField0_ & 0x00000080) != 0)) {
+                revisedKeys_ = new java.util.ArrayList<Exportkey.TemporaryExposureKey>();
+                mutable_bitField0_ |= 0x00000080;
+              }
+              revisedKeys_.add(
+                  input.readMessage(Exportkey.TemporaryExposureKey.PARSER, extensionRegistry));
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -318,6 +390,9 @@ public final class Exportkey {
         }
         if (((mutable_bitField0_ & 0x00000040) != 0)) {
           keys_ = java.util.Collections.unmodifiableList(keys_);
+        }
+        if (((mutable_bitField0_ & 0x00000080) != 0)) {
+          revisedKeys_ = java.util.Collections.unmodifiableList(revisedKeys_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -341,8 +416,7 @@ public final class Exportkey {
     private long startTimestamp_;
     /**
      * <pre>
-     * Time window of keys in this file based on arrival to server, in UTC
-     * seconds
+     * Time window of keys in this batch based on arrival to server, in UTC seconds.
      * </pre>
      *
      * <code>optional fixed64 start_timestamp = 1;</code>
@@ -354,8 +428,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Time window of keys in this file based on arrival to server, in UTC
-     * seconds
+     * Time window of keys in this batch based on arrival to server, in UTC seconds.
      * </pre>
      *
      * <code>optional fixed64 start_timestamp = 1;</code>
@@ -389,7 +462,7 @@ public final class Exportkey {
     private volatile java.lang.Object region_;
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -401,7 +474,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -424,7 +497,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Region for which these keys came from (e.g., country)
+     * Region for which these keys came from, such as country.
      * </pre>
      *
      * <code>optional string region = 3;</code>
@@ -449,8 +522,8 @@ public final class Exportkey {
     private int batchNum_;
     /**
      * <pre>
-     * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-     * Note: Not yet supported on iOS. Use values of 1 for both.
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+     * Note: Not yet supported on iOS.
      * </pre>
      *
      * <code>optional int32 batch_num = 4;</code>
@@ -462,8 +535,8 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-     * Note: Not yet supported on iOS. Use values of 1 for both.
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+     * Note: Not yet supported on iOS.
      * </pre>
      *
      * <code>optional int32 batch_num = 4;</code>
@@ -497,7 +570,7 @@ public final class Exportkey {
     private java.util.List<Exportkey.SignatureInfo> signatureInfos_;
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -508,7 +581,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -520,7 +593,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -531,7 +604,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -542,7 +615,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Information about signatures
+     * Information about associated signatures
      * </pre>
      *
      * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -557,7 +630,9 @@ public final class Exportkey {
     private java.util.List<Exportkey.TemporaryExposureKey> keys_;
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -568,7 +643,9 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -580,7 +657,9 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -591,7 +670,9 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -602,7 +683,9 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * The TemporaryExposureKeys themselves
+     * The TemporaryExposureKeys for initial release of keys.
+     * Keys should be included in this list for initial release,
+     * whereas revised or revoked keys should go in revised_keys.
      * </pre>
      *
      * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -611,6 +694,76 @@ public final class Exportkey {
     public Exportkey.TemporaryExposureKeyOrBuilder getKeysOrBuilder(
         int index) {
       return keys_.get(index);
+    }
+
+    public static final int REVISED_KEYS_FIELD_NUMBER = 8;
+    private java.util.List<Exportkey.TemporaryExposureKey> revisedKeys_;
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    @java.lang.Override
+    public java.util.List<Exportkey.TemporaryExposureKey> getRevisedKeysList() {
+      return revisedKeys_;
+    }
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends Exportkey.TemporaryExposureKeyOrBuilder> 
+        getRevisedKeysOrBuilderList() {
+      return revisedKeys_;
+    }
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    @java.lang.Override
+    public int getRevisedKeysCount() {
+      return revisedKeys_.size();
+    }
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    @java.lang.Override
+    public Exportkey.TemporaryExposureKey getRevisedKeys(int index) {
+      return revisedKeys_.get(index);
+    }
+    /**
+     * <pre>
+     * TemporaryExposureKeys that have changed status.
+     * Keys should be included in this list if they have changed status
+     * or have been revoked.
+     * </pre>
+     *
+     * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+     */
+    @java.lang.Override
+    public Exportkey.TemporaryExposureKeyOrBuilder getRevisedKeysOrBuilder(
+        int index) {
+      return revisedKeys_.get(index);
     }
 
     private byte memoizedIsInitialized = -1;
@@ -648,6 +801,9 @@ public final class Exportkey {
       for (int i = 0; i < keys_.size(); i++) {
         output.writeMessage(7, keys_.get(i));
       }
+      for (int i = 0; i < revisedKeys_.size(); i++) {
+        output.writeMessage(8, revisedKeys_.get(i));
+      }
       unknownFields.writeTo(output);
     }
 
@@ -683,6 +839,10 @@ public final class Exportkey {
       for (int i = 0; i < keys_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(7, keys_.get(i));
+      }
+      for (int i = 0; i < revisedKeys_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(8, revisedKeys_.get(i));
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -728,6 +888,8 @@ public final class Exportkey {
           .equals(other.getSignatureInfosList())) return false;
       if (!getKeysList()
           .equals(other.getKeysList())) return false;
+      if (!getRevisedKeysList()
+          .equals(other.getRevisedKeysList())) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -768,6 +930,10 @@ public final class Exportkey {
       if (getKeysCount() > 0) {
         hash = (37 * hash) + KEYS_FIELD_NUMBER;
         hash = (53 * hash) + getKeysList().hashCode();
+      }
+      if (getRevisedKeysCount() > 0) {
+        hash = (37 * hash) + REVISED_KEYS_FIELD_NUMBER;
+        hash = (53 * hash) + getRevisedKeysList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -907,6 +1073,7 @@ public final class Exportkey {
                 .alwaysUseFieldBuilders) {
           getSignatureInfosFieldBuilder();
           getKeysFieldBuilder();
+          getRevisedKeysFieldBuilder();
         }
       }
       @java.lang.Override
@@ -933,6 +1100,12 @@ public final class Exportkey {
           bitField0_ = (bitField0_ & ~0x00000040);
         } else {
           keysBuilder_.clear();
+        }
+        if (revisedKeysBuilder_ == null) {
+          revisedKeys_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000080);
+        } else {
+          revisedKeysBuilder_.clear();
         }
         return this;
       }
@@ -999,6 +1172,15 @@ public final class Exportkey {
           result.keys_ = keys_;
         } else {
           result.keys_ = keysBuilder_.build();
+        }
+        if (revisedKeysBuilder_ == null) {
+          if (((bitField0_ & 0x00000080) != 0)) {
+            revisedKeys_ = java.util.Collections.unmodifiableList(revisedKeys_);
+            bitField0_ = (bitField0_ & ~0x00000080);
+          }
+          result.revisedKeys_ = revisedKeys_;
+        } else {
+          result.revisedKeys_ = revisedKeysBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1118,6 +1300,32 @@ public final class Exportkey {
             }
           }
         }
+        if (revisedKeysBuilder_ == null) {
+          if (!other.revisedKeys_.isEmpty()) {
+            if (revisedKeys_.isEmpty()) {
+              revisedKeys_ = other.revisedKeys_;
+              bitField0_ = (bitField0_ & ~0x00000080);
+            } else {
+              ensureRevisedKeysIsMutable();
+              revisedKeys_.addAll(other.revisedKeys_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.revisedKeys_.isEmpty()) {
+            if (revisedKeysBuilder_.isEmpty()) {
+              revisedKeysBuilder_.dispose();
+              revisedKeysBuilder_ = null;
+              revisedKeys_ = other.revisedKeys_;
+              bitField0_ = (bitField0_ & ~0x00000080);
+              revisedKeysBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getRevisedKeysFieldBuilder() : null;
+            } else {
+              revisedKeysBuilder_.addAllMessages(other.revisedKeys_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -1151,8 +1359,7 @@ public final class Exportkey {
       private long startTimestamp_ ;
       /**
        * <pre>
-       * Time window of keys in this file based on arrival to server, in UTC
-       * seconds
+       * Time window of keys in this batch based on arrival to server, in UTC seconds.
        * </pre>
        *
        * <code>optional fixed64 start_timestamp = 1;</code>
@@ -1164,8 +1371,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Time window of keys in this file based on arrival to server, in UTC
-       * seconds
+       * Time window of keys in this batch based on arrival to server, in UTC seconds.
        * </pre>
        *
        * <code>optional fixed64 start_timestamp = 1;</code>
@@ -1177,8 +1383,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Time window of keys in this file based on arrival to server, in UTC
-       * seconds
+       * Time window of keys in this batch based on arrival to server, in UTC seconds.
        * </pre>
        *
        * <code>optional fixed64 start_timestamp = 1;</code>
@@ -1193,8 +1398,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Time window of keys in this file based on arrival to server, in UTC
-       * seconds
+       * Time window of keys in this batch based on arrival to server, in UTC seconds.
        * </pre>
        *
        * <code>optional fixed64 start_timestamp = 1;</code>
@@ -1249,7 +1453,7 @@ public final class Exportkey {
       private java.lang.Object region_ = "";
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1260,7 +1464,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1282,7 +1486,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1303,7 +1507,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1322,7 +1526,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1336,7 +1540,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Region for which these keys came from (e.g., country)
+       * Region for which these keys came from, such as country.
        * </pre>
        *
        * <code>optional string region = 3;</code>
@@ -1357,8 +1561,8 @@ public final class Exportkey {
       private int batchNum_ ;
       /**
        * <pre>
-       * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-       * Note: Not yet supported on iOS. Use values of 1 for both.
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+       * Note: Not yet supported on iOS.
        * </pre>
        *
        * <code>optional int32 batch_num = 4;</code>
@@ -1370,8 +1574,8 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-       * Note: Not yet supported on iOS. Use values of 1 for both.
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+       * Note: Not yet supported on iOS.
        * </pre>
        *
        * <code>optional int32 batch_num = 4;</code>
@@ -1383,8 +1587,8 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-       * Note: Not yet supported on iOS. Use values of 1 for both.
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+       * Note: Not yet supported on iOS.
        * </pre>
        *
        * <code>optional int32 batch_num = 4;</code>
@@ -1399,8 +1603,8 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10. Ordinal, 1-based numbering.
-       * Note: Not yet supported on iOS. Use values of 1 for both.
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
+       * Note: Not yet supported on iOS.
        * </pre>
        *
        * <code>optional int32 batch_num = 4;</code>
@@ -1466,7 +1670,7 @@ public final class Exportkey {
 
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1480,7 +1684,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1494,7 +1698,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1508,7 +1712,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1529,7 +1733,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1547,7 +1751,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1567,7 +1771,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1588,7 +1792,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1606,7 +1810,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1624,7 +1828,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1643,7 +1847,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1660,7 +1864,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1677,7 +1881,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1688,7 +1892,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1702,7 +1906,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1717,7 +1921,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1728,7 +1932,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1740,7 +1944,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Information about signatures
+       * Information about associated signatures
        * </pre>
        *
        * <code>repeated .SignatureInfo signature_infos = 6;</code>
@@ -1778,7 +1982,9 @@ public final class Exportkey {
 
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1792,7 +1998,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1806,7 +2014,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1820,7 +2030,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1841,7 +2053,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1859,7 +2073,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1879,7 +2095,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1900,7 +2118,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1918,7 +2138,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1936,7 +2158,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1955,7 +2179,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1972,7 +2198,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -1989,7 +2217,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2000,7 +2230,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2014,7 +2246,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2029,7 +2263,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2040,7 +2276,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2052,7 +2290,9 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * The TemporaryExposureKeys themselves
+       * The TemporaryExposureKeys for initial release of keys.
+       * Keys should be included in this list for initial release,
+       * whereas revised or revoked keys should go in revised_keys.
        * </pre>
        *
        * <code>repeated .TemporaryExposureKey keys = 7;</code>
@@ -2074,6 +2314,354 @@ public final class Exportkey {
           keys_ = null;
         }
         return keysBuilder_;
+      }
+
+      private java.util.List<Exportkey.TemporaryExposureKey> revisedKeys_ =
+        java.util.Collections.emptyList();
+      private void ensureRevisedKeysIsMutable() {
+        if (!((bitField0_ & 0x00000080) != 0)) {
+          revisedKeys_ = new java.util.ArrayList<Exportkey.TemporaryExposureKey>(revisedKeys_);
+          bitField0_ |= 0x00000080;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          Exportkey.TemporaryExposureKey, Exportkey.TemporaryExposureKey.Builder, Exportkey.TemporaryExposureKeyOrBuilder> revisedKeysBuilder_;
+
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public java.util.List<Exportkey.TemporaryExposureKey> getRevisedKeysList() {
+        if (revisedKeysBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(revisedKeys_);
+        } else {
+          return revisedKeysBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public int getRevisedKeysCount() {
+        if (revisedKeysBuilder_ == null) {
+          return revisedKeys_.size();
+        } else {
+          return revisedKeysBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Exportkey.TemporaryExposureKey getRevisedKeys(int index) {
+        if (revisedKeysBuilder_ == null) {
+          return revisedKeys_.get(index);
+        } else {
+          return revisedKeysBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder setRevisedKeys(
+          int index, Exportkey.TemporaryExposureKey value) {
+        if (revisedKeysBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.set(index, value);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder setRevisedKeys(
+          int index, Exportkey.TemporaryExposureKey.Builder builderForValue) {
+        if (revisedKeysBuilder_ == null) {
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          revisedKeysBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder addRevisedKeys(Exportkey.TemporaryExposureKey value) {
+        if (revisedKeysBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.add(value);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder addRevisedKeys(
+          int index, Exportkey.TemporaryExposureKey value) {
+        if (revisedKeysBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.add(index, value);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder addRevisedKeys(
+          Exportkey.TemporaryExposureKey.Builder builderForValue) {
+        if (revisedKeysBuilder_ == null) {
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.add(builderForValue.build());
+          onChanged();
+        } else {
+          revisedKeysBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder addRevisedKeys(
+          int index, Exportkey.TemporaryExposureKey.Builder builderForValue) {
+        if (revisedKeysBuilder_ == null) {
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          revisedKeysBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder addAllRevisedKeys(
+          java.lang.Iterable<? extends Exportkey.TemporaryExposureKey> values) {
+        if (revisedKeysBuilder_ == null) {
+          ensureRevisedKeysIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, revisedKeys_);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder clearRevisedKeys() {
+        if (revisedKeysBuilder_ == null) {
+          revisedKeys_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000080);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Builder removeRevisedKeys(int index) {
+        if (revisedKeysBuilder_ == null) {
+          ensureRevisedKeysIsMutable();
+          revisedKeys_.remove(index);
+          onChanged();
+        } else {
+          revisedKeysBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Exportkey.TemporaryExposureKey.Builder getRevisedKeysBuilder(
+          int index) {
+        return getRevisedKeysFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Exportkey.TemporaryExposureKeyOrBuilder getRevisedKeysOrBuilder(
+          int index) {
+        if (revisedKeysBuilder_ == null) {
+          return revisedKeys_.get(index);  } else {
+          return revisedKeysBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public java.util.List<? extends Exportkey.TemporaryExposureKeyOrBuilder> 
+           getRevisedKeysOrBuilderList() {
+        if (revisedKeysBuilder_ != null) {
+          return revisedKeysBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(revisedKeys_);
+        }
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Exportkey.TemporaryExposureKey.Builder addRevisedKeysBuilder() {
+        return getRevisedKeysFieldBuilder().addBuilder(
+            Exportkey.TemporaryExposureKey.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public Exportkey.TemporaryExposureKey.Builder addRevisedKeysBuilder(
+          int index) {
+        return getRevisedKeysFieldBuilder().addBuilder(
+            index, Exportkey.TemporaryExposureKey.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * TemporaryExposureKeys that have changed status.
+       * Keys should be included in this list if they have changed status
+       * or have been revoked.
+       * </pre>
+       *
+       * <code>repeated .TemporaryExposureKey revised_keys = 8;</code>
+       */
+      public java.util.List<Exportkey.TemporaryExposureKey.Builder> 
+           getRevisedKeysBuilderList() {
+        return getRevisedKeysFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          Exportkey.TemporaryExposureKey, Exportkey.TemporaryExposureKey.Builder, Exportkey.TemporaryExposureKeyOrBuilder> 
+          getRevisedKeysFieldBuilder() {
+        if (revisedKeysBuilder_ == null) {
+          revisedKeysBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              Exportkey.TemporaryExposureKey, Exportkey.TemporaryExposureKey.Builder, Exportkey.TemporaryExposureKeyOrBuilder>(
+                  revisedKeys_,
+                  ((bitField0_ & 0x00000080) != 0),
+                  getParentForChildren(),
+                  isClean());
+          revisedKeys_ = null;
+        }
+        return revisedKeysBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -2135,7 +2723,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2145,7 +2733,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2155,7 +2743,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2166,9 +2754,11 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2177,9 +2767,11 @@ public final class Exportkey {
     boolean hasVerificationKeyId();
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2188,9 +2780,11 @@ public final class Exportkey {
     java.lang.String getVerificationKeyId();
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2201,8 +2795,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2211,8 +2804,7 @@ public final class Exportkey {
     boolean hasSignatureAlgorithm();
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2221,8 +2813,7 @@ public final class Exportkey {
     java.lang.String getSignatureAlgorithm();
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2336,7 +2927,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2349,7 +2940,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2373,7 +2964,7 @@ public final class Exportkey {
     /**
      * <pre>
      * Key version for rollovers
-     * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+     * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
      * </pre>
      *
      * <code>optional string verification_key_version = 3;</code>
@@ -2398,9 +2989,11 @@ public final class Exportkey {
     private volatile java.lang.Object verificationKeyId_;
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2412,9 +3005,11 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2437,9 +3032,11 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Additional identifying information
-     * Must be in character class [a-zA-Z0-9_]
-     * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+     * Alias with which to identify public key to be used for verification
+     * Must be in character class [a-zA-Z0-9_.]
+     * For cross-compatibility with Apple, you can use your region's three-digit
+     * mobile country code (MCC). If your region has more than one MCC, choose the
+     * one that Apple has configured.
      * </pre>
      *
      * <code>optional string verification_key_id = 4;</code>
@@ -2464,8 +3061,7 @@ public final class Exportkey {
     private volatile java.lang.Object signatureAlgorithm_;
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2477,8 +3073,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2501,8 +3096,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * ASN.1 OID for Algorithm Identifier.
-     * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+     * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
      * </pre>
      *
      * <code>optional string signature_algorithm = 5;</code>
@@ -2894,7 +3488,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -2906,7 +3500,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -2929,7 +3523,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -2951,7 +3545,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -2971,7 +3565,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -2986,7 +3580,7 @@ public final class Exportkey {
       /**
        * <pre>
        * Key version for rollovers
-       * Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
+       * Must be in character class [a-zA-Z0-9_]. For example, 'v1'
        * </pre>
        *
        * <code>optional string verification_key_version = 3;</code>
@@ -3007,9 +3601,11 @@ public final class Exportkey {
       private java.lang.Object verificationKeyId_ = "";
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3020,9 +3616,11 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3044,9 +3642,11 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3067,9 +3667,11 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3088,9 +3690,11 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3104,9 +3708,11 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Additional identifying information
-       * Must be in character class [a-zA-Z0-9_]
-       * For cross-compatibility with Apple, use MCC (https://en.wikipedia.org/wiki/Mobile_country_code)
+       * Alias with which to identify public key to be used for verification
+       * Must be in character class [a-zA-Z0-9_.]
+       * For cross-compatibility with Apple, you can use your region's three-digit
+       * mobile country code (MCC). If your region has more than one MCC, choose the
+       * one that Apple has configured.
        * </pre>
        *
        * <code>optional string verification_key_id = 4;</code>
@@ -3127,8 +3733,7 @@ public final class Exportkey {
       private java.lang.Object signatureAlgorithm_ = "";
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3139,8 +3744,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3162,8 +3766,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3184,8 +3787,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3204,8 +3806,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3219,8 +3820,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * ASN.1 OID for Algorithm Identifier.
-       * For cross-compatibility with Apple, use '1.2.840.10045.4.3.2'
+       * ASN.1 OID for Algorithm Identifier. For example, `1.2.840.10045.4.3.2'
        * </pre>
        *
        * <code>optional string signature_algorithm = 5;</code>
@@ -3315,22 +3915,22 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Varying risks associated with exposure depending on type of verification
+     * Varying risk associated with a key depending on diagnosis method
      * </pre>
      *
-     * <code>optional int32 transmission_risk_level = 2;</code>
+     * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
      * @return Whether the transmissionRiskLevel field is set.
      */
-    boolean hasTransmissionRiskLevel();
+    @java.lang.Deprecated boolean hasTransmissionRiskLevel();
     /**
      * <pre>
-     * Varying risks associated with exposure depending on type of verification
+     * Varying risk associated with a key depending on diagnosis method
      * </pre>
      *
-     * <code>optional int32 transmission_risk_level = 2;</code>
+     * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
      * @return The transmissionRiskLevel.
      */
-    int getTransmissionRiskLevel();
+    @java.lang.Deprecated int getTransmissionRiskLevel();
 
     /**
      * <pre>
@@ -3369,6 +3969,46 @@ public final class Exportkey {
      * @return The rollingPeriod.
      */
     int getRollingPeriod();
+
+    /**
+     * <pre>
+     * Type of diagnosis associated with a key.
+     * </pre>
+     *
+     * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+     * @return Whether the reportType field is set.
+     */
+    boolean hasReportType();
+    /**
+     * <pre>
+     * Type of diagnosis associated with a key.
+     * </pre>
+     *
+     * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+     * @return The reportType.
+     */
+    Exportkey.TemporaryExposureKey.ReportType getReportType();
+
+    /**
+     * <pre>
+     * Number of days elapsed between symptom onset and the TEK being used.
+     * E.g. 2 means TEK is 2 days after onset of symptoms.
+     * </pre>
+     *
+     * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+     * @return Whether the daysSinceOnsetOfSymptoms field is set.
+     */
+    boolean hasDaysSinceOnsetOfSymptoms();
+    /**
+     * <pre>
+     * Number of days elapsed between symptom onset and the TEK being used.
+     * E.g. 2 means TEK is 2 days after onset of symptoms.
+     * </pre>
+     *
+     * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+     * @return The daysSinceOnsetOfSymptoms.
+     */
+    int getDaysSinceOnsetOfSymptoms();
   }
   /**
    * Protobuf type {@code TemporaryExposureKey}
@@ -3385,6 +4025,7 @@ public final class Exportkey {
     private TemporaryExposureKey() {
       keyData_ = com.google.protobuf.ByteString.EMPTY;
       rollingPeriod_ = 144;
+      reportType_ = 0;
     }
 
     @java.lang.Override
@@ -3438,6 +4079,23 @@ public final class Exportkey {
               rollingPeriod_ = input.readInt32();
               break;
             }
+            case 40: {
+              int rawValue = input.readEnum();
+                @SuppressWarnings("deprecation")
+              Exportkey.TemporaryExposureKey.ReportType value = Exportkey.TemporaryExposureKey.ReportType.valueOf(rawValue);
+              if (value == null) {
+                unknownFields.mergeVarintField(5, rawValue);
+              } else {
+                bitField0_ |= 0x00000010;
+                reportType_ = rawValue;
+              }
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              daysSinceOnsetOfSymptoms_ = input.readSInt32();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -3468,6 +4126,166 @@ public final class Exportkey {
       return Exportkey.internal_static_TemporaryExposureKey_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               Exportkey.TemporaryExposureKey.class, Exportkey.TemporaryExposureKey.Builder.class);
+    }
+
+    /**
+     * <pre>
+     * Data type representing why this key was published.
+     * </pre>
+     *
+     * Protobuf enum {@code TemporaryExposureKey.ReportType}
+     */
+    public enum ReportType
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <pre>
+       * Never returned by the client API.
+       * </pre>
+       *
+       * <code>UNKNOWN = 0;</code>
+       */
+      UNKNOWN(0),
+      /**
+       * <code>CONFIRMED_TEST = 1;</code>
+       */
+      CONFIRMED_TEST(1),
+      /**
+       * <code>CONFIRMED_CLINICAL_DIAGNOSIS = 2;</code>
+       */
+      CONFIRMED_CLINICAL_DIAGNOSIS(2),
+      /**
+       * <code>SELF_REPORT = 3;</code>
+       */
+      SELF_REPORT(3),
+      /**
+       * <pre>
+       * Reserved for future use.
+       * </pre>
+       *
+       * <code>RECURSIVE = 4;</code>
+       */
+      RECURSIVE(4),
+      /**
+       * <pre>
+       * Used to revoke a key, never returned by client API.
+       * </pre>
+       *
+       * <code>REVOKED = 5;</code>
+       */
+      REVOKED(5),
+      ;
+
+      /**
+       * <pre>
+       * Never returned by the client API.
+       * </pre>
+       *
+       * <code>UNKNOWN = 0;</code>
+       */
+      public static final int UNKNOWN_VALUE = 0;
+      /**
+       * <code>CONFIRMED_TEST = 1;</code>
+       */
+      public static final int CONFIRMED_TEST_VALUE = 1;
+      /**
+       * <code>CONFIRMED_CLINICAL_DIAGNOSIS = 2;</code>
+       */
+      public static final int CONFIRMED_CLINICAL_DIAGNOSIS_VALUE = 2;
+      /**
+       * <code>SELF_REPORT = 3;</code>
+       */
+      public static final int SELF_REPORT_VALUE = 3;
+      /**
+       * <pre>
+       * Reserved for future use.
+       * </pre>
+       *
+       * <code>RECURSIVE = 4;</code>
+       */
+      public static final int RECURSIVE_VALUE = 4;
+      /**
+       * <pre>
+       * Used to revoke a key, never returned by client API.
+       * </pre>
+       *
+       * <code>REVOKED = 5;</code>
+       */
+      public static final int REVOKED_VALUE = 5;
+
+
+      public final int getNumber() {
+        return value;
+      }
+
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static ReportType valueOf(int value) {
+        return forNumber(value);
+      }
+
+      /**
+       * @param value The numeric wire value of the corresponding enum entry.
+       * @return The enum associated with the given numeric wire value.
+       */
+      public static ReportType forNumber(int value) {
+        switch (value) {
+          case 0: return UNKNOWN;
+          case 1: return CONFIRMED_TEST;
+          case 2: return CONFIRMED_CLINICAL_DIAGNOSIS;
+          case 3: return SELF_REPORT;
+          case 4: return RECURSIVE;
+          case 5: return REVOKED;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<ReportType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static final com.google.protobuf.Internal.EnumLiteMap<
+          ReportType> internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<ReportType>() {
+              public ReportType findValueByNumber(int number) {
+                return ReportType.forNumber(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(ordinal());
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return Exportkey.TemporaryExposureKey.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final ReportType[] VALUES = values();
+
+      public static ReportType valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int value;
+
+      private ReportType(int value) {
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:TemporaryExposureKey.ReportType)
     }
 
     private int bitField0_;
@@ -3502,26 +4320,26 @@ public final class Exportkey {
     private int transmissionRiskLevel_;
     /**
      * <pre>
-     * Varying risks associated with exposure depending on type of verification
+     * Varying risk associated with a key depending on diagnosis method
      * </pre>
      *
-     * <code>optional int32 transmission_risk_level = 2;</code>
+     * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
      * @return Whether the transmissionRiskLevel field is set.
      */
     @java.lang.Override
-    public boolean hasTransmissionRiskLevel() {
+    @java.lang.Deprecated public boolean hasTransmissionRiskLevel() {
       return ((bitField0_ & 0x00000002) != 0);
     }
     /**
      * <pre>
-     * Varying risks associated with exposure depending on type of verification
+     * Varying risk associated with a key depending on diagnosis method
      * </pre>
      *
-     * <code>optional int32 transmission_risk_level = 2;</code>
+     * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
      * @return The transmissionRiskLevel.
      */
     @java.lang.Override
-    public int getTransmissionRiskLevel() {
+    @java.lang.Deprecated public int getTransmissionRiskLevel() {
       return transmissionRiskLevel_;
     }
 
@@ -3579,6 +4397,62 @@ public final class Exportkey {
       return rollingPeriod_;
     }
 
+    public static final int REPORT_TYPE_FIELD_NUMBER = 5;
+    private int reportType_;
+    /**
+     * <pre>
+     * Type of diagnosis associated with a key.
+     * </pre>
+     *
+     * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+     * @return Whether the reportType field is set.
+     */
+    @java.lang.Override public boolean hasReportType() {
+      return ((bitField0_ & 0x00000010) != 0);
+    }
+    /**
+     * <pre>
+     * Type of diagnosis associated with a key.
+     * </pre>
+     *
+     * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+     * @return The reportType.
+     */
+    @java.lang.Override public Exportkey.TemporaryExposureKey.ReportType getReportType() {
+      @SuppressWarnings("deprecation")
+      Exportkey.TemporaryExposureKey.ReportType result = Exportkey.TemporaryExposureKey.ReportType.valueOf(reportType_);
+      return result == null ? Exportkey.TemporaryExposureKey.ReportType.UNKNOWN : result;
+    }
+
+    public static final int DAYS_SINCE_ONSET_OF_SYMPTOMS_FIELD_NUMBER = 6;
+    private int daysSinceOnsetOfSymptoms_;
+    /**
+     * <pre>
+     * Number of days elapsed between symptom onset and the TEK being used.
+     * E.g. 2 means TEK is 2 days after onset of symptoms.
+     * </pre>
+     *
+     * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+     * @return Whether the daysSinceOnsetOfSymptoms field is set.
+     */
+    @java.lang.Override
+    public boolean hasDaysSinceOnsetOfSymptoms() {
+      return ((bitField0_ & 0x00000020) != 0);
+    }
+    /**
+     * <pre>
+     * Number of days elapsed between symptom onset and the TEK being used.
+     * E.g. 2 means TEK is 2 days after onset of symptoms.
+     * </pre>
+     *
+     * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+     * @return The daysSinceOnsetOfSymptoms.
+     */
+    @java.lang.Override
+    public int getDaysSinceOnsetOfSymptoms() {
+      return daysSinceOnsetOfSymptoms_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3605,6 +4479,12 @@ public final class Exportkey {
       if (((bitField0_ & 0x00000008) != 0)) {
         output.writeInt32(4, rollingPeriod_);
       }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        output.writeEnum(5, reportType_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        output.writeSInt32(6, daysSinceOnsetOfSymptoms_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -3629,6 +4509,14 @@ public final class Exportkey {
       if (((bitField0_ & 0x00000008) != 0)) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, rollingPeriod_);
+      }
+      if (((bitField0_ & 0x00000010) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(5, reportType_);
+      }
+      if (((bitField0_ & 0x00000020) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(6, daysSinceOnsetOfSymptoms_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3665,6 +4553,15 @@ public final class Exportkey {
         if (getRollingPeriod()
             != other.getRollingPeriod()) return false;
       }
+      if (hasReportType() != other.hasReportType()) return false;
+      if (hasReportType()) {
+        if (reportType_ != other.reportType_) return false;
+      }
+      if (hasDaysSinceOnsetOfSymptoms() != other.hasDaysSinceOnsetOfSymptoms()) return false;
+      if (hasDaysSinceOnsetOfSymptoms()) {
+        if (getDaysSinceOnsetOfSymptoms()
+            != other.getDaysSinceOnsetOfSymptoms()) return false;
+      }
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -3691,6 +4588,14 @@ public final class Exportkey {
       if (hasRollingPeriod()) {
         hash = (37 * hash) + ROLLING_PERIOD_FIELD_NUMBER;
         hash = (53 * hash) + getRollingPeriod();
+      }
+      if (hasReportType()) {
+        hash = (37 * hash) + REPORT_TYPE_FIELD_NUMBER;
+        hash = (53 * hash) + reportType_;
+      }
+      if (hasDaysSinceOnsetOfSymptoms()) {
+        hash = (37 * hash) + DAYS_SINCE_ONSET_OF_SYMPTOMS_FIELD_NUMBER;
+        hash = (53 * hash) + getDaysSinceOnsetOfSymptoms();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3833,6 +4738,10 @@ public final class Exportkey {
         bitField0_ = (bitField0_ & ~0x00000004);
         rollingPeriod_ = 144;
         bitField0_ = (bitField0_ & ~0x00000008);
+        reportType_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        daysSinceOnsetOfSymptoms_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -3877,6 +4786,14 @@ public final class Exportkey {
           to_bitField0_ |= 0x00000008;
         }
         result.rollingPeriod_ = rollingPeriod_;
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.reportType_ = reportType_;
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          result.daysSinceOnsetOfSymptoms_ = daysSinceOnsetOfSymptoms_;
+          to_bitField0_ |= 0x00000020;
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -3937,6 +4854,12 @@ public final class Exportkey {
         }
         if (other.hasRollingPeriod()) {
           setRollingPeriod(other.getRollingPeriod());
+        }
+        if (other.hasReportType()) {
+          setReportType(other.getReportType());
+        }
+        if (other.hasDaysSinceOnsetOfSymptoms()) {
+          setDaysSinceOnsetOfSymptoms(other.getDaysSinceOnsetOfSymptoms());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -4029,38 +4952,38 @@ public final class Exportkey {
       private int transmissionRiskLevel_ ;
       /**
        * <pre>
-       * Varying risks associated with exposure depending on type of verification
+       * Varying risk associated with a key depending on diagnosis method
        * </pre>
        *
-       * <code>optional int32 transmission_risk_level = 2;</code>
+       * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
        * @return Whether the transmissionRiskLevel field is set.
        */
       @java.lang.Override
-      public boolean hasTransmissionRiskLevel() {
+      @java.lang.Deprecated public boolean hasTransmissionRiskLevel() {
         return ((bitField0_ & 0x00000002) != 0);
       }
       /**
        * <pre>
-       * Varying risks associated with exposure depending on type of verification
+       * Varying risk associated with a key depending on diagnosis method
        * </pre>
        *
-       * <code>optional int32 transmission_risk_level = 2;</code>
+       * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
        * @return The transmissionRiskLevel.
        */
       @java.lang.Override
-      public int getTransmissionRiskLevel() {
+      @java.lang.Deprecated public int getTransmissionRiskLevel() {
         return transmissionRiskLevel_;
       }
       /**
        * <pre>
-       * Varying risks associated with exposure depending on type of verification
+       * Varying risk associated with a key depending on diagnosis method
        * </pre>
        *
-       * <code>optional int32 transmission_risk_level = 2;</code>
+       * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
        * @param value The transmissionRiskLevel to set.
        * @return This builder for chaining.
        */
-      public Builder setTransmissionRiskLevel(int value) {
+      @java.lang.Deprecated public Builder setTransmissionRiskLevel(int value) {
         bitField0_ |= 0x00000002;
         transmissionRiskLevel_ = value;
         onChanged();
@@ -4068,13 +4991,13 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Varying risks associated with exposure depending on type of verification
+       * Varying risk associated with a key depending on diagnosis method
        * </pre>
        *
-       * <code>optional int32 transmission_risk_level = 2;</code>
+       * <code>optional int32 transmission_risk_level = 2 [deprecated = true];</code>
        * @return This builder for chaining.
        */
-      public Builder clearTransmissionRiskLevel() {
+      @java.lang.Deprecated public Builder clearTransmissionRiskLevel() {
         bitField0_ = (bitField0_ & ~0x00000002);
         transmissionRiskLevel_ = 0;
         onChanged();
@@ -4187,6 +5110,124 @@ public final class Exportkey {
       public Builder clearRollingPeriod() {
         bitField0_ = (bitField0_ & ~0x00000008);
         rollingPeriod_ = 144;
+        onChanged();
+        return this;
+      }
+
+      private int reportType_ = 0;
+      /**
+       * <pre>
+       * Type of diagnosis associated with a key.
+       * </pre>
+       *
+       * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+       * @return Whether the reportType field is set.
+       */
+      @java.lang.Override public boolean hasReportType() {
+        return ((bitField0_ & 0x00000010) != 0);
+      }
+      /**
+       * <pre>
+       * Type of diagnosis associated with a key.
+       * </pre>
+       *
+       * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+       * @return The reportType.
+       */
+      @java.lang.Override
+      public Exportkey.TemporaryExposureKey.ReportType getReportType() {
+        @SuppressWarnings("deprecation")
+        Exportkey.TemporaryExposureKey.ReportType result = Exportkey.TemporaryExposureKey.ReportType.valueOf(reportType_);
+        return result == null ? Exportkey.TemporaryExposureKey.ReportType.UNKNOWN : result;
+      }
+      /**
+       * <pre>
+       * Type of diagnosis associated with a key.
+       * </pre>
+       *
+       * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+       * @param value The reportType to set.
+       * @return This builder for chaining.
+       */
+      public Builder setReportType(Exportkey.TemporaryExposureKey.ReportType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000010;
+        reportType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Type of diagnosis associated with a key.
+       * </pre>
+       *
+       * <code>optional .TemporaryExposureKey.ReportType report_type = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearReportType() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        reportType_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private int daysSinceOnsetOfSymptoms_ ;
+      /**
+       * <pre>
+       * Number of days elapsed between symptom onset and the TEK being used.
+       * E.g. 2 means TEK is 2 days after onset of symptoms.
+       * </pre>
+       *
+       * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+       * @return Whether the daysSinceOnsetOfSymptoms field is set.
+       */
+      @java.lang.Override
+      public boolean hasDaysSinceOnsetOfSymptoms() {
+        return ((bitField0_ & 0x00000020) != 0);
+      }
+      /**
+       * <pre>
+       * Number of days elapsed between symptom onset and the TEK being used.
+       * E.g. 2 means TEK is 2 days after onset of symptoms.
+       * </pre>
+       *
+       * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+       * @return The daysSinceOnsetOfSymptoms.
+       */
+      @java.lang.Override
+      public int getDaysSinceOnsetOfSymptoms() {
+        return daysSinceOnsetOfSymptoms_;
+      }
+      /**
+       * <pre>
+       * Number of days elapsed between symptom onset and the TEK being used.
+       * E.g. 2 means TEK is 2 days after onset of symptoms.
+       * </pre>
+       *
+       * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+       * @param value The daysSinceOnsetOfSymptoms to set.
+       * @return This builder for chaining.
+       */
+      public Builder setDaysSinceOnsetOfSymptoms(int value) {
+        bitField0_ |= 0x00000020;
+        daysSinceOnsetOfSymptoms_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Number of days elapsed between symptom onset and the TEK being used.
+       * E.g. 2 means TEK is 2 days after onset of symptoms.
+       * </pre>
+       *
+       * <code>optional sint32 days_since_onset_of_symptoms = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearDaysSinceOnsetOfSymptoms() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        daysSinceOnsetOfSymptoms_ = 0;
         onChanged();
         return this;
       }
@@ -5042,7 +6083,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5051,7 +6092,7 @@ public final class Exportkey {
     boolean hasSignatureInfo();
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5060,7 +6101,7 @@ public final class Exportkey {
     Exportkey.SignatureInfo getSignatureInfo();
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5069,7 +6110,7 @@ public final class Exportkey {
 
     /**
      * <pre>
-     * E.g., Batch 2 of 10
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
      * </pre>
      *
      * <code>optional int32 batch_num = 2;</code>
@@ -5078,7 +6119,7 @@ public final class Exportkey {
     boolean hasBatchNum();
     /**
      * <pre>
-     * E.g., Batch 2 of 10
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
      * </pre>
      *
      * <code>optional int32 batch_num = 2;</code>
@@ -5228,7 +6269,7 @@ public final class Exportkey {
     private Exportkey.SignatureInfo signatureInfo_;
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5240,7 +6281,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5252,7 +6293,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * Info about the signing key, version, algorithm, etc
+     * Info about the signing key, version, algorithm, and so on.
      * </pre>
      *
      * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5266,7 +6307,7 @@ public final class Exportkey {
     private int batchNum_;
     /**
      * <pre>
-     * E.g., Batch 2 of 10
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
      * </pre>
      *
      * <code>optional int32 batch_num = 2;</code>
@@ -5278,7 +6319,7 @@ public final class Exportkey {
     }
     /**
      * <pre>
-     * E.g., Batch 2 of 10
+     * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
      * </pre>
      *
      * <code>optional int32 batch_num = 2;</code>
@@ -5738,7 +6779,7 @@ public final class Exportkey {
           Exportkey.SignatureInfo, Exportkey.SignatureInfo.Builder, Exportkey.SignatureInfoOrBuilder> signatureInfoBuilder_;
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5749,7 +6790,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5764,7 +6805,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5784,7 +6825,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5802,7 +6843,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5826,7 +6867,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5843,7 +6884,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5855,7 +6896,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5870,7 +6911,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * Info about the signing key, version, algorithm, etc
+       * Info about the signing key, version, algorithm, and so on.
        * </pre>
        *
        * <code>optional .SignatureInfo signature_info = 1;</code>
@@ -5892,7 +6933,7 @@ public final class Exportkey {
       private int batchNum_ ;
       /**
        * <pre>
-       * E.g., Batch 2 of 10
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
        * </pre>
        *
        * <code>optional int32 batch_num = 2;</code>
@@ -5904,7 +6945,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
        * </pre>
        *
        * <code>optional int32 batch_num = 2;</code>
@@ -5916,7 +6957,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
        * </pre>
        *
        * <code>optional int32 batch_num = 2;</code>
@@ -5931,7 +6972,7 @@ public final class Exportkey {
       }
       /**
        * <pre>
-       * E.g., Batch 2 of 10
+       * For example, file 2 in batch size of 10. Ordinal, 1-based numbering.
        * </pre>
        *
        * <code>optional int32 batch_num = 2;</code>
@@ -6127,24 +7168,31 @@ public final class Exportkey {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\"src/main/resources/exportkey.proto\"\321\001\n" +
+      "\n\"src/main/resources/exportkey.proto\"\376\001\n" +
       "\032TemporaryExposureKeyExport\022\027\n\017start_tim" +
       "estamp\030\001 \001(\006\022\025\n\rend_timestamp\030\002 \001(\006\022\016\n\006r" +
       "egion\030\003 \001(\t\022\021\n\tbatch_num\030\004 \001(\005\022\022\n\nbatch_" +
       "size\030\005 \001(\005\022\'\n\017signature_infos\030\006 \003(\0132\016.Si" +
       "gnatureInfo\022#\n\004keys\030\007 \003(\0132\025.TemporaryExp" +
-      "osureKey\"\227\001\n\rSignatureInfo\022 \n\030verificati" +
-      "on_key_version\030\003 \001(\t\022\033\n\023verification_key" +
-      "_id\030\004 \001(\t\022\033\n\023signature_algorithm\030\005 \001(\tJ\004" +
-      "\010\001\020\002J\004\010\002\020\003R\rapp_bundle_idR\017android_packa" +
-      "ge\"\215\001\n\024TemporaryExposureKey\022\020\n\010key_data\030" +
-      "\001 \001(\014\022\037\n\027transmission_risk_level\030\002 \001(\005\022%" +
-      "\n\035rolling_start_interval_number\030\003 \001(\005\022\033\n" +
-      "\016rolling_period\030\004 \001(\005:\003144\"5\n\020TEKSignatu" +
-      "reList\022!\n\nsignatures\030\001 \003(\0132\r.TEKSignatur" +
-      "e\"p\n\014TEKSignature\022&\n\016signature_info\030\001 \001(" +
-      "\0132\016.SignatureInfo\022\021\n\tbatch_num\030\002 \001(\005\022\022\n\n" +
-      "batch_size\030\003 \001(\005\022\021\n\tsignature\030\004 \001(\014"
+      "osureKey\022+\n\014revised_keys\030\010 \003(\0132\025.Tempora" +
+      "ryExposureKey\"\227\001\n\rSignatureInfo\022 \n\030verif" +
+      "ication_key_version\030\003 \001(\t\022\033\n\023verificatio" +
+      "n_key_id\030\004 \001(\t\022\033\n\023signature_algorithm\030\005 " +
+      "\001(\tJ\004\010\001\020\002J\004\010\002\020\003R\rapp_bundle_idR\017android_" +
+      "package\"\354\002\n\024TemporaryExposureKey\022\020\n\010key_" +
+      "data\030\001 \001(\014\022#\n\027transmission_risk_level\030\002 " +
+      "\001(\005B\002\030\001\022%\n\035rolling_start_interval_number" +
+      "\030\003 \001(\005\022\033\n\016rolling_period\030\004 \001(\005:\003144\0225\n\013r" +
+      "eport_type\030\005 \001(\0162 .TemporaryExposureKey." +
+      "ReportType\022$\n\034days_since_onset_of_sympto" +
+      "ms\030\006 \001(\021\"|\n\nReportType\022\013\n\007UNKNOWN\020\000\022\022\n\016C" +
+      "ONFIRMED_TEST\020\001\022 \n\034CONFIRMED_CLINICAL_DI" +
+      "AGNOSIS\020\002\022\017\n\013SELF_REPORT\020\003\022\r\n\tRECURSIVE\020" +
+      "\004\022\013\n\007REVOKED\020\005\"5\n\020TEKSignatureList\022!\n\nsi" +
+      "gnatures\030\001 \003(\0132\r.TEKSignature\"p\n\014TEKSign" +
+      "ature\022&\n\016signature_info\030\001 \001(\0132\016.Signatur" +
+      "eInfo\022\021\n\tbatch_num\030\002 \001(\005\022\022\n\nbatch_size\030\003" +
+      " \001(\005\022\021\n\tsignature\030\004 \001(\014"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -6155,7 +7203,7 @@ public final class Exportkey {
     internal_static_TemporaryExposureKeyExport_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_TemporaryExposureKeyExport_descriptor,
-        new java.lang.String[] { "StartTimestamp", "EndTimestamp", "Region", "BatchNum", "BatchSize", "SignatureInfos", "Keys", });
+        new java.lang.String[] { "StartTimestamp", "EndTimestamp", "Region", "BatchNum", "BatchSize", "SignatureInfos", "Keys", "RevisedKeys", });
     internal_static_SignatureInfo_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_SignatureInfo_fieldAccessorTable = new
@@ -6167,7 +7215,7 @@ public final class Exportkey {
     internal_static_TemporaryExposureKey_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_TemporaryExposureKey_descriptor,
-        new java.lang.String[] { "KeyData", "TransmissionRiskLevel", "RollingStartIntervalNumber", "RollingPeriod", });
+        new java.lang.String[] { "KeyData", "TransmissionRiskLevel", "RollingStartIntervalNumber", "RollingPeriod", "ReportType", "DaysSinceOnsetOfSymptoms", });
     internal_static_TEKSignatureList_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_TEKSignatureList_fieldAccessorTable = new
