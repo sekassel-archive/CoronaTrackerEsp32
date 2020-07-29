@@ -1,6 +1,6 @@
 #include "coronatracker-spiffs.h"
 
-bool initSPIFFS(bool createEncountersFile)
+bool initSPIFFS(bool createEncountersFile, /*bool createRecentEncountersFile*/)
 {
     if (!SPIFFS.begin(true))
     {
@@ -23,6 +23,13 @@ bool initSPIFFS(bool createEncountersFile)
         }
         file.close();
     }
+
+    // if(createRecentEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH)) {
+
+    // }
+
+    //TODO Create recentencounterfile
+
     return true;
 }
 
@@ -31,13 +38,13 @@ bool fileContainsString(std::string str, const char *path)
     int index = 0;
     int len = str.length();
 
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
+    if (len == 0)
     {
         return false;
     }
 
-    if (len == 0)
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
     {
         return false;
     }
@@ -54,10 +61,12 @@ bool fileContainsString(std::string str, const char *path)
         {
             if (++index >= len)
             {
+                file.close();
                 return true;
             }
         }
     }
+    file.close();
     return false;
 }
 

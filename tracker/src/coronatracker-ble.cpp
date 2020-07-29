@@ -25,6 +25,8 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.print(" --> ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
 
+            //TODO Write to file instead
+
             recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
