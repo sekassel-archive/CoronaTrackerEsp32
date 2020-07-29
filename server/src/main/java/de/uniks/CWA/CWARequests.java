@@ -1,4 +1,4 @@
-package de.uniks;
+package de.uniks.CWA;
 
 import de.uniks.proto.Exportkey;
 import javafx.util.Pair;

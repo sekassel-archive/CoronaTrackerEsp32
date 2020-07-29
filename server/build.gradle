@@ -22,6 +22,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.11.0'
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
     compile 'com.google.protobuf:protobuf-java:3.12.2'
+    compile 'at.favre.lib:hkdf:1.1.0'
 }
 
 jar {
