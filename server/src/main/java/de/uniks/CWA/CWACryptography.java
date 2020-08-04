@@ -28,7 +28,7 @@ public class CWACryptography {
     private static final int PADDED_DATA_ENIN_START = 12;
 
     public static final String AES = "AES";
-    public static final String RPI_CIPHER_TRANSFORMATION = "AES/CBC/NoPadding";
+    public static final String RPI_CIPHER_TRANSFORMATION = "AES/ECB/NoPadding";
 
     private static byte[] getENIntervalNumber(int timestamp) {
         return ByteBuffer.allocate(ENIN_SIZE).order(ByteOrder.LITTLE_ENDIAN).putInt(timestamp).array();
