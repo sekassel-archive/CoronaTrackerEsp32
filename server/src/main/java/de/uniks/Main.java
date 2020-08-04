@@ -3,8 +3,10 @@ package de.uniks;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uniks.CWA.CWARequests;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -14,7 +16,10 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -25,7 +30,7 @@ import static spark.Spark.*;
 
 public class Main {
 
-    private static ConcurrentHashMap<Long, Set<BigInteger>> infections = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, List<byte[]>> infections = new ConcurrentHashMap<>();
     private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
@@ -56,60 +61,36 @@ public class Main {
             }
 
             //Rounds down to nearest day
-            long time = Instant.ofEpochSecond(input.getTime()).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
-            if (!infections.containsKey(time)) {
-                infections.put(time, ConcurrentHashMap.newKeySet());
+            int rsin = input.getRsin();
+            if (!infections.containsKey(rsin)) {
+                infections.put(rsin, new ArrayList<>());
             }
-            infections.get(time).add(input.getId());
+            infections.get(rsin).add(input.getKeyData());
             return "Success!";
         }));
 
-        get("/infections/time", (request, response) -> {
+        get("/infections/rsin", (request, response) -> {
             JSONObject json = new JSONObject();
-            for (Long key : infections.keySet()) {
+            for (Integer key : infections.keySet()) {
                 json.put(key.toString(), infections.get(key).size());
             }
             return json;
         });
 
-        get("/infections/time/:time", (request, response) -> {
-            long time;
+        get("/infections/rsin/:rsin", (request, response) -> {
+            int rsin;
             try {
-                time = Long.parseLong(request.params(":time"));
-            } catch (NumberFormatException e) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Input must be number";
-            }
-            time = Instant.ofEpochSecond(time).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
-
-            if (!infections.containsKey(time)) {
-                response.status(HTTP_NOT_FOUND);
-                return "Input not found";
-            }
-            return new JSONArray(infections.get(time));
-        });
-
-        get("/infections/id/:id", (request, response) -> {
-            BigInteger id;
-            try {
-                id = new BigInteger(request.params(":id"));
+                rsin = Integer.parseInt(request.params(":rsin"));
             } catch (NumberFormatException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Input must be number";
             }
 
-            ArrayList<Long> times = new ArrayList<>();
-            for (Map.Entry<Long, Set<BigInteger>> entry : infections.entrySet()) {
-                if (entry.getValue().contains(id)) {
-                    times.add(entry.getKey());
-                }
-            }
-
-            if (times.isEmpty()) {
+            if (!infections.containsKey(rsin)) {
                 response.status(HTTP_NOT_FOUND);
                 return "Input not found";
             }
-            return new JSONArray(times);
+            return new JSONArray(infections.get(rsin));
         });
 
         delete("/infections", ((request, response) -> {
@@ -117,54 +98,69 @@ public class Main {
             return "Successfully removed all entries";
         }));
 
-        delete("/infections/time/:time", (request, response) -> {
-            long time;
+        delete("/infections/rsin/:rsin", (request, response) -> {
+            int rsin;
             try {
-                time = Long.parseLong(request.params(":time"));
+                rsin = Integer.parseInt(request.params(":rsin"));
             } catch (NumberFormatException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Input must be number";
             }
-            time = Instant.ofEpochSecond(time).truncatedTo(ChronoUnit.DAYS).getEpochSecond();
 
-            if (!infections.containsKey(time)) {
+            if (!infections.containsKey(rsin)) {
                 response.status(HTTP_NOT_FOUND);
                 return "Input not found";
             }
-            infections.remove(time);
-            return "Successfully removed " + time;
+            infections.remove(rsin);
+            return "Successfully removed " + rsin;
         });
 
-        //delete infections->id
-        delete("/infections/id/:id", (request, response) -> {
-            BigInteger id;
+        delete("/infections/rsin/:rsin/teks/:tek", (request, response) -> {
+            int rsin;
             try {
-                id = new BigInteger(request.params(":id"));
+                rsin = Integer.parseInt(request.params(":rsin"));
             } catch (NumberFormatException e) {
                 response.status(HTTP_BAD_REQUEST);
-                return "Input must be number";
+                return "RSIN must be number";
+            }
+            JSONArray json;
+            try {
+                 json = new JSONArray(request.params(":tek"));
+            } catch (JSONException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Bad Array";
             }
 
-            ArrayList<Long> times = new ArrayList<>();
-            for (Map.Entry<Long, Set<BigInteger>> entry : infections.entrySet()) {
-                if (entry.getValue().contains(id)) {
-                    times.add(entry.getKey());
-                }
+            if(json.length() != 16) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Array must be of length 16";
             }
 
-            if (times.isEmpty()) {
+            if (!infections.containsKey(rsin)) {
                 response.status(HTTP_NOT_FOUND);
                 return "Input not found";
             }
 
-            for (long key : times) {
-                infections.get(key).remove(id);
-                if (infections.get(key).isEmpty()) {
-                    infections.remove(key);
+            List<byte[]> bytes = infections.get(rsin);
+            byte[] toRemove = null;
+            outer:
+            for (byte[] key : bytes) {
+                for (int i = 0; i < key.length; i++) {
+                    if(key[i] != json.getInt(i)) {
+                        continue outer;
+                    }
                 }
+                toRemove = key;
+                break;
             }
 
-            return "Successfully removed " + id;
+            if(toRemove == null) {
+                response.status(HTTP_NOT_FOUND);
+                return "Input not found";
+            } else {
+                bytes.remove(toRemove);
+                return "Successfully removed";
+            }
         });
 
         get("/cwa/status", (request, response) -> cwaStatus);
@@ -175,26 +171,45 @@ public class Main {
     private static String cwaStatus;
 
     private static void updateCWAKeys() {
-        Map<Long, List<BigInteger>> keyMap;
+        Map<Integer, List<byte[]>> keyMap;
         try {
-            keyMap = CWARequests.getAllInfectionKeys();
+            keyMap = CWARequests.getUnzippedInfectionData();
         } catch (IOException | InterruptedException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));
             cwaStatus = e.getMessage() + "\n" + sw.toString();
             return;
         }
-        for (Map.Entry<Long, List<BigInteger>> entry : keyMap.entrySet()) {
-            Long time = entry.getKey();
 
-            if (!infections.containsKey(time)) {
-                infections.put(time, ConcurrentHashMap.newKeySet());
+        for (Map.Entry<Integer, List<byte[]>> entry : keyMap.entrySet()) {
+            if(!infections.containsKey(entry.getKey())) {
+                infections.put(entry.getKey(), new ArrayList<>());
             }
-            Set<BigInteger> idSet = infections.get(time);
-            idSet.addAll(entry.getValue());
+            for (byte[] bytes : entry.getValue()) {
+                if(!listContainsArray(infections.get(entry.getKey()),bytes)) {
+                    infections.get(entry.getKey()).add(bytes);
+                }
+            }
         }
 
         cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
                 .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
+    }
+
+    private static boolean listContainsArray(List<byte[]> list, byte[] array) {
+        outer:
+        for (byte[] bytes : list) {
+            if(bytes.length != array.length) {
+                continue;
+            }
+
+            for (int i = 0; i < bytes.length; i++) {
+                if(bytes[i] != array[i]) {
+                    continue outer;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 }

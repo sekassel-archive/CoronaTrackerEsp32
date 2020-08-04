@@ -1,13 +1,11 @@
 package de.uniks.CWA;
 
 import de.uniks.proto.Exportkey;
-import javafx.util.Pair;
 import org.json.JSONArray;
 import spark.utils.IOUtils;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -29,22 +27,30 @@ public class CWARequests {
     private static final String ZIP_TEMPORARY = "response.zip";
     private static final String EXPORT_BIN = "export.bin";
 
-    private static DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    public static Map<Long, List<BigInteger>> getAllInfectionKeys() throws IOException, InterruptedException {
+    //Returns List of all RollingStartIntervalNumbers with their TemporaryExposureKeys
+    public static Map<Integer, List<byte[]>> getUnzippedInfectionData() throws IOException, InterruptedException {
         String[] dates = getInfectionDates();
-        Map<Long, List<BigInteger>> keyMap = new HashMap<>();
+        Map<Integer, List<byte[]>> keyMap = new HashMap<>();
 
         for (String date : dates) {
-            Pair<Long, List<BigInteger>> keys = getInfectionKeys(date);
-            keyMap.put(keys.getKey(), keys.getValue());
+            Map<Integer, List<byte[]>> data = getInfectionData(date);
+
+            for (Map.Entry<Integer, List<byte[]>> entry : data.entrySet()) {
+                if(!keyMap.containsKey(entry.getKey())) {
+                    keyMap.put(entry.getKey(), new ArrayList<>());
+                }
+                keyMap.get(entry.getKey()).addAll(entry.getValue());
+            }
         }
         return keyMap;
     }
 
-    private static Pair<Long, List<BigInteger>> getInfectionKeys(String date) throws DateTimeParseException, IOException, InterruptedException {
+    private static Map<Integer, List<byte[]>> getInfectionData(String date) throws DateTimeParseException, IOException, InterruptedException {
         LocalDate.parse(date, dateFormatter);
-        List<BigInteger> keys = new ArrayList<>();
+
+        Map<Integer, List<byte[]>> infectionData = new HashMap<>();
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -52,6 +58,9 @@ public class CWARequests {
                 .GET()
                 .build();
         HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+        if (response.statusCode() != HttpURLConnection.HTTP_OK) {
+            throw new IOException("Request returned with status code " + response.statusCode());
+        }
 
         FileOutputStream fos = new FileOutputStream(ZIP_TEMPORARY);
         fos.write(response.body());
@@ -71,9 +80,14 @@ public class CWARequests {
         List<Exportkey.TemporaryExposureKey> keysList = export.getKeysList();
 
         for (Exportkey.TemporaryExposureKey key : keysList) {
-            keys.add(new BigInteger(key.getKeyData().toByteArray()));
+            int rsin = key.getRollingStartIntervalNumber();
+
+            if (!infectionData.containsKey(rsin)) {
+                infectionData.put(rsin, new ArrayList<>());
+            }
+            infectionData.get(rsin).add(key.getKeyData().toByteArray());
         }
-        return new Pair<>(export.getStartTimestamp(), keys);
+        return infectionData;
     }
 
     private static String[] getInfectionDates() throws IOException, InterruptedException {
