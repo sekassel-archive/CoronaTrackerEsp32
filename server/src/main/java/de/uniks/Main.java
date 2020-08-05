@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
+import de.uniks.CWA.CWAWebsocket;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,14 +13,12 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.math.BigInteger;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -34,6 +33,8 @@ public class Main {
     private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
+        webSocket("/cwa", CWAWebsocket.class);
+
         get("/hello", (request, response) -> "Hello World");
 
         get("/infections", ((request, response) -> {
@@ -211,5 +212,9 @@ public class Main {
             return true;
         }
         return false;
+    }
+
+    public static ConcurrentHashMap<Integer, List<byte[]>> getInfections() {
+        return infections;
     }
 }
