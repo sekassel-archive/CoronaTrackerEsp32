@@ -1,5 +1,7 @@
 #include "coronatracker-wifi.h"
 
+using namespace websockets;
+
 bool disconnectWifi()
 {
     Serial.println("Deactivating Wifi");
@@ -14,6 +16,89 @@ bool connectToStoredWifi()
     return WiFi.waitForConnectResult() == WL_CONNECTED;
 }
 
+void checkForInfections() {
+    Serial.println("Connecting to server and checking for infections");
+    if (!connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return;
+    }
+    else
+    {
+        Serial.println("Requesting infections numbers");
+        HTTPClient http;
+
+        http.begin("http://192.168.178.59:4567/infections/rsin");
+        int code = http.GET();
+
+        if (!(code == HTTP_CODE_OK))
+        {
+            Serial.println("Failed to connect to server");
+            return;
+        }
+        else
+        {
+            DynamicJsonDocument doc(1024);
+            DeserializationError err = deserializeJson(doc, http.getString());
+
+            if (err)
+            {
+                Serial.print(F("deserializeJson() failed with code "));
+                Serial.println(err.c_str());
+                return;
+            }
+            else
+            {
+                WebsocketsClient client;
+
+                bool con = client.connect("ws://192.168.178.59:4567/cwa");
+
+                if (!con)
+                {
+                    Serial.println("Could not connect to websocket");
+                    return;
+                }
+                else
+                {
+                    client.onMessage([&](WebsocketsMessage message) {
+                        Serial.print("Got Message: ");
+                        Serial.println(message.data());
+                        //TODO Handle Message
+
+                        });
+
+                    JsonObject json = doc.as<JsonObject>();
+                    for (JsonPair pair : json)
+                    {
+                        Serial.printf("Starting to poll %s", pair.key().c_str());
+
+                        int values = pair.value().as<int>();
+
+                        for (int i = 0; i < values; i++)
+                        {
+                            String stringToSend = pair.key().c_str();
+                            stringToSend.concat(":");
+                            stringToSend.concat(i);
+
+                            client.send(stringToSend);
+
+                            while (!client.poll())
+                            {
+                                delay(1);
+                            }
+                        }
+                    }
+                    client.close();
+                }
+            }
+        }
+        http.end();
+    }
+    disconnectWifi();
+}
+
+
+//Deprecated
 std::pair<bool, std::vector<long>> requestInfections()
 {
     Serial.println("Requesting infections from server.");
