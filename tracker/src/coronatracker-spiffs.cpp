@@ -1,17 +1,17 @@
 #include "coronatracker-spiffs.h"
 
-bool initSPIFFS()
+bool initSPIFFS(bool createEncountersFile, /*bool createRecentEncountersFile*/)
 {
-    if (!SPIFFS.begin(true)) //Error on first flash, after 30 seconds continues?
+    if (!SPIFFS.begin(true))
     {
         Serial.println("Initializing failed");
         return false;
     }
 
     //Remove comment to reset file
-    //SPIFFS.remove(path);
+    //SPIFFS.remove(ENCOUNTERS_PATH);
 
-    if (!SPIFFS.exists(ENCOUNTERS_PATH))
+    if (createEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH))
     {
         Serial.println("Creating File");
         File file = SPIFFS.open(ENCOUNTERS_PATH);
@@ -23,6 +23,13 @@ bool initSPIFFS()
         }
         file.close();
     }
+
+    // if(createRecentEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH)) {
+
+    // }
+
+    //TODO Create recentencounterfile
+
     return true;
 }
 
@@ -31,13 +38,13 @@ bool fileContainsString(std::string str, const char *path)
     int index = 0;
     int len = str.length();
 
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
+    if (len == 0)
     {
         return false;
     }
 
-    if (len == 0)
+    File file = SPIFFS.open(path, FILE_READ);
+    if (!file)
     {
         return false;
     }
@@ -54,16 +61,18 @@ bool fileContainsString(std::string str, const char *path)
         {
             if (++index >= len)
             {
+                file.close();
                 return true;
             }
         }
     }
+    file.close();
     return false;
 }
 
 bool writeIDtoFile(std::string id, const char *path)
 {
-    File file = SPIFFS.open(ENCOUNTERS_PATH, FILE_APPEND);
+    File file = SPIFFS.open(path, FILE_APPEND);
     if (!file)
     {
         return false;

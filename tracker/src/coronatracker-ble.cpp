@@ -2,6 +2,9 @@
 
 static BLEUUID serviceUUID((uint16_t)0xFD68); //UUID taken from App
 char device_id[30] = "Hallo Welt COVID";      //ID to be braodcasted
+
+//TODO Move to main
+//TODO Is now resettet after every sleep,either store on flash or in rtc memory
 std::multimap<std::string, time_t> recentEncounterMap;
 
 BLEServer *pServer;
@@ -22,13 +25,15 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.print(" --> ID: ");
             Serial.println(advertisedDevice.getServiceData().c_str());
 
+            //TODO Write to file instead
+
             recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
-void initBLE()
+bool initBLE(bool initScan, bool initAdvertisment)
 {
     //Setting up Server
     Serial.println("Setting Up Server");
@@ -38,30 +43,45 @@ void initBLE()
     pService->start();
 
     //Service Data
-    BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-    oAdvertisementData.setServiceData(serviceUUID, device_id);
+    if (initAdvertisment)
+    {
+        BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+        oAdvertisementData.setServiceData(serviceUUID, device_id);
 
-    Serial.println("Setting up Advertisment");
-    pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(serviceUUID);
-    pAdvertising->setAdvertisementData(oAdvertisementData);
-    pAdvertising->setMinPreferred(0x06);
-    pAdvertising->setMinPreferred(0x12);
-    pAdvertising->start();
-
+        Serial.println("Setting up Advertisment");
+        pAdvertising = BLEDevice::getAdvertising();
+        pAdvertising->addServiceUUID(serviceUUID);
+        pAdvertising->setAdvertisementData(oAdvertisementData);
+        pAdvertising->setMinPreferred(0x06);
+        pAdvertising->setMinPreferred(0x12);
+        pAdvertising->start();
+    }
     //Setting up Scan
-    Serial.println("Setting up Scan");
-    pBLEScan = BLEDevice::getScan();
-    pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
-    pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
-    pBLEScan->setInterval(100);
-    pBLEScan->setWindow(99); // less or equal setInterval value
+    if (initScan)
+    {
+
+        Serial.println("Setting up Scan");
+        pBLEScan = BLEDevice::getScan();
+        pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
+        pBLEScan->setActiveScan(true); //active scan uses more power, but get results faster
+        pBLEScan->setInterval(100);
+        pBLEScan->setWindow(99); // less or equal setInterval value
+    }
+
+    return true;
 }
 
 void deinitBLE()
 {
-    pAdvertising->stop();
-    pBLEScan->stop();
+    if (pAdvertising != nullptr)
+    {
+        pAdvertising->stop();
+    }
+    if (pBLEScan != nullptr)
+    {
+        pBLEScan->stop();
+    }
+
     BLEDevice::deinit(false);
     delete pServer;
     delete pService;
