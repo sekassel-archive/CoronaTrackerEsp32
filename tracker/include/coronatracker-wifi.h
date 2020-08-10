@@ -4,7 +4,11 @@
 #include <ArduinoJSON.h>
 #include <ArduinoWebsockets.h>
 
+#include "coronatracker-crypto.h"
+
 #define SERVER_URL "https://tracing.uniks.de"
+
+const size_t JSON_CAPACITY = JSON_ARRAY_SIZE(16);
 
 bool disconnectWifi();
 bool connectToStoredWifi();

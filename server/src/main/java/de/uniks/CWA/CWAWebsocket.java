@@ -15,7 +15,7 @@ public class CWAWebsocket {
 
     @OnWebSocketConnect
     public void onConnect(Session session) throws Exception {
-        session.getRemote().sendString("Usage:\nrsin:keyNr");
+
     }
 
     @OnWebSocketClose

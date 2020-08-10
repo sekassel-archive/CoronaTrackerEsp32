@@ -16,6 +16,11 @@ bool connectToStoredWifi()
     return WiFi.waitForConnectResult() == WL_CONNECTED;
 }
 
+String lastMessage;
+void onMessageCallback(WebsocketsMessage message) {
+    lastMessage = message.data();
+}
+
 void checkForInfections() {
     Serial.println("Connecting to server and checking for infections");
     if (!connectToStoredWifi())
@@ -60,22 +65,19 @@ void checkForInfections() {
                 }
                 else
                 {
-                    client.onMessage([&](WebsocketsMessage message) {
-                        Serial.print("Got Message: ");
-                        Serial.println(message.data());
-                        //TODO Handle Message
-
-                        });
+                    client.onMessage(onMessageCallback);
 
                     JsonObject json = doc.as<JsonObject>();
                     for (JsonPair pair : json)
                     {
-                        Serial.printf("Starting to poll %s", pair.key().c_str());
+                        Serial.printf("Starting to poll %s\n", pair.key().c_str());
 
                         int values = pair.value().as<int>();
 
                         for (int i = 0; i < values; i++)
                         {
+                            int rsin = atoi(pair.key().c_str());
+
                             String stringToSend = pair.key().c_str();
                             stringToSend.concat(":");
                             stringToSend.concat(i);
@@ -86,10 +88,35 @@ void checkForInfections() {
                             {
                                 delay(1);
                             }
+
+                            if(lastMessage.equals("Not found") || lastMessage.equals("Wrong Input!")) {
+                                continue;
+                            }
+
+                            StaticJsonDocument<JSON_CAPACITY> doc;
+                            deserializeJson(doc, lastMessage);
+
+                            JsonArray byteArray = doc.as<JsonArray>();
+                            signed char keyData[16];
+
+                            int j = 0;
+                            for (JsonVariant elem : byteArray)
+                            {
+                                keyData[j] = elem.as<int>();
+                                j++;
+                            }
+
+                            for (int j = 0; j < 144; j++)
+                            {
+                                signed char rpi[16];
+                                calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpi);
+
+                                //TODO Compare with own keys
+                            }
                         }
                     }
-                    client.close();
                 }
+                client.close();
             }
         }
         http.end();
@@ -112,10 +139,13 @@ std::pair<bool, std::vector<long>> requestInfections()
     }
     else
     {
+        Serial.println(ESP.getFreeHeap());
         HTTPClient http;
 
         http.begin(String(SERVER_URL) + "/infections");
         int httpCode = http.GET();
+
+        Serial.println(ESP.getFreeHeap());
 
         Serial.print("ReturnCode: ");
         Serial.println(httpCode);
@@ -127,8 +157,10 @@ std::pair<bool, std::vector<long>> requestInfections()
             Serial.println("-----------------------------");
 
             //TODO: Maybe calculate approximate size beforehand
-            DynamicJsonDocument doc(2048);
+            DynamicJsonDocument doc(2048); //Can stream directly
             DeserializationError err = deserializeJson(doc, response);
+
+            Serial.println(ESP.getFreeHeap());
 
             if (!err)
             {
