@@ -106,7 +106,7 @@ void checkForInfections() {
                                 j++;
                             }
 
-                            for (int j = 0; j < ROLLING_PERIOD; j++)
+                            for (int j = 0; j < EKROLLING_PERIOD; j++)
                             {
                                 signed char rpi[16];
                                 calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpi);

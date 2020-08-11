@@ -3,6 +3,8 @@
 #include "mbedtls/md.h"
 #include "mbedtls/aes.h"
 
+#define EKROLLING_PERIOD 144
+
 int calculateRollingProximityIdentifierKey(const unsigned char *tek, unsigned char *output);
 int calculateRollingProximityIdentifier(const unsigned char *tek, int ENIN, unsigned char *output);
 int calculateENIntervalNumber(long timestamp);
