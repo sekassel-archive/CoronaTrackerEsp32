@@ -33,7 +33,7 @@ void checkForInfections() {
         Serial.println("Requesting infections numbers");
         HTTPClient http;
 
-        http.begin("http://192.168.178.59:4567/infections/rsin");
+        http.begin(String(SERVER_URL) + String(RSIN_URL));
         int code = http.GET();
 
         if (!(code == HTTP_CODE_OK))
@@ -56,7 +56,7 @@ void checkForInfections() {
             {
                 WebsocketsClient client;
 
-                bool con = client.connect("ws://192.168.178.59:4567/cwa");
+                bool con = client.connect(WS_URL);
 
                 if (!con)
                 {
@@ -70,7 +70,7 @@ void checkForInfections() {
                     JsonObject json = doc.as<JsonObject>();
                     for (JsonPair pair : json)
                     {
-                        Serial.printf("Starting to poll %s\n", pair.key().c_str());
+                        Serial.printf("Starting to check rsin: %s\n", pair.key().c_str());
 
                         int values = pair.value().as<int>();
 
@@ -106,7 +106,7 @@ void checkForInfections() {
                                 j++;
                             }
 
-                            for (int j = 0; j < 144; j++)
+                            for (int j = 0; j < ROLLING_PERIOD; j++)
                             {
                                 signed char rpi[16];
                                 calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpi);

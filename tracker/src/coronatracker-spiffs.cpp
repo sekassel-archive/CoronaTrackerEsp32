@@ -1,6 +1,6 @@
 #include "coronatracker-spiffs.h"
 
-bool initSPIFFS(bool createEncountersFile, /*bool createRecentEncountersFile*/)
+bool initSPIFFS(bool createEncountersFile /*bool createRecentEncountersFile*/)
 {
     if (!SPIFFS.begin(true))
     {
