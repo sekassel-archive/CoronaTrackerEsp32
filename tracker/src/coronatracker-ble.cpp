@@ -45,8 +45,32 @@ bool initBLE(bool initScan, bool initAdvertisment)
     //Service Data
     if (initAdvertisment)
     {
+        esp_power_level_t power = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
+        //Starts at 0 with -12dbm, each step adds 3 dbm
+        signed char tpl = -12 + power * 3;
+
+        signed char version = 1; //00000001, Stands for 01:00
+
+        signed char tek[16];
+        //TODO Save and reuse Keys
+        generateTemporaryExposureKey(tek);
+
+        time_t current_time;
+        time(&current_time);
+        int enin = calculateENIntervalNumber(current_time);
+
+        Serial.println(enin);
+
+        signed char payload[20];
+        int err = getAdvertisingPayload((const unsigned char* )tek, enin, version, tpl, (unsigned char* ) payload);
+
+        if(err != 0) {
+            Serial.printf("Error on adertising payload: %d\n", err);
+            return false;
+        }
+
         BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-        oAdvertisementData.setServiceData(serviceUUID, device_id);
+        oAdvertisementData.setServiceData(serviceUUID, std::string(reinterpret_cast<char *>(payload)));
 
         Serial.println("Setting up Advertisment");
         pAdvertising = BLEDevice::getAdvertising();
