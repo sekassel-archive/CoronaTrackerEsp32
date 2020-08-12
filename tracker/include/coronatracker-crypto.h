@@ -4,6 +4,7 @@
 #include "mbedtls/aes.h"
 
 #define EKROLLING_PERIOD 144
+#define TEK_LENGTH 16
 
 int calculateRollingProximityIdentifierKey(const unsigned char *tek, unsigned char *output);
 int calculateRollingProximityIdentifier(const unsigned char *tek, int ENIN, unsigned char *output);

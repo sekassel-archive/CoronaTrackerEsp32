@@ -51,15 +51,15 @@ bool initBLE(bool initScan, bool initAdvertisment)
 
         signed char version = 1; //00000001, Stands for 01:00
 
-        signed char tek[16];
-        //TODO Save and reuse Keys
+        signed char tek[TEK_LENGTH];
+        //TODO Reuse Keys
         generateTemporaryExposureKey(tek);
 
         time_t current_time;
         time(&current_time);
         int enin = calculateENIntervalNumber(current_time);
 
-        Serial.println(enin);
+        addTemporaryExposureKeyToDatabase(tek, TEK_LENGTH, enin);
 
         signed char payload[20];
         int err = getAdvertisingPayload((const unsigned char* )tek, enin, version, tpl, (unsigned char* ) payload);

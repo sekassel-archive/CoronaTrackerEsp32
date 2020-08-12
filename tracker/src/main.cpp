@@ -181,7 +181,7 @@ void setup()
             }
 
             Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS(true))
+            if (!initSPIFFS(true, true))
             {
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
@@ -190,13 +190,10 @@ void setup()
             setNextAction(ACTION_INFECTION_REQUEST);
         }
 
-        if (nextAction != ACTION_ADVERTISE)
+        Serial.println("Initializing SPIFFS");
+        if (!initSPIFFS(false, false))
         {
-            Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS(false))
-            {
-                restartAfterErrorWithDelay("SPIFFS initialize failed");
-            }
+            restartAfterErrorWithDelay("SPIFFS initialize failed");
         }
 
         if (nextAction == ACTION_ADVERTISE || nextAction == ACTION_SCAN)
@@ -217,7 +214,7 @@ void setup()
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
-        scanForCovidDevices((uint32_t) SCAN_TIME);
+        scanForCovidDevices((uint32_t)SCAN_TIME);
 
         //TODO Maybe move recentEncounters to Main
 
@@ -229,7 +226,7 @@ void setup()
             if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(it->first, ENCOUNTERS_PATH))
             {
                 std::string stringToAppend = it->first + ";";
-                if (writeIDtoFile(stringToAppend))
+                if (writeIDtoFile(stringToAppend, ENCOUNTERS_PATH))
                 {
                     Serial.printf("Successfully added %s to file.\n", it->first.c_str());
                 }
@@ -320,7 +317,7 @@ void setup()
 
             for (long id : infectionVector)
             {
-                if (fileContainsString(String(id).c_str()))
+                if (fileContainsString(String(id).c_str(), ENCOUNTERS_PATH))
                 {
                     Serial.printf("User has me someone infected: %ld\n", id);
                     metInfected = true;
