@@ -59,7 +59,7 @@ bool initBLE(bool initScan, bool initAdvertisment)
         time(&current_time);
         int enin = calculateENIntervalNumber(current_time);
 
-        addTemporaryExposureKeyToDatabase(tek, TEK_LENGTH, enin);
+        insertTemporaryExposureKeyIntoDatabase(tek, TEK_LENGTH, enin);
 
         signed char payload[20];
         int err = getAdvertisingPayload((const unsigned char* )tek, enin, version, tpl, (unsigned char* ) payload);
