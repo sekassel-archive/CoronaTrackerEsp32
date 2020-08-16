@@ -14,6 +14,11 @@ void tftInit(int requestDelaySeconds)
 
     tft.setTextSize(1); //With size equals to 1, you can print 10 lines and about 27 characters per line
     tft.setCursor(0, 0);
+
+    // tft.setSwapBytes(true);
+    // ledcSetup(0, 5000, 8);
+    // ledcAttachPin(TFT_BL, 0);
+    // ledcWrite(0, 185);
 }
 
 void showRequestDelayOnDisplay()

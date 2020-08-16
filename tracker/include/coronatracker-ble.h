@@ -1,5 +1,6 @@
 #include <BLEDevice.h>
 #include <Arduino.h>
+#include <sqlite3.h>
 
 bool initBLE(bool initScan, bool initAdvertisment);
 void deinitBLE();

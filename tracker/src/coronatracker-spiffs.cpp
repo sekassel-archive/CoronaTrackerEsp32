@@ -1,6 +1,6 @@
 #include "coronatracker-spiffs.h"
 
-bool initSPIFFS(bool createEncountersFile, /*bool createRecentEncountersFile*/)
+bool initSPIFFS(bool createEncountersFile, bool createRecentEncountersFile)
 {
     if (!SPIFFS.begin(true))
     {
@@ -13,22 +13,28 @@ bool initSPIFFS(bool createEncountersFile, /*bool createRecentEncountersFile*/)
 
     if (createEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH))
     {
-        Serial.println("Creating File");
+        Serial.println("Creating encounter file");
         File file = SPIFFS.open(ENCOUNTERS_PATH);
 
         if (!file)
         {
-            Serial.println("There was an error creating the file");
+            Serial.println("There was an error creating the encounter file");
             return false;
         }
         file.close();
     }
 
-    // if(createRecentEncountersFile && !SPIFFS.exists(ENCOUNTERS_PATH)) {
+    if(createRecentEncountersFile && !SPIFFS.exists(RECENTENCOUNTERS_PATH)) {
+        Serial.println("Creating recentencounter file");
+        File file = SPIFFS.open(RECENTENCOUNTERS_PATH);
 
-    // }
-
-    //TODO Create recentencounterfile
+        if (!file)
+        {
+            Serial.println("There was an error creating the recentencounter file");
+            return false;
+        }
+        file.close();
+    }
 
     return true;
 }
@@ -52,8 +58,8 @@ bool fileContainsString(std::string str, const char *path)
     while (file.available())
     {
         char c = file.read();
-        if (c != str[index])
-        {
+        
+        if (c != str[index]){
             index = 0;
         }
 
