@@ -16,7 +16,7 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-#define SLEEP_INTERVAL 100000 //In microseconds --> 100 milliseconds
+#define SLEEP_INTERVAL 10000000 //In microseconds --> 10000 milliseconds
 
 #define BOOTS_UNTIL_SCAN 500
 #define BOOTS_UNTIL_INFECTION_REQUEST 30000
@@ -116,7 +116,7 @@ void goIntoDeepSleep()
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % BOOTS_UNTIL_SCAN == 0)
+    else if (bootCount % 2 == 0)
     {
         setNextAction(ACTION_SCAN);
     }
@@ -226,6 +226,8 @@ void setup()
 
         //TODO Read from File instead
 
+        cleanUpTempDatabase();
+
         auto recentEncounters = getRecentEncounters();
         for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
         {
@@ -255,11 +257,6 @@ void setup()
             {
                 recentEncounters->erase(it);
             }
-        }
-
-        for (auto it = recentEncounters->cbegin(); it != recentEncounters->cend(); ++it)
-        {
-            Serial.printf("%s -> %ld\n", it->first.c_str(), it->second);
         }
     }
     else if (nextAction == ACTION_ADVERTISE)

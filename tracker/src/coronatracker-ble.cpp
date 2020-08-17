@@ -27,6 +27,20 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 
             //TODO Write to file instead
 
+            if (advertisedDevice.getServiceData().length() < 16)
+            {
+                Serial.println("Advertised Data is too short");
+                return;
+            }
+
+            const char* serviceData = advertisedDevice.getServiceData().c_str();
+            signed char data[16];
+            for (int i = 0; i < 16; i++)
+            {
+                data[i] = serviceData[i];
+            }
+            
+            insertBluetoothDataIntoDataBase(time(NULL), data, 16, false);
             recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
         }
     }

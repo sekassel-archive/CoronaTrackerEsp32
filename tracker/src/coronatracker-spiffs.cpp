@@ -42,8 +42,21 @@ bool initSPIFFS(bool createEncountersFile, bool createDataBases)
     }
 
     //Remove comment to reset SPIFFS
-    //SPIFFS.format();
+    SPIFFS.format();
     //return false;
+
+    File root = SPIFFS.open("/");
+
+    File file = root.openNextFile();
+
+    while (file)
+    {
+
+        Serial.print("FILE: ");
+        Serial.println(file.name());
+
+        file = root.openNextFile();
+    }
 
     if (createEncountersFile)
     {
@@ -56,73 +69,68 @@ bool initSPIFFS(bool createEncountersFile, bool createDataBases)
 
     if (createDataBases)
     {
-        if (!SPIFFS.exists(TEMPORARY_EXPOSURE_KEY_DATABASE_PATH))
+        bool ret = createFile(TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
+
+        sqlite3 *db;
+        if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &db))
         {
-            bool ret = createFile(TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
-            if (ret == false)
-            {
-                return false;
-            }
-
-            sqlite3 *tek_db;
-            if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db))
-            {
-                return false;
-            }
-
-            char *errMsg;
-            if (sqlite3_exec(tek_db, "CREATE TABLE IF NOT EXISTS tek (tek BLOB, enin INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
-            {
-                Serial.printf("Failed to create table in datbase: %s\n", errMsg);
-                sqlite3_close(tek_db);
-                return false;
-            }
-            sqlite3_free(errMsg);
-            sqlite3_close(tek_db);
+            return false;
         }
 
-        if (!SPIFFS.exists(MAIN_DATABASE_PATH))
+        char *errMsg;
+        if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS tek (tek BLOB, enin INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
         {
-            bool ret = createFile(MAIN_DATABASE_PATH);
-            if (ret == false)
-            {
-                return false;
-            }
-
-            sqlite3 *tek_db;
-            if (sqlite3_open(MAIN_DATABSE_SQLITE_PATH, &tek_db))
-            {
-                return false;
-            }
-
-            char *errMsg;
-            if (sqlite3_exec(tek_db, "CREATE TABLE IF NOT EXISTS main (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
-            {
-                Serial.printf("Failed to create table in datbase: %s\n", errMsg);
-                sqlite3_close(tek_db);
-                return false;
-            }
-            sqlite3_free(errMsg);
-            sqlite3_close(tek_db);
+            Serial.printf("Failed to create table tek in datbase: %s\n", errMsg);
+            sqlite3_close(db);
+            return false;
         }
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
+
+        ret = createFile(MAIN_DATABASE_PATH);
+
+        if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db))
+        {
+            return false;
+        }
+
+        if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS main (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
+        {
+            Serial.printf("Failed to create table main in datbase: %s\n", errMsg);
+            sqlite3_close(db);
+            return false;
+        }
+
+        if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS temp (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
+        {
+            Serial.printf("Failed to create table temp in datbase: %s\n", errMsg);
+            sqlite3_close(db);
+            return false;
+        }
+
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
     }
     return true;
 }
 
 bool createFile(const char *path)
 {
+    Serial.printf("Creating File %s.. ", path);
     if (!SPIFFS.exists(path))
     {
-        Serial.printf("Creating File %s\n", path);
         File file = SPIFFS.open(path);
 
         if (!file)
         {
-            Serial.println("There was an error creating the file");
+            Serial.println("Failed");
             return false;
         }
         file.close();
+        Serial.println("Created.");
+        return true;
     }
+    Serial.println("Already exists.");
     return true;
 }
 
@@ -226,11 +234,11 @@ bool insertBlobIntoDatabase(const char *db_path, const char *sql, int sql_length
     return true;
 }
 
-bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_size)
+bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_size, bool intoMain)
 {
     Serial.println("Inserting Rolling Proximity Identifier into Database");
-    sqlite3 *tek_db;
-    if (sqlite3_open(MAIN_DATABSE_SQLITE_PATH, &tek_db))
+    sqlite3 *main_db;
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db))
     {
         return false;
     }
@@ -239,43 +247,51 @@ bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_si
     const char *tail;
 
     std::stringstream sql_ss;
-    sql_ss << "INSERT INTO main VALUES (";
+    sql_ss << "INSERT INTO ";
+    if (intoMain)
+    {
+        sql_ss << "main";
+    }
+    else
+    {
+        sql_ss << "temp";
+    }
+    sql_ss << " VALUES (";
     sql_ss << time;
     sql_ss << ",?);";
 
     const char *sql = sql_ss.str().c_str();
+    Serial.println(sql);
 
-    if (sqlite3_prepare_v2(tek_db, sql, strlen(sql), &res, &tail) != SQLITE_OK)
+    if (sqlite3_prepare_v2(main_db, sql, strlen(sql), &res, &tail) != SQLITE_OK)
     {
-        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
-        sqlite3_close(tek_db);
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(main_db));
+        sqlite3_close(main_db);
         return false;
     }
 
     if (sqlite3_bind_blob(res, 1, data, data_size, SQLITE_STATIC) != SQLITE_OK)
     {
-        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(tek_db));
-        sqlite3_close(tek_db);
+        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(main_db));
+        sqlite3_close(main_db);
         return false;
     }
 
     if (sqlite3_step(res) != SQLITE_DONE)
     {
-        Serial.printf("ERROR inserting data: %s\n", sqlite3_errmsg(tek_db));
-        sqlite3_close(tek_db);
+        Serial.printf("ERROR inserting data: %s\n", sqlite3_errmsg(main_db));
+        sqlite3_close(main_db);
         return false;
     }
 
     if (sqlite3_finalize(res) != SQLITE_OK)
     {
-        Serial.printf("ERROR finalizing data: %s\n", sqlite3_errmsg(tek_db));
-        sqlite3_close(tek_db);
+        Serial.printf("ERROR finalizing data: %s\n", sqlite3_errmsg(main_db));
+        sqlite3_close(main_db);
         return false;
     }
 
     return true;
-
-    return insertBlobIntoDatabase(MAIN_DATABSE_SQLITE_PATH, sql, strlen(sql), data, data_size);
 }
 
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin)
@@ -326,7 +342,7 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
 
     std::stringstream delete_sql;
     delete_sql << "DELETE FROM tek WHERE enin <";
-    delete_sql << enin - (144*14); //Two Weeks
+    delete_sql << enin - (144 * 14); //Two Weeks
     delete_sql << ";";
 
     char *zErrMsg;
@@ -337,7 +353,7 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
         return false;
     }
 
-    sqlite3_exec(tek_db, "SELECT * FROM tek", callback, (void*)dataf, &zErrMsg);
+    sqlite3_exec(tek_db, "SELECT * FROM tek", callback, (void *)dataf, &zErrMsg);
     sqlite3_free(zErrMsg);
 
     sqlite3_close(tek_db);
@@ -365,5 +381,58 @@ bool getCurrentTek(sqlite3_callback tekCallback, void *data)
     }
 
     sqlite3_close(tek_db);
+    return true;
+}
+
+const char *dataMainInsert = "Maindata callback called";
+static int mainInsertCallback(void *data, int argc, char **argv, char **azColName)
+{
+    Serial.printf("%s: \n", (const char *)data);
+    time_t current_time;
+    time(&current_time);
+    for (int i = 0; i < argc; i++)
+    {
+        insertBluetoothDataIntoDataBase(current_time, (signed char *)argv[i], 16, true);
+    }
+
+    return 0;
+}
+
+bool cleanUpTempDatabase()
+{
+    Serial.println("Cleaning up database");
+    sqlite3 *main_db;
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db))
+    {
+        return false;
+    }
+
+    //Delete old entries
+    std::stringstream delete_sql;
+    delete_sql << "DELETE FROM temp WHERE time <";
+    delete_sql << time(NULL) - (15 * 60); //15 Minutes
+    delete_sql << ";";
+
+    char *zErrMsg;
+    if (sqlite3_exec(main_db, delete_sql.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+    //Move exposures to main if necessary
+    if (sqlite3_exec(main_db, "SELECT DISTINCT bl_data FROM temp WHERE COUNT(bl_data) > 5", mainInsertCallback, (void *)dataMainInsert, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+    Serial.println("Printing twmp:");
+    db_exec(main_db, "SELECT * FROM temp");
+    Serial.println("Printing mian:");
+    db_exec(main_db, "SELECT * FROM main");
+
+    sqlite3_close(main_db);
+
     return true;
 }
