@@ -174,17 +174,10 @@ bool writeIDtoFile(std::string id, const char *path)
     return success;
 }
 
-//Inserts blob if one argument is parameter
+//Does not work for some reason
 bool insertBlobIntoDatabase(const char *db_path, const char *sql, int sql_length, signed char *blob, int blob_length)
 {
     Serial.println("Inserting blob");
-    Serial.println(sql);
-    Serial.println(sql_length);
-
-    Serial.println(db_path);
-
-    //Serial.println((char*)blob);
-
     sqlite3 *db;
     sqlite3_stmt *res;
     const char *tail;
@@ -226,9 +219,7 @@ bool insertBlobIntoDatabase(const char *db_path, const char *sql, int sql_length
         return false;
     }
 
-
     db_exec(db, "SELECT * FROM tek");
-    delay(10000);
 
     sqlite3_close(db);
     return true;
@@ -236,6 +227,16 @@ bool insertBlobIntoDatabase(const char *db_path, const char *sql, int sql_length
 
 bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_size)
 {
+    Serial.println("Inserting Rolling Proximity Identifier into Database");
+    sqlite3 *tek_db;
+    if (sqlite3_open(MAIN_DATABSE_SQLITE_PATH, &tek_db))
+    {
+        return false;
+    }
+
+    sqlite3_stmt *res;
+    const char *tail;
+
     std::stringstream sql_ss;
     sql_ss << "INSERT INTO main VALUES (";
     sql_ss << time;
@@ -243,38 +244,86 @@ bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_si
 
     const char *sql = sql_ss.str().c_str();
 
+    if (sqlite3_prepare_v2(tek_db, sql, strlen(sql), &res, &tail) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    if (sqlite3_bind_blob(res, 1, data, data_size, SQLITE_STATIC) != SQLITE_OK)
+    {
+        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    if (sqlite3_step(res) != SQLITE_DONE)
+    {
+        Serial.printf("ERROR inserting data: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    if (sqlite3_finalize(res) != SQLITE_OK)
+    {
+        Serial.printf("ERROR finalizing data: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    return true;
+
     return insertBlobIntoDatabase(MAIN_DATABSE_SQLITE_PATH, sql, strlen(sql), data, data_size);
 }
 
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin)
 {
-    Serial.println(ESP.getFreeHeap());
-    std::stringstream sql_ss;
-    sql_ss << "INSERT INTO tek VALUES (?,";
-    sql_ss << enin;
-    sql_ss << ");";
-
-    const char *sql_command = sql_ss.str().c_str();
-
-    Serial.println(sql_command);
-    Serial.println(strlen(sql_command));
-
-    for (int i = 0; i < 35; i++)
+    Serial.println("Inserting Temporary Exposure Key into Database");
+    sqlite3 *tek_db;
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db))
     {
-        Serial.print(sql_command[i]);
-        Serial.print(" ");
+        return false;
     }
-    Serial.println();
-    
 
-    Serial.println(TEK_DATABASE_SQLITE_PATH);
+    sqlite3_stmt *res;
+    const char *tail;
 
-    for (int i = 0; i < strlen(TEK_DATABASE_SQLITE_PATH); i++)
+    std::stringstream sql;
+    sql << "INSERT INTO tek VALUES (?,";
+    sql << enin;
+    sql << ");";
+
+    const char *sql_command = sql.str().c_str();
+
+    if (sqlite3_prepare_v2(tek_db, sql_command, strlen(sql_command), &res, &tail) != SQLITE_OK)
     {
-        Serial.print(TEK_DATABASE_SQLITE_PATH[i]);
-        Serial.print(" ");
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
     }
-    Serial.println();
+    if (sqlite3_bind_blob(res, 1, tek, tek_length, SQLITE_STATIC) != SQLITE_OK)
+    {
+        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
 
-    return insertBlobIntoDatabase(TEK_DATABASE_SQLITE_PATH, sql_command, strlen(sql_command), tek, tek_length);
+    if (sqlite3_step(res) != SQLITE_DONE)
+    {
+        Serial.printf("ERROR inserting data: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    if (sqlite3_finalize(res) != SQLITE_OK)
+    {
+        Serial.printf("ERROR finalizing data: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    sqlite3_close(tek_db);
+
+    return true;
 }
