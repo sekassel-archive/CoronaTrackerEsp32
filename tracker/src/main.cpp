@@ -162,6 +162,12 @@ void setup()
         {
             firstBoot = false;
 
+            Serial.println("Initializing SPIFFS");
+            if (!initSPIFFS(true, true))
+            {
+                restartAfterErrorWithDelay("SPIFFS initialize failed");
+            }
+
             //Getting Time
             if (!connectToStoredWifi())
             {
@@ -174,16 +180,16 @@ void setup()
                 restartAfterErrorWithDelay("Time initialize failed");
             }
 
+            Serial.println("Generating TEK");
+            if (!generateFirstTEK())
+            {
+                restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
+            }
+
             Serial.println("Disconnecting Wifi");
             if (!disconnectWifi())
             {
                 Serial.println("Disconnect Failed");
-            }
-
-            Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS(true, true))
-            {
-                restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
             //Start a request upon first boot
@@ -256,7 +262,8 @@ void setup()
             Serial.printf("%s -> %ld\n", it->first.c_str(), it->second);
         }
     }
-    else if (nextAction == ACTION_ADVERTISE) {
+    else if (nextAction == ACTION_ADVERTISE)
+    {
         delay(100);
     }
     else if (nextAction == ACTION_WIFI_CONFIG)

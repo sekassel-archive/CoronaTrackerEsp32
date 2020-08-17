@@ -43,6 +43,7 @@ bool initSPIFFS(bool createEncountersFile, bool createDataBases)
 
     //Remove comment to reset SPIFFS
     //SPIFFS.format();
+    //return false;
 
     if (createEncountersFile)
     {
@@ -323,7 +324,46 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
         return false;
     }
 
+    std::stringstream delete_sql;
+    delete_sql << "DELETE FROM tek WHERE enin <";
+    delete_sql << enin - (144*14); //Two Weeks
+    delete_sql << ";";
+
+    char *zErrMsg;
+    if (sqlite3_exec(tek_db, delete_sql.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    sqlite3_exec(tek_db, "SELECT * FROM tek", callback, (void*)dataf, &zErrMsg);
+    sqlite3_free(zErrMsg);
+
     sqlite3_close(tek_db);
 
+    return true;
+}
+
+bool getCurrentTek(sqlite3_callback tekCallback, void *data)
+{
+    sqlite3 *tek_db;
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.println("Error on opening database");
+        return false;
+    }
+
+    const char *sql = "SELECT * FROM tek WHERE enin=(SELECT MAX(enin) FROM tek)";
+
+    char *zErrMsg;
+    if (sqlite3_exec(tek_db, sql, tekCallback, data, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    sqlite3_close(tek_db);
     return true;
 }

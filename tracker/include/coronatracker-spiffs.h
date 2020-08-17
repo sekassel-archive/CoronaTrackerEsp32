@@ -18,3 +18,4 @@ bool initSPIFFS(bool createEncountersFile, bool createDataBases);
 bool writeIDtoFile(std::string id, const char *path);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);
 bool insertBluetoothDataIntoDataBase(time_t time, signed char *data, int data_size);
+bool getCurrentTek(sqlite3_callback tekCallback, void *data);
