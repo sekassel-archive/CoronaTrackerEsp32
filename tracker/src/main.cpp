@@ -277,28 +277,8 @@ void setup()
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        auto result = requestInfections();
         bool result = checkForInfections();
-        {
-            Serial.println("Failed to request infections");
-        }
         showIsInfectedOnDisplay(result);
-        {
-            auto infectionVector = result.second;
-            bool metInfected = false;
-
-            for (long id : infectionVector)
-            {
-                if (fileContainsString(String(id).c_str(), ENCOUNTERS_PATH))
-                {
-                    Serial.printf("User has me someone infected: %ld\n", id);
-                    metInfected = true;
-                }
-            }
-            showIsInfectedOnDisplay(metInfected);
-            //TODO Change Behaviour on Infection
-        delay(10000);
-        }
         showRequestDelayOnDisplay();
     }
     goIntoDeepSleep();
