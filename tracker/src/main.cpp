@@ -278,11 +278,11 @@ void setup()
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
         auto result = requestInfections();
-        if (!result.first)
+        bool result = checkForInfections();
         {
             Serial.println("Failed to request infections");
         }
-        else
+        showIsInfectedOnDisplay(result);
         {
             auto infectionVector = result.second;
             bool metInfected = false;
@@ -297,7 +297,7 @@ void setup()
             }
             showIsInfectedOnDisplay(metInfected);
             //TODO Change Behaviour on Infection
-            delay(10000);
+        delay(10000);
         }
         showRequestDelayOnDisplay();
     }

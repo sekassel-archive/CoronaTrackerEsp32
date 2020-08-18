@@ -17,16 +17,31 @@ bool connectToStoredWifi()
 }
 
 String lastMessage;
-void onMessageCallback(WebsocketsMessage message) {
+void onMessageCallback(WebsocketsMessage message)
+{
     lastMessage = message.data();
 }
 
-void checkForInfections() {
+const char *dataExp = "Exposure callback called";
+bool wasExposed = false;
+static int exposureCallback(void *data, int argc, char **argv, char **azColName)
+{
+    int occurences = atoi(argv[0]);
+    if (occurences > 0)
+    {
+        Serial.println("Person has met someone infected!");
+        wasExposed = true;
+    }
+    return 0;
+}
+
+bool checkForInfections()
+{
     Serial.println("Connecting to server and checking for infections");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
-        return;
+        return false;
     }
     else
     {
@@ -39,7 +54,7 @@ void checkForInfections() {
         if (!(code == HTTP_CODE_OK))
         {
             Serial.println("Failed to connect to server");
-            return;
+            return false;
         }
         else
         {
@@ -50,7 +65,7 @@ void checkForInfections() {
             {
                 Serial.print(F("deserializeJson() failed with code "));
                 Serial.println(err.c_str());
-                return;
+                return false;
             }
             else
             {
@@ -61,11 +76,18 @@ void checkForInfections() {
                 if (!con)
                 {
                     Serial.println("Could not connect to websocket");
-                    return;
+                    return false;
                 }
                 else
                 {
                     client.onMessage(onMessageCallback);
+
+                    sqlite3 *db;
+                    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
+                    {
+                        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
+                        return false;
+                    }
 
                     JsonObject json = doc.as<JsonObject>();
                     for (JsonPair pair : json)
@@ -76,6 +98,7 @@ void checkForInfections() {
 
                         for (int i = 0; i < values; i++)
                         {
+                            Serial.printf("Entry %d/%d\n", i, values);
                             int rsin = atoi(pair.key().c_str());
 
                             String stringToSend = pair.key().c_str();
@@ -89,7 +112,8 @@ void checkForInfections() {
                                 delay(1);
                             }
 
-                            if(lastMessage.equals("Not found") || lastMessage.equals("Wrong Input!")) {
+                            if (lastMessage.equals("Not found") || lastMessage.equals("Wrong Input!"))
+                            {
                                 continue;
                             }
 
@@ -111,10 +135,23 @@ void checkForInfections() {
                                 signed char rpi[16];
                                 calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpi);
 
-                                //TODO Compare with own keys
+                                if (!checkForKeyInDatabse(db, rpi, 16, exposureCallback, (void *)dataExp))
+                                {
+                                    Serial.println("Could not check database");
+                                }
+                                if (wasExposed)
+                                {
+                                    client.close();
+                                    http.end();
+                                    disconnectWifi();
+                                    sqlite3_close(db);
+                                    Serial.println("Infected!");
+                                    return true;
+                                }
                             }
                         }
                     }
+                    sqlite3_close(db);
                 }
                 client.close();
             }
@@ -122,80 +159,7 @@ void checkForInfections() {
         http.end();
     }
     disconnectWifi();
-}
-
-
-//Deprecated
-std::pair<bool, std::vector<long>> requestInfections()
-{
-    Serial.println("Requesting infections from server.");
-
-    std::vector<long> infectionVector;
-
-    if (!connectToStoredWifi())
-    {
-        Serial.println("Could not Connect to Wifi - Retrying later");
-        return std::make_pair(false, infectionVector);;
-    }
-    else
-    {
-        Serial.println(ESP.getFreeHeap());
-        HTTPClient http;
-
-        http.begin(String(SERVER_URL) + "/infections");
-        int httpCode = http.GET();
-
-        Serial.println(ESP.getFreeHeap());
-
-        Serial.print("ReturnCode: ");
-        Serial.println(httpCode);
-        if (httpCode > 0)
-        {
-            Serial.println("---------- Message ----------");
-            String response = http.getString();
-            Serial.println(response);
-            Serial.println("-----------------------------");
-
-            //TODO: Maybe calculate approximate size beforehand
-            DynamicJsonDocument doc(2048); //Can stream directly
-            DeserializationError err = deserializeJson(doc, response);
-
-            Serial.println(ESP.getFreeHeap());
-
-            if (!err)
-            {
-                JsonObject responseJSON = doc.as<JsonObject>();
-                for (JsonPair pair : responseJSON)
-                {
-                    if (pair.value().is<JsonArray>())
-                    {
-                        JsonArray array = pair.value().as<JsonArray>();
-                        for (JsonVariant elem : array)
-                        {
-                            if (elem.is<long>())
-                            {
-                                infectionVector.push_back(elem);
-                            }
-                        }
-                    }
-                }
-            }
-            else
-            {
-                Serial.printf("deserializeJson() failed with code %s\n", err.c_str());
-                return std::make_pair(false, infectionVector);;
-            }
-        }
-        else
-        {
-            Serial.println("Error on HTTP request");
-            return std::make_pair(false, infectionVector);;
-        }
-        http.end();
-        disconnectWifi();
-
-        return std::make_pair(true, infectionVector);
-    }
+    return false;
 }
 
 bool configureWifi()

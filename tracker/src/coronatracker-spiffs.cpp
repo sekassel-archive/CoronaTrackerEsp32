@@ -411,55 +411,46 @@ bool cleanUpTempDatabase()
     return true;
 }
 
-bool checkForKeyInDatabse(signed char *key, int key_length, sqlite3_callback exposureCallback, void *data)
+bool checkForKeyInDatabse(sqlite3 *db, signed char *key, int key_length, sqlite3_callback exposureCallback, void *data)
 {
-    sqlite3 *main_database;
-    int rc = sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_database);
-    if (rc)
-    {
-        Serial.println("Failed to open database");
-        return false;
-    }
-
     sqlite3_stmt *res;
     const char *tail;
 
     const char *sql = "SELECT COUNT(bl_data) FROM main WHERE bl_data = ?";
 
-    rc = sqlite3_prepare_v2(main_database, sql, strlen(sql), &res, &tail);
+    int rc = sqlite3_prepare_v2(db, sql, strlen(sql), &res, &tail);
     if (rc != SQLITE_OK)
     {
-        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(main_database));
-        sqlite3_close(main_database);
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
         return false;
     }
 
     rc = sqlite3_bind_blob(res, 1, key, key_length, SQLITE_STATIC);
     if (rc != SQLITE_OK)
     {
-        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(main_database));
-        sqlite3_close(main_database);
+        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
         return false;
     }
 
     char *sql_2 = sqlite3_expanded_sql(res);
 
     char *err2;
-    rc = sqlite3_exec(main_database, sql_2, exposureCallback, data, &err2);
+    rc = sqlite3_exec(db, sql_2, exposureCallback, data, &err2);
     if (rc != SQLITE_OK)
     {
         Serial.printf("Failed to ask database: %s\n", err2);
         sqlite3_free(err2);
         sqlite3_free(sql_2);
         sqlite3_finalize(res);
-        sqlite3_close(main_database);
+        sqlite3_close(db);
         return false;
     }
 
     sqlite3_free(err2);
     sqlite3_finalize(res);
     sqlite3_free(sql_2);
-    sqlite3_close(main_database);
 
     return true;
 }
