@@ -22,19 +22,6 @@ void onMessageCallback(WebsocketsMessage message)
     lastMessage = message.data();
 }
 
-const char *dataExp = "Exposure callback called";
-bool wasExposed = false;
-static int exposureCallback(void *data, int argc, char **argv, char **azColName)
-{
-    int occurences = atoi(argv[0]);
-    if (occurences > 0)
-    {
-        Serial.println("Person has met someone infected!");
-        wasExposed = true;
-    }
-    return 0;
-}
-
 bool checkForInfections()
 {
     Serial.println("Connecting to server and checking for infections");
@@ -58,8 +45,9 @@ bool checkForInfections()
         }
         else
         {
-            DynamicJsonDocument doc(1024);
+            DynamicJsonDocument doc(960); //This allows 40 entries
             DeserializationError err = deserializeJson(doc, http.getString());
+            http.end();
 
             if (err)
             {
@@ -130,24 +118,24 @@ bool checkForInfections()
                                 j++;
                             }
 
+                            signed char rpis[EKROLLING_PERIOD][16];
                             for (int j = 0; j < EKROLLING_PERIOD; j++)
                             {
-                                signed char rpi[16];
-                                calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpi);
+                                calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpis[j]);
+                            }
+                            int occ = checkForKeysInDatabase(db, rpis, EKROLLING_PERIOD, 16);
 
-                                if (!checkForKeyInDatabse(db, rpi, 16, exposureCallback, (void *)dataExp))
-                                {
-                                    Serial.println("Could not check database");
-                                }
-                                if (wasExposed)
-                                {
-                                    client.close();
-                                    http.end();
-                                    disconnectWifi();
-                                    sqlite3_close(db);
-                                    Serial.println("Infected!");
-                                    return true;
-                                }
+                            if (occ == -1)
+                            {
+                                Serial.println("There was an Error checking keys");
+                            }
+                            else if (occ > 0)
+                            {
+                                client.close();
+                                disconnectWifi();
+                                sqlite3_close(db);
+                                Serial.println("User was exposed to someone infected!");
+                                return true;
                             }
                         }
                     }

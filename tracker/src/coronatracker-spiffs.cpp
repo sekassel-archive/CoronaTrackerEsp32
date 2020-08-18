@@ -411,46 +411,55 @@ bool cleanUpTempDatabase()
     return true;
 }
 
-bool checkForKeyInDatabse(sqlite3 *db, signed char *key, int key_length, sqlite3_callback exposureCallback, void *data)
+//Return how many of the keys are in database from the given keys
+int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length)
 {
     sqlite3_stmt *res;
-    const char *tail;
+    const char *sql;
 
-    const char *sql = "SELECT COUNT(bl_data) FROM main WHERE bl_data = ?";
+    if (key_amount == 144)
+    {
+        sql = "SELECT COUNT(bl_data) FROM main WHERE bl_data IN ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+    }
+    else
+    {
+        std::stringstream sql_ss;
+        sql_ss << "SELECT COUNT(bl_data) FROM main WHERE bl_data IN (";
+        for (int i = 0; i < key_amount; i++)
+        {
+            if (i == key_amount - 1)
+            {
+                sql_ss << " ?";
+                break;
+            }
+            sql_ss << " ?,";
+        }
+        sql_ss << ");";
+        sql = sql_ss.str().c_str();
+    }
 
-    int rc = sqlite3_prepare_v2(db, sql, strlen(sql), &res, &tail);
-    if (rc != SQLITE_OK)
+    if (sqlite3_prepare_v2(db, sql, strlen(sql), &res, nullptr) != SQLITE_OK)
     {
         Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return false;
+        return -1;
     }
 
-    rc = sqlite3_bind_blob(res, 1, key, key_length, SQLITE_STATIC);
-    if (rc != SQLITE_OK)
+    for (int i = 1; i <= key_amount; i++)
     {
-        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return false;
+        if (sqlite3_bind_blob(res, i, (signed char *)keys[i], key_length, SQLITE_STATIC) != SQLITE_OK)
+        {
+            Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(db));
+            return -1;
+        }
     }
 
-    char *sql_2 = sqlite3_expanded_sql(res);
-
-    char *err2;
-    rc = sqlite3_exec(db, sql_2, exposureCallback, data, &err2);
-    if (rc != SQLITE_OK)
+    if (sqlite3_step(res) != SQLITE_ROW)
     {
-        Serial.printf("Failed to ask database: %s\n", err2);
-        sqlite3_free(err2);
-        sqlite3_free(sql_2);
-        sqlite3_finalize(res);
-        sqlite3_close(db);
-        return false;
+        Serial.printf("ERROR stepping: %s\n", sqlite3_errmsg(db));
+        return -1;
     }
+    int occ = sqlite3_column_int(res, 0);
 
-    sqlite3_free(err2);
     sqlite3_finalize(res);
-    sqlite3_free(sql_2);
-
-    return true;
+    return occ;
 }
