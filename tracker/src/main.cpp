@@ -222,42 +222,10 @@ void setup()
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)SCAN_TIME);
 
-        //TODO Maybe move recentEncounters to Main
+        //deinitBLE(); //We need to free the memory for database interaction
 
-        //TODO Read from File instead
-
+        Serial.println(ESP.getFreeHeap());
         cleanUpTempDatabase();
-
-        auto recentEncounters = getRecentEncounters();
-        for (auto it = recentEncounters->begin(), end = recentEncounters->end(); it != end; it = recentEncounters->upper_bound(it->first))
-        {
-            if (recentEncounters->count(it->first) >= ENCOUNTERS_NEEDED && !fileContainsString(it->first, ENCOUNTERS_PATH))
-            {
-                std::string stringToAppend = it->first + ";";
-                if (writeIDtoFile(stringToAppend, ENCOUNTERS_PATH))
-                {
-                    Serial.printf("Successfully added %s to file.\n", it->first.c_str());
-                }
-                else
-                {
-                    Serial.printf("Could not print id to file: %s\n", it->first.c_str());
-                }
-            }
-        }
-
-        //We delete entries that are older than 15 minutes
-
-        //TODO Delete Entries from file
-
-        time_t fifteenMinutesAgo = time(NULL) - 930; // 15 Minutes and 30 Seconds
-        for (auto it = recentEncounters->cbegin(), next_it = it; it != recentEncounters->cend(); it = next_it)
-        {
-            ++next_it;
-            if (it->second < fifteenMinutesAgo)
-            {
-                recentEncounters->erase(it);
-            }
-        }
     }
     else if (nextAction == ACTION_ADVERTISE)
     {

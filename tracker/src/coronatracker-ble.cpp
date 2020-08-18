@@ -3,10 +3,6 @@
 static BLEUUID serviceUUID((uint16_t)0xFD6F); //UUID taken from App
 signed char tek[TEK_LENGTH];                  //Temporary Exposure Key
 
-//TODO Move to main
-//TODO Is now resettet after every sleep,either store on flash or in rtc memory
-std::multimap<std::string, time_t> recentEncounterMap;
-
 BLEServer *pServer;
 BLEService *pService;
 BLEAdvertising *pAdvertising;
@@ -21,11 +17,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         if (advertisedDevice.haveServiceData() && advertisedDevice.getServiceDataUUID().equals(serviceUUID))
         {
             Serial.print("Found Covid Device: ");
-            Serial.print(advertisedDevice.toString().c_str());
-            Serial.print(" --> ID: ");
-            Serial.println(advertisedDevice.getServiceData().c_str());
-
-            //TODO Write to file instead
+            Serial.println(advertisedDevice.toString().c_str());
 
             if (advertisedDevice.getServiceData().length() < 16)
             {
@@ -40,8 +32,9 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 data[i] = serviceData[i];
             }
             
-            insertBluetoothDataIntoDataBase(time(NULL), data, 16, false);
-            recentEncounterMap.insert(std::make_pair(advertisedDevice.getServiceData(), time(NULL)));
+            if(!insertRollingProximityIdentifier(time(NULL), data, 16, false)) {
+                Serial.println("Failed to insert RPI!");
+            }
         }
     }
 };
@@ -172,9 +165,4 @@ void deinitBLE()
 void scanForCovidDevices(uint32_t duration)
 {
     BLEDevice::getScan()->start(duration, false);
-}
-
-std::multimap<std::string, time_t> *getRecentEncounters()
-{
-    return &recentEncounterMap;
 }
