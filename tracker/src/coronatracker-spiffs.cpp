@@ -114,55 +114,6 @@ bool createFile(const char *path)
     return true;
 }
 
-bool fileContainsString(std::string str, const char *path)
-{
-    int index = 0;
-    int len = str.length();
-
-    if (len == 0)
-    {
-        return false;
-    }
-
-    File file = SPIFFS.open(path, FILE_READ);
-    if (!file)
-    {
-        return false;
-    }
-
-    while (file.available())
-    {
-        char c = file.read();
-        if (c != str[index])
-        {
-            index = 0;
-        }
-
-        if (c == str[index])
-        {
-            if (++index >= len)
-            {
-                file.close();
-                return true;
-            }
-        }
-    }
-    file.close();
-    return false;
-}
-
-bool writeIDtoFile(std::string id, const char *path)
-{
-    File file = SPIFFS.open(path, FILE_APPEND);
-    if (!file)
-    {
-        return false;
-    }
-    bool success = file.print(id.c_str());
-    file.close();
-    return success;
-}
-
 bool insertRPI(time_t time, signed char *data, int data_size, bool intoMain, sqlite3 *main_db)
 {
     sqlite3_stmt *res;
