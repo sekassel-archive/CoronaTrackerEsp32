@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Ticker.h>
+#include <SparkFunLSM9DS1.h>
 
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
@@ -16,17 +17,19 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-#define SLEEP_INTERVAL 10000000 //In microseconds --> 10000 milliseconds
+#define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
 
-#define BOOTS_UNTIL_SCAN 500
-#define BOOTS_UNTIL_INFECTION_REQUEST 30000
+//average time for one boot: 4000ms (with a cpu frequency of 80)
+#define BOOTS_UNTIL_SCAN 15 
+#define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
 
-#define SCAN_TIME 1
+#define SCAN_TIME 3 //in seconds
+#define ADVERTISE_TIME 200 //in milliseconds
 
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 
 const int ENCOUNTERS_NEEDED = 10;
@@ -39,6 +42,8 @@ int lastButtonState = 0;
 int startPressed = 0;
 
 Ticker buttonTicker;
+
+LSM9DS1 imu;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -116,7 +121,7 @@ void goIntoDeepSleep()
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % 2 == 0)
+    else if (bootCount % BOOTS_UNTIL_SCAN == 0)
     {
         setNextAction(ACTION_SCAN);
     }
@@ -138,6 +143,12 @@ void setup()
     //Setting up Serial
     Serial.begin(115200);
     Serial.println("Serial initialized");
+
+    imu.sleepGyro(true);
+    setCpuFrequencyMhz(80);
+
+    float start = micros();
+    float end;
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
@@ -229,7 +240,7 @@ void setup()
     }
     else if (nextAction == ACTION_ADVERTISE)
     {
-        delay(100);
+        delay(ADVERTISE_TIME);
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
@@ -281,6 +292,12 @@ void setup()
         showIsInfectedOnDisplay(result);
         showRequestDelayOnDisplay();
     }
+
+    end = micros();
+    float result = end - start;
+    result /= 1000; //convert to milliseconds
+    Serial.printf("Time(milliseconds): %g\n", result);
+
     goIntoDeepSleep();
 }
 
