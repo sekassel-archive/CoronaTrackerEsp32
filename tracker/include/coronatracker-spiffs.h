@@ -12,10 +12,8 @@
 #define MAIN_DATABASE_PATH "/main.db"
 #define MAIN_DATABASE_SQLITE_PATH "/spiffs/main.db"
 
-bool fileContainsString(std::string str, const char *path);
 bool createFile(const char *path);
 bool initSPIFFS(bool createEncountersFile, bool createDataBases);
-bool writeIDtoFile(std::string id, const char *path);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);
 bool getCurrentTek(sqlite3_callback tekCallback, void *data);
 bool cleanUpTempDatabase();
