@@ -25,7 +25,7 @@ int printSQLResult(sqlite3 *db, const char *sql)
     return rc;
 }
 
-bool initSPIFFS(bool createEncountersFile, bool createDataBases)
+bool initSPIFFS(bool createDataBases)
 {
     if (!SPIFFS.begin(true))
     {
@@ -36,15 +36,6 @@ bool initSPIFFS(bool createEncountersFile, bool createDataBases)
     //Remove comment to reset SPIFFS
     //SPIFFS.format();
     //return false;
-
-    if (createEncountersFile)
-    {
-        bool ret = createFile(ENCOUNTERS_PATH);
-        if (ret == false)
-        {
-            return false;
-        }
-    }
 
     if (createDataBases)
     {

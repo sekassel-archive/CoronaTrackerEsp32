@@ -174,7 +174,7 @@ void setup()
             firstBoot = false;
 
             Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS(true, true))
+            if (!initSPIFFS(true))
             {
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
@@ -208,7 +208,7 @@ void setup()
         }
 
         Serial.println("Initializing SPIFFS");
-        if (!initSPIFFS(false, false))
+        if (!initSPIFFS(false))
         {
             restartAfterErrorWithDelay("SPIFFS initialize failed");
         }
