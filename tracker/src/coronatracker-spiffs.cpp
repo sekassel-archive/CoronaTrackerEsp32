@@ -7,14 +7,17 @@ static int callback(void *data, int argc, char **argv, char **azColName)
     Serial.println("------");
     for (i = 0; i < argc; i++)
     {
-        if(strcmp(azColName[i], "time") == 0 || strcmp(azColName[i], "enin") == 0) {
+        if (strcmp(azColName[i], "time") == 0 || strcmp(azColName[i], "enin") == 0)
+        {
             Serial.printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-        } else {
-            Serial.printf("%s = %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX\n", azColName[i], 
-            argv[i][0], argv[i][1], argv[i][2], argv[i][3], argv[i][4], 
-            argv[i][5], argv[i][6], argv[i][7], argv[i][8], argv[i][9], 
-            argv[i][10], argv[i][11], argv[i][12], argv[i][13], argv[i][14], 
-            argv[i][15]);
+        }
+        else
+        {
+            Serial.printf("%s = %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX\n", azColName[i],
+                          argv[i][0], argv[i][1], argv[i][2], argv[i][3], argv[i][4],
+                          argv[i][5], argv[i][6], argv[i][7], argv[i][8], argv[i][9],
+                          argv[i][10], argv[i][11], argv[i][12], argv[i][13], argv[i][14],
+                          argv[i][15]);
         }
     }
     Serial.println("------");
@@ -231,26 +234,47 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
     return true;
 }
 
-bool getCurrentTek(sqlite3_callback tekCallback, void *data)
+bool getCurrentTek(signed char *tek, int *enin)
 {
     sqlite3 *tek_db;
+    sqlite3_stmt *res;
+
     if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
     {
         Serial.println("Error on opening database");
         return false;
     }
 
-    const char *sql = "SELECT * FROM tek WHERE enin=(SELECT MAX(enin) FROM tek)";
+    Serial.println("__________________Printing TEK______________________:");
+    printSQLResult(tek_db, "SELECT * FROM tek");
+    Serial.println("___________________________________________________________:");
 
-    char *zErrMsg;
-    if (sqlite3_exec(tek_db, sql, tekCallback, data, &zErrMsg) != SQLITE_OK)
+    const char *sql = "SELECT tek, enin FROM tek WHERE enin=(SELECT MAX(enin) FROM tek)";
+
+    if (sqlite3_prepare_v2(tek_db, sql, strlen(sql), &res, nullptr) != SQLITE_OK)
     {
-        Serial.printf("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
         return false;
     }
 
+    if (sqlite3_step(res) != SQLITE_ROW)
+    {
+        Serial.printf("ERROR stepping: %s\n", sqlite3_errmsg(tek_db));
+        return false;
+    }
+    const signed char *data = (const signed char *)sqlite3_column_blob(res, 0);
+
+    for (int i = 0; i < sqlite3_column_bytes(res, 0); i++)
+    {
+        tek[i] = data[i];
+    }
+
+    int x = sqlite3_column_int(res, 1);
+    *enin = x;
+
+    sqlite3_finalize(res);
     sqlite3_close(tek_db);
+
     return true;
 }
 
@@ -356,8 +380,6 @@ bool cleanUpTempDatabase()
     Serial.println("___________________________________________________________:");
 
     sqlite3_close(main_db);
-
-    Serial.println("was here!");
     return true;
 }
 

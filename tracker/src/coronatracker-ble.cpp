@@ -25,14 +25,15 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
                 return;
             }
 
-            const char* serviceData = advertisedDevice.getServiceData().c_str();
+            const char *serviceData = advertisedDevice.getServiceData().c_str();
             signed char data[16];
             for (int i = 0; i < 16; i++)
             {
                 data[i] = serviceData[i];
             }
-            
-            if(!insertRollingProximityIdentifier(time(NULL), data, 16, false)) {
+
+            if (!insertRollingProximityIdentifier(time(NULL), data, 16, false))
+            {
                 Serial.println("Failed to insert RPI!");
             }
         }
@@ -40,34 +41,7 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
-const char *dataTek = "TEK callback called";
-static int tekCallback(void *data, int argc, char **argv, char **azColName)
-{
-    Serial.printf("%s: \n", (const char *)data);
-    time_t current_time;
-    time(&current_time);
-    int currentENIN = calculateENIntervalNumber(current_time);
-
-    int enin = atoi(argv[1]);
-
-    //If entry is older than a day
-    if (currentENIN - EKROLLING_PERIOD >= enin)
-    {
-        Serial.printf("Generating new TEK at: %d\n", currentENIN);
-        generateTemporaryExposureKey(tek);
-        insertTemporaryExposureKeyIntoDatabase(tek, TEK_LENGTH, currentENIN);
-    }
-    else
-    {
-        for (int i = 0; i < TEK_LENGTH; i++)
-        {
-            tek[i] = argv[0][i];
-        }
-    }
-    return 0;
-}
-
-bool generateFirstTEK()
+bool generateNewTEK()
 {
     Serial.println("Generate TEK called!");
     generateTemporaryExposureKey(tek);
@@ -84,10 +58,22 @@ bool initBLE(bool initScan, bool initAdvertisment)
     //Needs to be done before bluetooth else out of memory error
     if (initAdvertisment)
     {
-        if (!getCurrentTek(tekCallback, (void *)dataTek))
+        int enin;
+        if (!getCurrentTek(tek, &enin))
         {
             Serial.println("Error retrieving current tek");
             return false;
+        }
+
+        time_t current_time;
+        time(&current_time);
+        int currentENIN = calculateENIntervalNumber(current_time);
+
+        //If entry is older than a day
+        if (currentENIN - EKROLLING_PERIOD >= enin)
+        {
+            Serial.printf("Generating new TEK at: %d\n", currentENIN);
+            generateNewTEK();
         }
     }
 

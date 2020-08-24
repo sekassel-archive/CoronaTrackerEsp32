@@ -20,10 +20,10 @@
 #define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
 
 //average time for one boot: 4000ms (with a cpu frequency of 80)
-#define BOOTS_UNTIL_SCAN 15 
+#define BOOTS_UNTIL_SCAN 15
 #define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
 
-#define SCAN_TIME 3 //in seconds
+#define SCAN_TIME 3        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
 
 //Saved during deep sleep mode
@@ -182,7 +182,7 @@ void setup()
             //Getting Time
             if (!connectToStoredWifi())
             {
-                Serial.println("Could not connect to Wifi!");
+                restartAfterErrorWithDelay("Could not connect to Wifi!");
             }
 
             Serial.println("Initializing Time");
@@ -191,10 +191,20 @@ void setup()
                 restartAfterErrorWithDelay("Time initialize failed");
             }
 
-            Serial.println("Generating TEK");
-            if (!generateFirstTEK())
+            Serial.print("Generating TEK - ");
+            signed char tek[16];
+            int enin;
+            if (getCurrentTek(tek, &enin))
             {
-                restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
+                Serial.println("Already exists");
+            }
+            else
+            {
+                if (!generateNewTEK())
+                {
+                    restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
+                }
+                Serial.println("Generated");
             }
 
             Serial.println("Disconnecting Wifi");
