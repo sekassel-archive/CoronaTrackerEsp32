@@ -29,10 +29,9 @@
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR bool wifiInitialized = true;
+RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR bool firstBoot = true;
-
-const int ENCOUNTERS_NEEDED = 10;
+RTC_DATA_ATTR bool requuestOnStartUp = true; //For disabling startup request
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -112,12 +111,16 @@ void setNextAction(int action)
     }
 }
 
-void goIntoDeepSleep()
+void goIntoDeepSleep(bool requestInfections)
 {
     bootCount++;
 
-    //Every 500th boot equals roughly every Minute. Every 30000th boot equals (very) roughly 1 hour. This does not factor in constant times to sleep/wake up.
-    if (bootCount % BOOTS_UNTIL_INFECTION_REQUEST == 0)
+    //TODO: Rework System to use actual time instead of counting boots
+    if (requestInfections) //Request Infection on First boot after initialize
+    {
+        setNextAction(ACTION_INFECTION_REQUEST);
+    }
+    else if (bootCount % BOOTS_UNTIL_INFECTION_REQUEST == 0)
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
@@ -213,8 +216,7 @@ void setup()
                 Serial.println("Disconnect Failed");
             }
 
-            //Start a request upon first boot
-            setNextAction(ACTION_INFECTION_REQUEST);
+            goIntoDeepSleep(requuestOnStartUp);
         }
 
         Serial.println("Initializing SPIFFS");
@@ -308,7 +310,7 @@ void setup()
     result /= 1000; //convert to milliseconds
     Serial.printf("Time(milliseconds): %g\n", result);
 
-    goIntoDeepSleep();
+    goIntoDeepSleep(false);
 }
 
 void loop()
