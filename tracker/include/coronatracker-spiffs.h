@@ -17,3 +17,4 @@ bool getCurrentTek(signed char *tek, int *enin);
 bool cleanUpTempDatabase();
 bool insertRollingProximityIdentifier(time_t time, signed char *data, int data_size, bool savePermanently);
 int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length);
+bool printDatabases();

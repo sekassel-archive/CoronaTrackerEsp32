@@ -36,6 +36,36 @@ int printSQLResult(sqlite3 *db, const char *sql)
     return rc;
 }
 
+bool printDatabases()
+{
+    sqlite3 *main_db;
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(main_db));
+        return false;
+    }
+    Serial.println("_________Temporary Rolling Proximity Identifiers___________");
+    printSQLResult(main_db, "SELECT * FROM temp");
+    Serial.println("___________________________________________________________");
+    Serial.println("____________Saved Rolling Proximity Identifiers____________");
+    printSQLResult(main_db, "SELECT * FROM main");
+    Serial.println("___________________________________________________________");
+    sqlite3_close(main_db);
+
+    sqlite3 *tek_db;
+
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.println("Error on opening database");
+        return false;
+    }
+
+    Serial.println("_________________Temporary Exposure Keys___________________");
+    printSQLResult(tek_db, "SELECT * FROM tek");
+    Serial.println("___________________________________________________________");
+    sqlite3_close(tek_db);
+}
+
 bool initSPIFFS(bool createDataBases)
 {
     if (!SPIFFS.begin(true))
@@ -245,10 +275,6 @@ bool getCurrentTek(signed char *tek, int *enin)
         return false;
     }
 
-    Serial.println("__________________Printing TEK______________________:");
-    printSQLResult(tek_db, "SELECT * FROM tek");
-    Serial.println("___________________________________________________________:");
-
     const char *sql = "SELECT tek, enin FROM tek WHERE enin=(SELECT MAX(enin) FROM tek)";
 
     if (sqlite3_prepare_v2(tek_db, sql, strlen(sql), &res, nullptr) != SQLITE_OK)
@@ -371,13 +397,6 @@ bool cleanUpTempDatabase()
         sqlite3_free(zErrMsg);
         return false;
     }
-
-    Serial.println("__________________Printing TEMPORARY______________________:");
-    printSQLResult(main_db, "SELECT * FROM temp");
-    Serial.println("___________________________________________________________:");
-    Serial.println("______________________Printing MAIN________________________:");
-    printSQLResult(main_db, "SELECT * FROM main");
-    Serial.println("___________________________________________________________:");
 
     sqlite3_close(main_db);
     return true;

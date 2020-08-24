@@ -238,6 +238,7 @@ void setup()
         }
     }
 
+    //printDatabases();
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
@@ -245,7 +246,6 @@ void setup()
 
         //deinitBLE(); //We need to free the memory for database interaction
 
-        Serial.println(ESP.getFreeHeap());
         cleanUpTempDatabase();
     }
     else if (nextAction == ACTION_ADVERTISE)
