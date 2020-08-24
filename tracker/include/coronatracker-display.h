@@ -8,7 +8,8 @@ const static int MINUTE = 60;
 const static int DAY = 86400;
 
 void showIsInfectedOnDisplay(bool metInfected);
-void tftInit(int requestDelaySeconds);
+//TODO Change behaviour of time requestDelay on screen 
+void tftInit(int requestDelaySeconds = 3600);
 void showLocalTimeOnDisplay(struct tm timeinfo);
 void showStartWifiMessageOnDisplay();
 void configureWifiMessageOnDisplay();
