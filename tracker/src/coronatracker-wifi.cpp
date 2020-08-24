@@ -58,6 +58,7 @@ bool checkForInfections()
             else
             {
                 WebsocketsClient client;
+                client.onMessage(onMessageCallback);
 
                 bool con = client.connect(WS_URL);
 
@@ -68,8 +69,6 @@ bool checkForInfections()
                 }
                 else
                 {
-                    client.onMessage(onMessageCallback);
-
                     sqlite3 *db;
                     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
                     {
@@ -128,6 +127,8 @@ bool checkForInfections()
                             if (occ == -1)
                             {
                                 Serial.println("There was an Error checking keys");
+
+                                i--; //Temporary Workaround for Out Of Memory Error, will simply retry the current entry
                             }
                             else if (occ > 0)
                             {
