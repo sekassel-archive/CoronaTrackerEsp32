@@ -7,7 +7,15 @@ static int callback(void *data, int argc, char **argv, char **azColName)
     Serial.println("------");
     for (i = 0; i < argc; i++)
     {
-        Serial.printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        if(strcmp(azColName[i], "time") == 0 || strcmp(azColName[i], "enin") == 0) {
+            Serial.printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+        } else {
+            Serial.printf("%s = %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX %02hhX\n", azColName[i], 
+            argv[i][0], argv[i][1], argv[i][2], argv[i][3], argv[i][4], 
+            argv[i][5], argv[i][6], argv[i][7], argv[i][8], argv[i][9], 
+            argv[i][10], argv[i][11], argv[i][12], argv[i][13], argv[i][14], 
+            argv[i][15]);
+        }
     }
     Serial.println("------");
     return 0;
