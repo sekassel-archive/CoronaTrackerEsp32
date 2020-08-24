@@ -432,6 +432,7 @@ int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, 
     if (sqlite3_prepare_v2(db, sql, strlen(sql), &res, nullptr) != SQLITE_OK)
     {
         Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(res);
         return -1;
     }
 
@@ -440,6 +441,7 @@ int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, 
         if (sqlite3_bind_blob(res, i, (signed char *)keys[i], key_length, SQLITE_STATIC) != SQLITE_OK)
         {
             Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(res);
             return -1;
         }
     }
@@ -447,6 +449,7 @@ int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, 
     if (sqlite3_step(res) != SQLITE_ROW)
     {
         Serial.printf("ERROR stepping: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(res);
         return -1;
     }
     int occ = sqlite3_column_int(res, 0);
