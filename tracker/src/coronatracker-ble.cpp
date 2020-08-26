@@ -132,7 +132,8 @@ bool initBLE(bool initScan, bool initAdvertisment)
     return true;
 }
 
-void deinitBLE()
+//If Memory is released completly bluetooth cant be enabled again
+void deinitBLE(bool releaseMemory)
 {
     if (pAdvertising != nullptr)
     {
@@ -143,7 +144,7 @@ void deinitBLE()
         pBLEScan->stop();
     }
 
-    BLEDevice::deinit(false);
+    BLEDevice::deinit(releaseMemory);
     delete pServer;
     delete pService;
 }

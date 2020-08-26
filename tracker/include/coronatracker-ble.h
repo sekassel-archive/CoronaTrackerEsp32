@@ -5,6 +5,6 @@
 #include "coronatracker-spiffs.h"
 
 bool initBLE(bool initScan, bool initAdvertisment);
-void deinitBLE();
+void deinitBLE(bool releaseMemory);
 void scanForCovidDevices(uint32_t duration);
 bool generateNewTEK();

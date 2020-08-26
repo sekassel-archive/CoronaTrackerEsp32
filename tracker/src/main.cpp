@@ -246,7 +246,7 @@ void setup()
         Serial.println("Starting Scan...");
         scanForCovidDevices((uint32_t)SCAN_TIME);
 
-        //deinitBLE(); //We need to free the memory for database interaction
+        deinitBLE(true); //free memory for database interaction
 
         cleanUpTempDatabase();
     }
