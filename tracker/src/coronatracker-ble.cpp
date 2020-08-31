@@ -8,6 +8,8 @@ BLEService *pService;
 BLEAdvertising *pAdvertising;
 BLEScan *pBLEScan;
 
+std::vector<std::string> encounteredRolllingProximityIdentifiers;
+
 class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 {
     //Called for each advertising BLE server.
@@ -19,23 +21,13 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             Serial.print("Found Covid Device: ");
             Serial.println(advertisedDevice.toString().c_str());
 
-            if (advertisedDevice.getServiceData().length() < 16)
+            if (advertisedDevice.getServiceData().length() != 20)
             {
-                Serial.println("Advertised Data is too short");
+                Serial.println("Advertised Data has wrong length!");
                 return;
             }
 
-            const char *serviceData = advertisedDevice.getServiceData().c_str();
-            signed char data[16];
-            for (int i = 0; i < 16; i++)
-            {
-                data[i] = serviceData[i];
-            }
-
-            if (!insertRollingProximityIdentifier(time(NULL), data, 16, false))
-            {
-                Serial.println("Failed to insert RPI!");
-            }
+            encounteredRolllingProximityIdentifiers.push_back(advertisedDevice.getServiceData().substr(0, 16));
         }
     }
 };
@@ -155,7 +147,8 @@ void deinitBLE(bool releaseMemory)
     delete pService;
 }
 
-void scanForCovidDevices(uint32_t duration)
+std::vector<std::string> scanForCovidDevices(uint32_t duration)
 {
     BLEDevice::getScan()->start(duration, false);
+    return encounteredRolllingProximityIdentifiers;
 }

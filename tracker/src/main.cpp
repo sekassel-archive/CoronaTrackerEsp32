@@ -244,10 +244,11 @@ void setup()
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
-        scanForCovidDevices((uint32_t)SCAN_TIME);
 
+        std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
 
+        insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
     }
     else if (nextAction == ACTION_ADVERTISE)
