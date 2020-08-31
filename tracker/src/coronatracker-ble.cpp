@@ -106,8 +106,14 @@ bool initBLE(bool initScan, bool initAdvertisment)
             return false;
         }
 
+        std::string payloadString;
+        for (int i = 0; i < 20; i++)
+        {
+            payloadString.push_back(payload[i]);
+        }
+
         BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-        oAdvertisementData.setServiceData(serviceUUID, std::string(reinterpret_cast<char *>(payload)));
+        oAdvertisementData.setServiceData(serviceUUID, payloadString);
 
         Serial.println("Setting up Advertisment");
         pAdvertising = BLEDevice::getAdvertising();
