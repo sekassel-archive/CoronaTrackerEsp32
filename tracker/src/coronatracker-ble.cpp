@@ -77,16 +77,12 @@ bool initBLE(bool initScan, bool initAdvertisment)
         }
     }
 
-    //Setting up Server
-    Serial.println("Setting Up Server");
-    BLEDevice::init("CovidTracker");
-    pServer = BLEDevice::createServer();
-    pService = pServer->createService(serviceUUID);
-    pService->start();
+    BLEDevice::init("");
 
-    //Service Data
     if (initAdvertisment)
     {
+        Serial.println("Setting up Advertisment");
+
         esp_power_level_t power = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
         //Starts at 0 with -12dbm, each step adds 3 dbm
         signed char tpl = -12 + power * 3;
@@ -107,20 +103,17 @@ bool initBLE(bool initScan, bool initAdvertisment)
         }
 
         BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
+        oAdvertisementData.setFlags(0x1A);
+        oAdvertisementData.setCompleteServices(serviceUUID);
         oAdvertisementData.setServiceData(serviceUUID, std::string(reinterpret_cast<char *>(payload)));
 
-        Serial.println("Setting up Advertisment");
         pAdvertising = BLEDevice::getAdvertising();
-        pAdvertising->addServiceUUID(serviceUUID);
         pAdvertising->setAdvertisementData(oAdvertisementData);
-        pAdvertising->setMinPreferred(0x06);
-        pAdvertising->setMinPreferred(0x12);
+        pAdvertising->setScanResponse(false);
         pAdvertising->start();
     }
-    //Setting up Scan
     if (initScan)
     {
-
         Serial.println("Setting up Scan");
         pBLEScan = BLEDevice::getScan();
         pBLEScan->setAdvertisedDeviceCallbacks(&myCallbacks);
