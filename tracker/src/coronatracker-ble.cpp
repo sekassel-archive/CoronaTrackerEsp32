@@ -3,8 +3,6 @@
 static BLEUUID serviceUUID((uint16_t)0xFD6F); //UUID taken from App
 signed char tek[TEK_LENGTH];                  //Temporary Exposure Key
 
-BLEServer *pServer;
-BLEService *pService;
 BLEAdvertising *pAdvertising;
 BLEScan *pBLEScan;
 
@@ -122,8 +120,6 @@ void deinitBLE()
     }
 
     BLEDevice::deinit(false);
-    delete pServer;
-    delete pService;
 }
 
 void scanForCovidDevices(uint32_t duration)
