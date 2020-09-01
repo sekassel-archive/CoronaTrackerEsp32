@@ -41,23 +41,20 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 };
 MyAdvertisedDeviceCallbacks myCallbacks;
 
-bool generateNewTEK()
+bool generateNewTemporaryExposureKey(int ENIntervalNumber)
 {
-    Serial.println("Generate TEK called!");
+    Serial.println("Generating new Temporary Exposure Key...");
     generateTemporaryExposureKey(tek);
-
-    time_t current_time;
-    time(&current_time);
-    int enin = calculateENIntervalNumber(current_time);
-
-    return insertTemporaryExposureKeyIntoDatabase(tek, TEK_LENGTH, enin);
+    return insertTemporaryExposureKeyIntoDatabase(tek, TEK_LENGTH, ENIntervalNumber);
 }
 
 bool initBLE(bool initScan, bool initAdvertisment)
 {
-    //Needs to be done before bluetooth else out of memory error
+    BLEDevice::init("");
     if (initAdvertisment)
     {
+        Serial.println("Initializing Advertisment");
+
         int enin;
         if (!getCurrentTek(tek, &enin))
         {
@@ -65,23 +62,14 @@ bool initBLE(bool initScan, bool initAdvertisment)
             return false;
         }
 
-        time_t current_time;
-        time(&current_time);
-        int currentENIN = calculateENIntervalNumber(current_time);
+        int currentENIN = calculateENIntervalNumber(time(NULL));
 
         //If entry is older than a day
         if (currentENIN - EKROLLING_PERIOD >= enin)
         {
             Serial.printf("Generating new TEK at: %d\n", currentENIN);
-            generateNewTEK();
+            generateNewTemporaryExposureKey(currentENIN);
         }
-    }
-
-    BLEDevice::init("");
-
-    if (initAdvertisment)
-    {
-        Serial.println("Setting up Advertisment");
 
         esp_power_level_t power = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
         //Starts at 0 with -12dbm, each step adds 3 dbm
@@ -89,12 +77,8 @@ bool initBLE(bool initScan, bool initAdvertisment)
 
         signed char version = 1; //00000001, Stands for 01:00
 
-        time_t current_time;
-        time(&current_time);
-        int enin = calculateENIntervalNumber(current_time);
-
         signed char payload[20];
-        int err = getAdvertisingPayload((const unsigned char *)tek, enin, version, tpl, (unsigned char *)payload);
+        int err = getAdvertisingPayload((const unsigned char *)tek, currentENIN, version, tpl, (unsigned char *)payload);
 
         if (err != 0)
         {
@@ -112,6 +96,7 @@ bool initBLE(bool initScan, bool initAdvertisment)
         pAdvertising->setScanResponse(false);
         pAdvertising->start();
     }
+
     if (initScan)
     {
         Serial.println("Setting up Scan");

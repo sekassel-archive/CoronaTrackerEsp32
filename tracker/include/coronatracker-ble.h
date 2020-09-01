@@ -7,4 +7,4 @@
 bool initBLE(bool initScan, bool initAdvertisment);
 void deinitBLE();
 void scanForCovidDevices(uint32_t duration);
-bool generateNewTEK();
+bool generateNewTemporaryExposureKey(int ENIntervalNumber);
