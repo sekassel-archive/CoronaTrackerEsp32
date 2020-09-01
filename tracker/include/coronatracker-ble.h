@@ -5,6 +5,6 @@
 #include "coronatracker-spiffs.h"
 
 bool initBLE(bool initScan, bool initAdvertisment);
-void deinitBLE();
-void scanForCovidDevices(uint32_t duration);
+void deinitBLE(bool releaseMemory);
+std::vector<std::string> scanForCovidDevices(uint32_t duration);
 bool generateNewTemporaryExposureKey(int ENIntervalNumber);
