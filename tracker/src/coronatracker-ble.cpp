@@ -76,6 +76,16 @@ bool initBLE(bool initScan, bool initAdvertisment)
             return false;
         }
 
+        //The address is derived from the payload (-> Changes when payload changes) and therefore not random.
+        uint8_t address[6];
+        err = getBLEAddress((const unsigned char *)payload, 20, address, 6);
+
+        if (err != 0)
+        {
+            Serial.printf("Error on getting address: %d\n", err);
+            return false;
+        }
+
         std::string payloadString;
         for (int i = 0; i < 20; i++)
         {
@@ -83,14 +93,36 @@ bool initBLE(bool initScan, bool initAdvertisment)
         }
 
         BLEAdvertisementData oAdvertisementData = BLEAdvertisementData();
-        oAdvertisementData.setFlags(0x1A);
+        oAdvertisementData.setFlags(0x1A); //As per specification, although CWA does not advertise this
         oAdvertisementData.setCompleteServices(serviceUUID);
         oAdvertisementData.setServiceData(serviceUUID, payloadString);
 
         pAdvertising = BLEDevice::getAdvertising();
         pAdvertising->setAdvertisementData(oAdvertisementData);
         pAdvertising->setScanResponse(false);
-        pAdvertising->start();
+
+        //Configuring private Address. Some of these steps could not be done via pAdvertising directly
+        esp_err_t error = esp_ble_gap_set_rand_addr(address);
+        if (error != ESP_OK)
+        {
+            Serial.printf("Error on setting random address: %d - %s\n", error, esp_err_to_name(error));
+            return false;
+        }
+
+        esp_ble_adv_params_t advParams;
+        advParams.adv_int_min = 0x20;
+        advParams.adv_int_max = 0x40;
+        advParams.adv_type = ADV_TYPE_NONCONN_IND;
+        advParams.own_addr_type = BLE_ADDR_TYPE_RANDOM;
+        advParams.channel_map = ADV_CHNL_ALL;
+        advParams.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
+
+        error = esp_ble_gap_start_advertising(&advParams);
+        if (error != ESP_OK)
+        {
+            Serial.printf("Error on starting advertising: %d - %s\n", error, esp_err_to_name(error));
+            return false;
+        }
     }
 
     if (initScan)

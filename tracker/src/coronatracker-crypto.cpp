@@ -110,6 +110,19 @@ int calculateRollingProximityIdentifier(const unsigned char *tek, int ENIN, unsi
     return ret;
 }
 
+int getBLEAddress(const unsigned char *seed, int seedLength, uint8_t *output, int outputLength)
+{
+    int err = mbedtls_hkdf_expand(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), seed, seedLength, NULL, 0, output, outputLength);
+
+    /*
+    Most significant bits set to one, as per Bluetooth Core Specification Version 5.2 | Vol.6, Part B 1.3.2.1
+    While this is a static address and not a private one, advertising does not seem to work otherwise
+    */
+    output[0] |= 0xC0; //1100 0000
+
+    return err;
+}
+
 int calculateMetadata(signed char version, signed char tpl, signed char* output) {
     output[0] = version;
     output[1] = tpl;
