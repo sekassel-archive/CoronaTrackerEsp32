@@ -79,4 +79,24 @@ public class SQLite {
             }
         }
     }
+
+    public static Map<Integer, Integer> getRSINTableSizes() throws SQLException {
+        final String SELECT_SQL = "SELECT rsin FROM RSIN";
+        Map<Integer, Integer> sizesMap = new HashMap<>();
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+        ResultSet resultSet = conn.createStatement().executeQuery(SELECT_SQL);
+
+        while (resultSet.next()) {
+            int rsin = resultSet.getInt("rsin");
+            int size = getTableSize(Integer.toString(rsin), conn);
+            sizesMap.put(rsin, size);
+        }
+        return sizesMap;
+    }
+
+    private static int getTableSize(String name, Connection db) throws SQLException {
+        final String SELECT_SQL = "SELECT COUNT(*) FROM RSIN_" + name;
+        return db.createStatement().executeQuery(SELECT_SQL).getInt(1);
+    }
 }
