@@ -5,6 +5,7 @@ import org.sqlite.core.Codes;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -98,5 +99,18 @@ public class SQLite {
     private static int getTableSize(String name, Connection db) throws SQLException {
         final String SELECT_SQL = "SELECT COUNT(*) FROM RSIN_" + name;
         return db.createStatement().executeQuery(SELECT_SQL).getInt(1);
+    }
+
+    public static Connection openDatabase() throws SQLException {
+        return DriverManager.getConnection(DATABASE_PATH);
+    }
+
+    public static void closeDatabase(Connection db) throws SQLException {
+        db.close();
+    }
+
+    public static byte[] getKeyData(int rsin, int index, Connection db) throws SQLException {
+        final String SELECT_SQL = "SELECT key_data FROM RSIN_" + rsin + " WHERE rowid=" + (index + 1);//Database is not zero indexed
+        return db.createStatement().executeQuery(SELECT_SQL).getBytes(1);
     }
 }
