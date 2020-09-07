@@ -23,6 +23,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-databind:2.11.0'
     compile 'com.google.protobuf:protobuf-java:3.12.2'
     compile 'at.favre.lib:hkdf:1.1.0'
+    compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
 }
 
 jar {
