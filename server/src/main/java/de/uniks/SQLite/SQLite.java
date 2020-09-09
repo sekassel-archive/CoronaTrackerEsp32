@@ -128,16 +128,64 @@ public class SQLite {
         return db.createStatement().executeQuery(SELECT_SQL).getInt(1);
     }
 
-    public static Connection openDatabase() throws SQLException {
-        return DriverManager.getConnection(DATABASE_PATH);
+    //For Debugging purposes
+
+    public static void addTemporaryExposureKey(int rsin, byte[] tek) throws SQLException {
+        final String SELECT_SQL = "INSERT INTO RSIN_?? VALUES (?)".replace("??", Integer.toString(rsin));
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+
+        HashSet<Integer> rsinSet = new HashSet<>();
+        rsinSet.add(rsin);
+        createRSINTables(rsinSet, conn);
+
+        PreparedStatement stmt = conn.prepareStatement(SELECT_SQL);
+        stmt.setBytes(1, tek);
+        stmt.execute();
     }
 
-    public static void closeDatabase(Connection db) throws SQLException {
-        db.close();
+    public static List<byte[]> getRSINTable(int rsin) throws SQLException {
+        final String SELECT_SQL = "SELECT * FROM RSIN_??".replace("??", Integer.toString(rsin));
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+        ResultSet resultSet = conn.createStatement().executeQuery(SELECT_SQL);
+
+        ArrayList<byte[]> table = new ArrayList<>();
+        while (resultSet.next()) {
+            table.add(resultSet.getBytes(1));
+        }
+
+        return table;
+    }
+
+    public static void deleteRollingStartIntervalNumber(int rsin) throws SQLException {
+        final String DROP_SQL = "DROP TABLE RSIN_??".replace("??", Integer.toString(rsin));
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+        conn.createStatement().execute(DROP_SQL);
+    }
+
+    public static void deleteTemporaryExposureKey(int rsin, byte[] tek) throws SQLException {
+        final String DELETE_SQL = "DELETE FROM RSIN_?? WHERE key_data = ?".replace("??", Integer.toString(rsin));
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+        PreparedStatement stmt = conn.prepareStatement(DELETE_SQL);
+        stmt.setBytes(1, tek);
+        stmt.execute();
+    }
+
+    //For Websocket
+
+    public static Connection openDatabase() throws SQLException {
+        return DriverManager.getConnection(DATABASE_PATH);
     }
 
     public static byte[] getKeyData(int rsin, int index, Connection db) throws SQLException {
         final String SELECT_SQL = "SELECT key_data FROM RSIN_" + rsin + " WHERE rowid=" + (index + 1);//Database is not zero indexed
         return db.createStatement().executeQuery(SELECT_SQL).getBytes(1);
+    }
+
+    public static void closeDatabase(Connection db) throws SQLException {
+        db.close();
     }
 }
