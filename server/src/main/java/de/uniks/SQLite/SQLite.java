@@ -1,14 +1,12 @@
 package de.uniks.SQLite;
 
+import de.uniks.CWA.CWACryptography;
 import org.sqlite.SQLiteException;
 import org.sqlite.core.Codes;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static de.uniks.CWA.CWARequests.getUnzippedInfectionData;
 
@@ -94,6 +92,35 @@ public class SQLite {
             sizesMap.put(rsin, size);
         }
         return sizesMap;
+    }
+
+    //Deletes databases older than 2 weeks
+    public static void cleanUpDatabases() throws SQLException {
+        final String SELECT_SQL = "SELECT rsin FROM RSIN WHERE rsin < ?";
+        int cutoff = CWACryptography.getRollingStartIntervalNumber(System.currentTimeMillis() / 1000)
+                - (CWACryptography.TWO_WEEKS_IN_10_MINUTES_INTERVAL * 2 + 144); //CWA keeps rsins for a month it seems
+
+        Connection conn = DriverManager.getConnection(DATABASE_PATH);
+
+        PreparedStatement stmt = conn.prepareStatement(SELECT_SQL);
+        stmt.setInt(1, cutoff);
+        ResultSet resultSet = stmt.executeQuery();
+
+        ArrayList<Integer> rsinList = new ArrayList<>();
+        while (resultSet.next()) {
+            rsinList.add(resultSet.getInt("rsin"));
+        }
+        final String DELETE_SQL = "DELETE FROM RSIN WHERE rsin < ?";
+        stmt = conn.prepareStatement(DELETE_SQL);
+        stmt.setInt(1, cutoff);
+        stmt.execute();
+
+        Statement statement = conn.createStatement();
+        for (Integer rsin : rsinList) {
+            final String DROP_SQL = "DROP TABLE RSIN_" + rsin;
+            statement.addBatch(DROP_SQL);
+        }
+        statement.executeBatch();
     }
 
     private static int getTableSize(String name, Connection db) throws SQLException {
