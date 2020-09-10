@@ -203,7 +203,7 @@ void setup()
             }
             else
             {
-                if (!generateNewTEK())
+                if (!generateNewTemporaryExposureKey(time(NULL)))
                 {
                     restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
                 }

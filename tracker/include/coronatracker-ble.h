@@ -7,4 +7,4 @@
 bool initBLE(bool initScan, bool initAdvertisment);
 void deinitBLE(bool releaseMemory);
 std::vector<std::string> scanForCovidDevices(uint32_t duration);
-bool generateNewTEK();
+bool generateNewTemporaryExposureKey(int ENIntervalNumber);
