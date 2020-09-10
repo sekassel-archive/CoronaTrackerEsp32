@@ -304,7 +304,7 @@ bool getCurrentTek(signed char *tek, int *enin)
     return true;
 }
 
-bool insertRollingProximityIdentifier(time_t time, signed char *data, int data_size, bool savePermanently)
+bool insertTemporaryRollingProximityIdentifiers(time_t time, std::vector<std::__cxx11::string> rpis)
 {
     sqlite3 *db;
     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
@@ -314,11 +314,23 @@ bool insertRollingProximityIdentifier(time_t time, signed char *data, int data_s
         return false;
     };
 
-    if (!insertRPI(time, data, data_size, savePermanently, db))
+    for (auto rpi : rpis)
     {
-        sqlite3_close(db);
-        return false;
+        const char *serviceData = rpi.c_str();
+        int size = rpi.length();
+        signed char data[size];
+        for (int i = 0; i < size; i++)
+        {
+            data[i] = serviceData[i];
+        }
+
+        if (!insertRPI(time, data, size, false, db))
+        {
+            sqlite3_close(db);
+            return false;
+        }
     }
+
     sqlite3_close(db);
     return true;
 }
