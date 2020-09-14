@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @WebSocket
 public class CWAWebsocket {
 
-    static Map<Session, Connection> sessionMap = new ConcurrentHashMap<>();
+    static final Map<Session, Connection> sessionMap = new ConcurrentHashMap<>();
 
     @OnWebSocketConnect
     public void onConnect(Session session) throws Exception {

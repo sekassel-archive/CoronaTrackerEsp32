@@ -12,7 +12,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 public class CWACryptography {
     private static final int ENIN_SIZE = 4;

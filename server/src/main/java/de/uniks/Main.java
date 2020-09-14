@@ -29,7 +29,7 @@ import static java.net.HttpURLConnection.*;
 import static spark.Spark.*;
 
 public class Main {
-    private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
         webSocket("/cwa", CWAWebsocket.class);
@@ -111,7 +111,7 @@ public class Main {
             return "Successfully removed " + rsin;
         });
 
-        delete("/infections/rsin/:rsin/teks/:tek", (request, response) -> {
+        delete("/infections/rsin/:rsin/tek/:tek", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -124,7 +124,7 @@ public class Main {
                 json = new JSONArray(request.params(":tek"));
             } catch (JSONException e) {
                 response.status(HTTP_BAD_REQUEST);
-                return "Bad Array";
+                return "Could not extract array";
             }
 
             if (json.length() != 16) {
@@ -158,6 +158,7 @@ public class Main {
         try {
             SQLite.initializeDatabase();
             SQLite.insertExposures(CWARequests.getUnzippedInfectionData());
+            SQLite.cleanUpDatabases();
         } catch (IOException | InterruptedException | SQLException e) {
             StringWriter sw = new StringWriter();
             e.printStackTrace(new PrintWriter(sw));

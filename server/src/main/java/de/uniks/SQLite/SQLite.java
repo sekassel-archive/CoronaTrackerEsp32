@@ -59,7 +59,7 @@ public class SQLite {
     }
 
     private static void createRSINTables(Set<Integer> rsins, Connection db) throws SQLException {
-        final String CREATE_SQL = "CREATE TABLE IF NOT EXISTS RSIN_?? (key_data BLOB UNIQUE);";
+        final String CREATE_SQL = "CREATE TABLE IF NOT EXISTS RSIN_?? (key_data BLOB UNIQUE);"; //TODO Could use AUTOINCREMENT to support deletion of entries in the future
         final String INSERT_SQL = "INSERT INTO RSIN VALUES (?)";
 
         try (Statement stmt = db.createStatement(); PreparedStatement pstmt = db.prepareStatement(INSERT_SQL)) {
@@ -94,11 +94,11 @@ public class SQLite {
         }
     }
 
-    //Deletes databases older than 2 weeks
+    //Deletes databases older than 4 weeks
     public static void cleanUpDatabases() throws SQLException {
         final String SELECT_SQL = "SELECT rsin FROM RSIN WHERE rsin < ?";
         int cutoff = CWACryptography.getRollingStartIntervalNumber(System.currentTimeMillis() / 1000)
-                - (CWACryptography.TWO_WEEKS_IN_10_MINUTES_INTERVAL + 144); //CWA keeps rsins for a month it seems
+                - (CWACryptography.TWO_WEEKS_IN_10_MINUTES_INTERVAL * 2 + 144); //CWA keeps rsins for a month it seems
 
 
         try (Connection conn = DriverManager.getConnection(DATABASE_PATH)) {
@@ -181,7 +181,7 @@ public class SQLite {
 
         try (Connection conn = DriverManager.getConnection(DATABASE_PATH); PreparedStatement stmt = conn.prepareStatement(DELETE_SQL)) {
             stmt.setBytes(1, tek);
-            stmt.execute();
+            stmt.execute(); //TODO Could use update count to confirm if entry even existed before
         }
     }
 
