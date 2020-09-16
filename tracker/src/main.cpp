@@ -188,6 +188,9 @@ void setup()
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
             }
 
+            Serial.println("Getting RSINs");
+            auto map = getRSINAsMap(false);
+
             Serial.println("Initializing Time");
             if (!initializeTime())
             {
