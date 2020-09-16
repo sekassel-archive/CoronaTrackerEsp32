@@ -10,6 +10,9 @@
 #define MAIN_DATABASE_PATH "/main.db"
 #define MAIN_DATABASE_SQLITE_PATH "/spiffs/main.db"
 
+#define SERVER_DATADASE_PATH "/cwa.db"
+#define SERVER_DATADASE_SQLITE_PATH "/spiffs/cwa.db"
+
 bool createFile(const char *path);
 bool initSPIFFS(bool createDataBases);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);

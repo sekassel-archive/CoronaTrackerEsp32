@@ -122,6 +122,24 @@ bool initSPIFFS(bool createDataBases)
 
         sqlite3_free(errMsg);
         sqlite3_close(db);
+
+        createFile(SERVER_DATADASE_PATH);
+
+        if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
+        {
+            return false;
+        }
+
+        //Saves progress on already preocessed keys from server
+        if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS cwa (time INTEGER, entry INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
+        {
+            Serial.printf("Failed to create table cwa in database: %s\n", errMsg);
+            sqlite3_close(db);
+            return false;
+        }
+
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
     }
     return true;
 }
