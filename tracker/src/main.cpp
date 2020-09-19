@@ -7,9 +7,11 @@
 #include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
 
-#define LED_PIN 4
-#define TP_PWR_PIN 25
-#define TP_PIN_PIN 33
+// #define LED_PIN 4
+// #define TP_PWR_PIN 25
+// #define TP_PIN_PIN 33
+// #define LED_PIN 2
+// #define BUTTON_PIN 0
 
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
@@ -17,7 +19,7 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-#define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
+#define SLEEP_INTERVAL 2000000 //In microseconds --> 2000 milliseconds
 
 //average time for one boot: 4000ms (with a cpu frequency of 80)
 #define BOOTS_UNTIL_SCAN 15
@@ -31,7 +33,7 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR bool firstBoot = true;
-RTC_DATA_ATTR bool requuestOnStartUp = true; //For disabling startup request
+RTC_DATA_ATTR bool requuestOnStartUp = false; //For disabling startup request
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -51,8 +53,8 @@ const int daylightOffset_sec = 3600;
 
 void blinkLED()
 {
-    int state = digitalRead(LED_PIN);
-    digitalWrite(LED_PIN, !state);
+    // int state = digitalRead(LED_PIN);
+    // digitalWrite(LED_PIN, !state);
 }
 
 bool initializeTime()
@@ -77,9 +79,9 @@ bool initializeTime()
     return true;
 }
 
-void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
+void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 300000)
 {
-    digitalWrite(LED_PIN, HIGH);
+    // digitalWrite(LED_PIN, HIGH);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
@@ -147,31 +149,28 @@ void setup()
     Serial.begin(115200);
     Serial.println("Serial initialized");
 
-    imu.sleepGyro(true);
-    setCpuFrequencyMhz(80);
-
     float start = micros();
     float end;
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
-    pinMode(LED_PIN, OUTPUT);
-    pinMode(TP_PIN_PIN, INPUT); // Button input
-    pinMode(TP_PWR_PIN, PULLUP);
-    digitalWrite(TP_PWR_PIN, HIGH);
+    // pinMode(LED_PIN, OUTPUT);
+    // pinMode(TP_PIN_PIN, INPUT); // Button input
+    // pinMode(TP_PWR_PIN, PULLUP);
+    // digitalWrite(TP_PWR_PIN, HIGH);
 
     //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
-        tftInit();
-        digitalWrite(LED_PIN, HIGH);
+        // tftInit();
+        // digitalWrite(LED_PIN, HIGH);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        digitalWrite(LED_PIN, LOW);
+        // digitalWrite(LED_PIN, LOW);
         if (firstBoot)
         {
             firstBoot = false;
@@ -236,7 +235,7 @@ void setup()
 
         if (nextAction == ACTION_INFECTION_REQUEST)
         {
-            tftInit();
+            // tftInit();
         }
     }
 
@@ -259,17 +258,18 @@ void setup()
     {
         while (true)
         {
-            buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            // buttonState = digitalRead(TP_PIN_PIN); // read the button input
+            // buttonState = digitalRead(BUTTON_PIN); // read the button input
             //Button was pressed
-            if (buttonState == HIGH)
-            {
+            // if (buttonState == LOW/*HIGH*/)
+            // {
                 //First press
-                if (buttonState != lastButtonState)
-                {
-                    startPressed = millis();
-                }
-                else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
-                {
+                // if (buttonState != lastButtonState)
+                // {
+                    // startPressed = millis();
+                // }
+                // else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
+                // {
                     Serial.println("Starting WifiManger-Config");
                     buttonTicker.attach_ms(500, blinkLED);
 
@@ -281,21 +281,21 @@ void setup()
                     {
                         Serial.println("We connected to Wifi...");
                         wifiInitialized = true;
-                        digitalWrite(LED_PIN, LOW);
+                        // digitalWrite(LED_PIN, LOW);
                     }
                     else
                     {
                         Serial.println("Could not connect to Wifi");
-                        digitalWrite(LED_PIN, HIGH);
+                        // digitalWrite(LED_PIN, HIGH);
                         //Delay so feedback can be seen on LED
                         delay(5000);
                     }
                     disconnectWifi();
                     break;
                     //ESP.restart(); //Loop exit
-                }
-            }
-            lastButtonState = buttonState;
+                // }
+            // }
+            // lastButtonState = buttonState;
             delay(500);
         }
     }
