@@ -1,17 +1,31 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <Ticker.h>
 #include <SparkFunLSM9DS1.h>
+#include <Nextion.h>
 
+#include "SSD1306.h"
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
 #include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
+#include "NexUpload.h"
+#include "NexConfig.h"
+#include "NexHardware.h"
+// #include "pins_arduino.h"
+
+
+
+// #define SSD1306_ADDRESS 0x3c
+// #define I2C_SDA 21
+// #define I2C_SCL 22
+// SSD1306 oled(SSD1306_ADDRESS, I2C_SDA, I2C_SCL);
 
 // #define LED_PIN 4
 // #define TP_PWR_PIN 25
 // #define TP_PIN_PIN 33
-// #define LED_PIN 2
-// #define BUTTON_PIN 0
+#define LED_PIN 16
+#define BUTTON_PIN 0
 
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
@@ -21,7 +35,6 @@
 
 #define SLEEP_INTERVAL 2000000 //In microseconds --> 2000 milliseconds
 
-//average time for one boot: 4000ms (with a cpu frequency of 80)
 #define BOOTS_UNTIL_SCAN 15
 #define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
 
@@ -53,8 +66,8 @@ const int daylightOffset_sec = 3600;
 
 void blinkLED()
 {
-    // int state = digitalRead(LED_PIN);
-    // digitalWrite(LED_PIN, !state);
+    int state = digitalRead(LED_PIN);
+    digitalWrite(LED_PIN, !state);
 }
 
 bool initializeTime()
@@ -81,7 +94,7 @@ bool initializeTime()
 
 void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 300000)
 {
-    // digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, HIGH);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
@@ -154,23 +167,24 @@ void setup()
 
     //Setting up pinModes
     Serial.println("Setting up pinModes");
-    // pinMode(LED_PIN, OUTPUT);
+    pinMode(LED_PIN, OUTPUT);
     // pinMode(TP_PIN_PIN, INPUT); // Button input
     // pinMode(TP_PWR_PIN, PULLUP);
     // digitalWrite(TP_PWR_PIN, HIGH);
+    pinMode(BUTTON_PIN, INPUT); // Button input
 
     //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
         // tftInit();
-        // digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_PIN, HIGH);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        // digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_PIN, LOW);
         if (firstBoot)
         {
             firstBoot = false;
@@ -259,17 +273,17 @@ void setup()
         while (true)
         {
             // buttonState = digitalRead(TP_PIN_PIN); // read the button input
-            // buttonState = digitalRead(BUTTON_PIN); // read the button input
+            buttonState = digitalRead(BUTTON_PIN); // read the button input
             //Button was pressed
-            // if (buttonState == LOW/*HIGH*/)
-            // {
+            if (buttonState == /* LOW */HIGH)
+            {
                 //First press
-                // if (buttonState != lastButtonState)
-                // {
-                    // startPressed = millis();
-                // }
-                // else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
-                // {
+                if (buttonState != lastButtonState)
+                {
+                    startPressed = millis();
+                }
+                else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
+                {
                     Serial.println("Starting WifiManger-Config");
                     buttonTicker.attach_ms(500, blinkLED);
 
@@ -281,21 +295,21 @@ void setup()
                     {
                         Serial.println("We connected to Wifi...");
                         wifiInitialized = true;
-                        // digitalWrite(LED_PIN, LOW);
+                        digitalWrite(LED_PIN, LOW);
                     }
                     else
                     {
                         Serial.println("Could not connect to Wifi");
-                        // digitalWrite(LED_PIN, HIGH);
+                        digitalWrite(LED_PIN, HIGH);
                         //Delay so feedback can be seen on LED
                         delay(5000);
                     }
                     disconnectWifi();
                     break;
                     //ESP.restart(); //Loop exit
-                // }
-            // }
-            // lastButtonState = buttonState;
+                }
+            }
+            lastButtonState = buttonState;
             delay(500);
         }
     }
