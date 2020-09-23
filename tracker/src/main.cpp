@@ -1,17 +1,17 @@
 #include <Arduino.h>
-#include <Wire.h>
+// #include <Wire.h>
 #include <Ticker.h>
 #include <SparkFunLSM9DS1.h>
-#include <Nextion.h>
+// #include <Nextion.h>
 
-#include "SSD1306.h"
+// #include "SSD1306.h"
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
 #include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
-#include "NexUpload.h"
-#include "NexConfig.h"
-#include "NexHardware.h"
+// #include "NexUpload.h"
+// #include "NexConfig.h"
+// #include "NexHardware.h"
 // #include "pins_arduino.h"
 
 
