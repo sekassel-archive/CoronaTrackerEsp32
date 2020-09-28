@@ -12,7 +12,6 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 public class CWACryptography {
     private static final int ENIN_SIZE = 4;
@@ -29,6 +28,8 @@ public class CWACryptography {
 
     public static final String AES = "AES";
     public static final String RPI_CIPHER_TRANSFORMATION = "AES/ECB/NoPadding";
+
+    public static final int TWO_WEEKS_IN_10_MINUTES_INTERVAL = 6 * 24 * 14;
 
     private static byte[] getENIntervalNumber(int timestamp) {
         return ByteBuffer.allocate(ENIN_SIZE).order(ByteOrder.LITTLE_ENDIAN).putInt(timestamp).array();
@@ -61,5 +62,9 @@ public class CWACryptography {
 
     public static byte[] getRollingProximityIdentifier(byte[] tek, int j) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
         return getRollingProximityIdentifier(getRollingProximityIdentifierKey(tek), getPaddedData(j));
+    }
+
+    public static int getRollingStartIntervalNumber(long timestamp) {
+        return (int) timestamp / (60 * 10);
     }
 }

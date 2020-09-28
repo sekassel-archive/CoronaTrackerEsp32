@@ -206,7 +206,7 @@ void setup()
             }
             else
             {
-                if (!generateNewTemporaryExposureKey(time(NULL)))
+                if (!generateNewTemporaryExposureKey(calculateENIntervalNumber(time(NULL))))
                 {
                     restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
                 }
