@@ -191,6 +191,10 @@ void setup()
             Serial.println("Getting RSINs");
             auto map = getRSINAsMap(false);
 
+            Serial.println("Initializing CWA Progress");
+            if(!insertCWAProgress(map)) {
+                restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+            }
             Serial.println("Initializing Time");
             if (!initializeTime())
             {

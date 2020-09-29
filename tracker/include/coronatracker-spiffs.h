@@ -21,3 +21,4 @@ bool cleanUpTempDatabase();
 bool insertTemporaryRollingProximityIdentifiers(time_t time, std::vector<std::__cxx11::string> rpis);
 int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length);
 bool printDatabases();
+bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap);
