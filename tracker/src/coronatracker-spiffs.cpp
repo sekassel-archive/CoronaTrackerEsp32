@@ -64,6 +64,8 @@ bool printDatabases()
     printSQLResult(tek_db, "SELECT * FROM tek");
     Serial.println("___________________________________________________________");
     sqlite3_close(tek_db);
+
+    return true;
 }
 
 bool initSPIFFS(bool createDataBases)
