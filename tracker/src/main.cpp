@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <Ticker.h>
-#include <SparkFunLSM9DS1.h>
 
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
@@ -41,8 +40,6 @@ int lastButtonState = 0;
 int startPressed = 0;
 
 Ticker buttonTicker;
-
-LSM9DS1 imu;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -147,7 +144,6 @@ void setup()
     Serial.begin(115200);
     Serial.println("Serial initialized");
 
-    imu.sleepGyro(true);
     setCpuFrequencyMhz(80);
 
     float start = micros();
@@ -164,7 +160,6 @@ void setup()
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
-        tftInit();
         digitalWrite(LED_PIN, HIGH);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
@@ -236,7 +231,6 @@ void setup()
 
         if (nextAction == ACTION_INFECTION_REQUEST)
         {
-            tftInit();
         }
     }
 
