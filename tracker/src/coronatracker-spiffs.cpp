@@ -296,7 +296,6 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
     const char *tail;
 
     const char *sql_command = "INSERT INTO tek VALUES (?,?);";
-    Serial.printf("%s\n", sql_command);
 
     if (sqlite3_prepare_v2(tek_db, sql_command, strlen(sql_command), &res, &tail) != SQLITE_OK)
     {
@@ -305,16 +304,16 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
         return false;
     }
 
-    if (sqlite3_bind_int(res, 1, enin) != SQLITE_OK)
+    if (sqlite3_bind_blob(res, 1, tek, tek_length, SQLITE_STATIC) != SQLITE_OK)
     {
-        Serial.printf("ERROR binding int(%d): %s\n", enin, sqlite3_errmsg(tek_db));
+        Serial.printf("ERROR binding blob(%s): %s\n", tek, sqlite3_errmsg(tek_db));
         sqlite3_close(tek_db);
         return false;
     }
 
-    if (sqlite3_bind_blob(res, 2, tek, tek_length, SQLITE_STATIC) != SQLITE_OK)
+    if (sqlite3_bind_int(res, 2, enin) != SQLITE_OK)
     {
-        Serial.printf("ERROR binding blob(%s): %s\n", tek, sqlite3_errmsg(tek_db));
+        Serial.printf("ERROR binding int(%d): %s\n", enin, sqlite3_errmsg(tek_db));
         sqlite3_close(tek_db);
         return false;
     }
