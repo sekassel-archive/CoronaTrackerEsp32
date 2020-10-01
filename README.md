@@ -1,5 +1,9 @@
 # CoronaTrackerEsp32
 
+An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the ESP32. 
+
+## Overview
+
 Goal of the project is to create a do it yourself coronatracker.
 We use a cheap microcontroller (ESP32) with bluetooth and wifi.
 Our code is compatible with the german Corona-Warn-App. Our tracker recognizes smartphones with the Corona-Warn-App and they recognize our tracker. 
@@ -10,16 +14,46 @@ This project is still work in progress and some features are incomplete/not yet 
 
 ## Hardware
 
-At the moment we can not guarantee that the code works on every ESP32 board. The display often needs some different settings and the pins have to be configured.
-The device we are planning to optimize for our tracker is the T-WATCH-2020 from LILIGO.
+The software should work on most ESP32 boards. Internally we use **LILYGO® TTGO ESP32 WiFi + Bluetooth 18650 Battery Protection Board**, mainly because of usability of 18650 batteries.
+
+<img src="doc\images\ESP_Front.jpg" style="zoom: 40%;" /><img src="doc\images\ESP_Back.jpg" style="zoom: 40%;" />
+
+Depending on how the pins on your board are configured you may need to change them.
 
 ## How you can built your own tracker?
 
-First you need an ESP32 board with a battery.
+Choose a suitable ESP32 board. This tutorial will use the TODO.
 
-- download the coronatracker software
-- open the project in PlatformIO and upload
-- configure wifi like it is shown on the display with help from your pc or phone
-- don't forget to charge your device
+1. Download and install [Visual Studio Code](https://code.visualstudio.com/). 
 
-The tracker connects to the server now and starts advertising like the corona-warn-app does.
+2. Install [PlatformIO](https://platformio.org/) for VS Code. ([Instructions](https://platformio.org/install/ide?install=vscode)) There may be a prompt to restart VS Code after installing.
+
+3. Clone or download this project. You can use `Download ZIP`on the top right of this site. Unzip it in a suitable directory.![](doc\images\git_download.png)
+
+4. Open the project with PlatformIO. 
+
+   1. Open Platform IO Home.
+
+      ![](doc\images\PIO_Home.png)
+
+   2. Click on `Open Folder`and search the downloaded project.
+
+      ![](doc\images\PIO_Open.png)
+
+   3. Open the `tracker` folder. It might take awhile until the project is fully loaded.
+
+      ![](doc\images\PIO_OpenFolder.png)
+
+5. Connect your ESP32 via USB and upload the project.
+
+   <img src="doc\images\PIO_Upload.png" alt="PIO_Upload"  />
+
+   This message should appear at the bottom of the terminal if the upload was successful.
+
+   ![](doc\images\PIO_Success.png)
+
+6. The ESP will now start an Access Point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there i no connection to the Internet) Enter your WiFi Credentials and click safe.
+
+   <img src="doc\images\WiFI_1.png" style="zoom: 33%;" /><img src="doc\images\WiFi_2.png" style="zoom: 33%;" />
+
+7. The ESP will now start initialization and afterwards simulating the CWA-App.
