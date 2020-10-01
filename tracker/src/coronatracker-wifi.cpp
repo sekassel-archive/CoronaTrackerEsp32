@@ -78,7 +78,16 @@ bool checkForInfections()
     else
     {
         Serial.println("Requesting infections numbers");
+        Serial.printf("Heap before map: %d\n", ESP.getFreeHeap());
         auto rsinMap = getRSINAsMap(false);
+        Serial.printf("Heap after map: %d\n", ESP.getFreeHeap());
+
+        std::map<uint32_t, uint16_t> currentProgress = getCurrentProgress();
+        if (currentProgress.empty())
+        {
+            Serial.println("Failed to read current progress");
+            return false;
+        }
 
         if (rsinMap.empty())
         {
@@ -110,10 +119,17 @@ bool checkForInfections()
                 {
                     uint32_t rsin = it->first;
                     uint16_t values = it->second;
+                    int i = 0;
 
                     Serial.printf("Starting to check rsin: %d\n", rsin);
 
-                    for (int i = 0; i < values; i++)
+                    //We only need to check keys, if we haven't checked them before
+                    if (currentProgress.find(rsin) != currentProgress.end())
+                    {
+                        i = currentProgress.find(rsin)->second;
+                    }
+
+                    for (i; i < values; i++)
                     {
                         Serial.printf("Entry %d/%d\n", i, values);
 
@@ -173,6 +189,7 @@ bool checkForInfections()
             }
             client.close();
         }
+        insertCWAProgress(rsinMap);
     }
     disconnectWifi();
     return false;

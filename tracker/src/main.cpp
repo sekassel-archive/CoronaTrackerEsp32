@@ -21,7 +21,7 @@
 
 //average time for one boot: 4000ms (with a cpu frequency of 80)
 #define BOOTS_UNTIL_SCAN 15
-#define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
+#define BOOTS_UNTIL_INFECTION_REQUEST 15 //probably just if the esp is charging
 
 #define SCAN_TIME 3        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
@@ -29,7 +29,7 @@
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requuestOnStartUp = true; //For disabling startup request
 
@@ -147,9 +147,6 @@ void setup()
     Serial.begin(115200);
     Serial.println("Serial initialized");
 
-    imu.sleepGyro(true);
-    setCpuFrequencyMhz(80);
-
     float start = micros();
     float end;
 
@@ -182,19 +179,27 @@ void setup()
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
-            //Getting Time
+            std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
+
+            //Setting up CWA Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
             }
 
-            Serial.println("Getting RSINs");
-            auto map = getRSINAsMap(false);
-
-            Serial.println("Initializing CWA Progress");
-            if(!insertCWAProgress(map)) {
-                restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+            if (progressMap.empty())
+            {
+                Serial.println("Initializing CWA Progress");
+                if (!insertCWAProgress(getRSINAsMap(false)))
+                {
+                    restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+                }
             }
+            else
+            {
+                Serial.println("Progress already initialized");
+            }
+
             Serial.println("Initializing Time");
             if (!initializeTime())
             {
@@ -264,47 +269,28 @@ void setup()
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
-        while (true)
+        Serial.println("Starting WifiManger-Config");
+        buttonTicker.attach_ms(500, blinkLED);
+
+        configureWifiMessageOnDisplay();
+        bool res = configureWifi();
+
+        buttonTicker.detach();
+        if (res)
         {
-            buttonState = digitalRead(TP_PIN_PIN); // read the button input
-            //Button was pressed
-            if (buttonState == HIGH)
-            {
-                //First press
-                if (buttonState != lastButtonState)
-                {
-                    startPressed = millis();
-                }
-                else if ((millis() - startPressed) >= BUTTON_PRESS_DURATION_MILLISECONDS)
-                {
-                    Serial.println("Starting WifiManger-Config");
-                    buttonTicker.attach_ms(500, blinkLED);
-
-                    configureWifiMessageOnDisplay();
-                    bool res = configureWifi();
-
-                    buttonTicker.detach();
-                    if (res)
-                    {
-                        Serial.println("We connected to Wifi...");
-                        wifiInitialized = true;
-                        digitalWrite(LED_PIN, LOW);
-                    }
-                    else
-                    {
-                        Serial.println("Could not connect to Wifi");
-                        digitalWrite(LED_PIN, HIGH);
-                        //Delay so feedback can be seen on LED
-                        delay(5000);
-                    }
-                    disconnectWifi();
-                    break;
-                    //ESP.restart(); //Loop exit
-                }
-            }
-            lastButtonState = buttonState;
-            delay(500);
+            Serial.println("We connected to Wifi...");
+            wifiInitialized = true;
+            digitalWrite(LED_PIN, LOW);
         }
+        else
+        {
+            Serial.println("Could not connect to Wifi");
+            digitalWrite(LED_PIN, HIGH);
+            //Delay so feedback can be seen on LED
+            delay(5000);
+        }
+        disconnectWifi();
+        //ESP.restart(); //Loop exit
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {

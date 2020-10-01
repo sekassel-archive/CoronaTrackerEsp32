@@ -159,8 +159,6 @@ bool initSPIFFS(bool createDataBases)
 
 bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
 {
-    Serial.println(ESP.getFreeHeap());
-
     std::stringstream sql_ss;
     sql_ss << "INSERT INTO cwa VALUES ";
 
@@ -184,6 +182,8 @@ bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
         i++;
     }
 
+    const char *delete_sql = "DELETE FROM cwa;";
+
     sqlite3 *db;
     if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
     {
@@ -191,15 +191,19 @@ bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
         return false;
     }
 
-    const char *sql = sql_ss.str().c_str();
-    Serial.println(sql);
-
-    Serial.println(ESP.getFreeHeap());
-
     char *zErrMsg;
+    if (sqlite3_exec(db, delete_sql, NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on executing DELETE (%s): %s\n", delete_sql, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    const char *sql = sql_ss.str().c_str();
+
     if (sqlite3_exec(db, sql, NULL, NULL, &zErrMsg) != SQLITE_OK)
     {
-        Serial.printf("SQL error on executing (%s): %s\n", sql, zErrMsg);
+        Serial.printf("SQL error on executing INSERT (%s): %s\n", sql, zErrMsg);
         sqlite3_free(zErrMsg);
         return false;
     }
@@ -207,9 +211,44 @@ bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
     sqlite3_free(zErrMsg);
     sqlite3_close(db);
 
-    Serial.println(ESP.getFreeHeap());
-
     return true;
+}
+
+std::map<uint32_t, uint16_t> getCurrentProgress()
+{
+    sqlite3_stmt *res;
+    const char *tail;
+    sqlite3 *db;
+    const char *sql = "SELECT * FROM cwa;";
+
+    std::map<uint32_t, uint16_t> progressMap;
+
+    if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return progressMap;
+    }
+
+    if (sqlite3_prepare_v2(db, sql, strlen(sql), &res, &tail) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql(%s): %s\n", sql, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return progressMap;
+    }
+
+    while (sqlite3_step(res) == SQLITE_ROW)
+    {
+        int i1 = sqlite3_column_int(res, 0);
+        int i2 = sqlite3_column_int(res, 1);
+
+        progressMap.insert(std::make_pair(i1, i2));
+    }
+
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+
+    return progressMap;
 }
 
 bool createFile(const char *path)
