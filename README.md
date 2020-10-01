@@ -4,11 +4,9 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
 
 ## Overview
 
-Goal of the project is to create a do it yourself coronatracker.
-We use a cheap microcontroller (ESP32) with bluetooth and wifi.
-Our code is compatible with the german Corona-Warn-App. Our tracker recognizes smartphones with the Corona-Warn-App and they recognize our tracker. 
-The idea is that you can carry the tracker instead of having the app on your smartphone.
-The tracker is connected to a chosen wifi so it can request the infected keys from the official Corona-Warn-App server and warn you if you met someone infected.
+Goal of the project is to create a do it yourself coronatracker and replace the CWA-App on your phone with this device. Advantages of using it is its cheapness and availability, as well as not having to use the app on your phone.
+
+The program mimics the [Exposure Notification Protocol](https://www.google.com/covid19/exposurenotifications/) by Apple/Google, that is used by CWA. Parts that could not be done on the microcontroller itself are done by our server (mainly Googles [Protocol Buffers](https://developers.google.com/android/exposure-notifications/exposure-key-file-format))
 
 This project is still work in progress and some features are incomplete/not yet implemented.
 
@@ -22,7 +20,7 @@ Depending on how the pins on your board are configured you may need to change th
 
 ## How you can built your own tracker?
 
-Choose a suitable ESP32 board. This tutorial will use the TODO.
+Choose a suitable ESP32 board.
 
 1. Download and install [Visual Studio Code](https://code.visualstudio.com/). 
 
@@ -44,7 +42,7 @@ Choose a suitable ESP32 board. This tutorial will use the TODO.
 
       <img src="doc\images\PIO_OpenFolder.png"  />
 
-5. Connect your ESP32 via USB and upload the project.
+5. Connect your ESP32 via USB and upload the project. (If you are using our board you have to press the `Boot` Button at this point)
 
    <img src="doc\images\PIO_Upload.png"  />
 
