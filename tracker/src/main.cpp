@@ -6,6 +6,7 @@
 #include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
 
+#define BUTTON_PIN 0
 #define LED_PIN 16
 
 #define ACTION_NOTHING 0
@@ -74,7 +75,7 @@ bool initializeTime()
 
 void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
 {
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, LOW);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
@@ -148,18 +149,19 @@ void setup()
     //Setting up pinModes
     Serial.println("Setting up pinModes");
     pinMode(LED_PIN, OUTPUT);
+    pinMode(BUTTON_PIN, PULLUP);
 
     //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_PIN, HIGH);
         if (firstBoot)
         {
             firstBoot = false;
@@ -255,12 +257,12 @@ void setup()
         {
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
-            digitalWrite(LED_PIN, LOW);
+            digitalWrite(LED_PIN, HIGH);
         }
         else
         {
             Serial.println("Could not connect to Wifi");
-            digitalWrite(LED_PIN, HIGH);
+            digitalWrite(LED_PIN, LOW);
             //Delay so feedback can be seen on LED
             delay(5000);
         }
