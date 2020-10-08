@@ -129,6 +129,7 @@ void goIntoDeepSleep(bool requestInfections)
         setNextAction(ACTION_ADVERTISE);
     }
 
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, LOW);
     esp_sleep_enable_timer_wakeup(SLEEP_INTERVAL);
     esp_deep_sleep_start();
 }
@@ -151,10 +152,18 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, PULLUP);
 
+    Serial.println("Initialize display");
+    initDisplay();
+
+    buttonState = digitalRead(BUTTON_PIN); // read the button input
+    if (buttonState == LOW){
+        buttonPressedInMain();
+    }
+
     //Wifi not initialized
     if (!wifiInitialized)
     {
-        Serial.println("Awaiting Button Press for Wifi-Configuration");
+        Serial.println("Wifi-Configuration");
         digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();

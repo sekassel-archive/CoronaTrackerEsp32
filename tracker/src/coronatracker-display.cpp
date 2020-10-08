@@ -1,6 +1,19 @@
 #include "coronatracker-display.h"
+#include "SSD1306Wire.h"
 
 int REQUEST_DELAY_SECONDS = 1;
+
+SSD1306Wire display(0x3c, 5, 4);
+
+void initDisplay()
+{
+    if (!display.init())
+    {
+        Serial.println("Display init error.");
+    }
+    display.setFont(ArialMT_Plain_10);
+    display.setTextAlignment(TEXT_ALIGN_LEFT);
+}
 
 void showRequestDelayOnDisplay()
 {
@@ -60,6 +73,11 @@ void configureWifiMessageOnDisplay()
 
 void showStartWifiMessageOnDisplay()
 {
+    display.drawString(0, 20, "Something Something");
+    display.display();
+    delay(3000);
+    Serial.println("Clear display!");
+    display.clear();
 }
 
 void showLocalTimeOnDisplay(struct tm timeinfo)
@@ -74,4 +92,24 @@ void showIsInfectedOnDisplay(bool metInfected)
     else
     {
     }
+}
+
+void buttonPressedInMain()
+{
+    Serial.println("Boot button was pressed.");
+    display.drawString(0, 20, "Something Something");
+    display.display();
+    delay(3000);
+    Serial.println("Clear display!");
+    display.clear();
+    display.display();
+    delay(5000);
+}
+
+void clearDisplay()
+{
+    //throws core panic exception
+    display.clear();
+    display.display();
+    delay(5000);
 }
