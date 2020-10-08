@@ -10,8 +10,9 @@ void initDisplay();
 void showIsInfectedOnDisplay(bool metInfected);
 //TODO Change behaviour of time requestDelay on screen
 void showLocalTimeOnDisplay(struct tm timeinfo);
-void showStartWifiMessageOnDisplay();
 void configureWifiMessageOnDisplay();
 void showRequestDelayOnDisplay();
-void buttonPressedInMain();
+void buttonPressedInMainOnDisplay();
 void clearDisplay();
+void wifiConfiguredSuccessfullyOnDisplay();
+void configureWifiFailedOnDisplay();

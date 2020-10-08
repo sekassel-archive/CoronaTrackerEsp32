@@ -154,10 +154,14 @@ void setup()
 
     Serial.println("Initialize display");
     initDisplay();
+    
+    esp_sleep_wakeup_cause_t wakeup_reason;
+    wakeup_reason = esp_sleep_get_wakeup_cause();
 
-    buttonState = digitalRead(BUTTON_PIN); // read the button input
-    if (buttonState == LOW){
-        buttonPressedInMain();
+    buttonState = digitalRead(BUTTON_PIN);
+    if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW){ //LOW means clicked
+        Serial.println("Wakeup caused by external signal using RTC_IO");
+        buttonPressedInMainOnDisplay();
     }
 
     //Wifi not initialized
@@ -166,7 +170,6 @@ void setup()
         Serial.println("Wifi-Configuration");
         digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
-        showStartWifiMessageOnDisplay();
     }
     else
     {
@@ -267,21 +270,23 @@ void setup()
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
             digitalWrite(LED_PIN, HIGH);
+            wifiConfiguredSuccessfullyOnDisplay();
         }
         else
-        {
+        { 
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
-            //Delay so feedback can be seen on LED
-            delay(5000);
+            configureWifiFailedOnDisplay();
         }
+        delay(5000);
         disconnectWifi();
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
         bool result = checkForInfections();
         showIsInfectedOnDisplay(result);
-        showRequestDelayOnDisplay();
+        showRequestDelayOnDisplay();//have to be reworked
+        delay(5000);
     }
 
     end = micros();

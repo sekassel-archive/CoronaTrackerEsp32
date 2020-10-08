@@ -11,7 +11,7 @@ void initDisplay()
     {
         Serial.println("Display init error.");
     }
-    display.setFont(ArialMT_Plain_10);
+    display.setFont(ArialMT_Plain_16); //10, 16 or 24 are possible choices
     display.setTextAlignment(TEXT_ALIGN_LEFT);
 }
 
@@ -69,15 +69,12 @@ void showRequestDelayOnDisplay()
 
 void configureWifiMessageOnDisplay()
 {
-}
-
-void showStartWifiMessageOnDisplay()
-{
-    display.drawString(0, 20, "Something Something");
-    display.display();
-    delay(3000);
-    Serial.println("Clear display!");
+    Serial.println("showStartWifiMessageOnDisplay");
     display.clear();
+    display.drawString(0, 0, "Configure wifi on"); //probably 18 letters with size 16
+    display.drawString(0, 20, "your Phone or ");
+    display.drawString(0, 40, "Computer.");
+    display.display();
 }
 
 void showLocalTimeOnDisplay(struct tm timeinfo)
@@ -86,30 +83,52 @@ void showLocalTimeOnDisplay(struct tm timeinfo)
 
 void showIsInfectedOnDisplay(bool metInfected)
 {
+    display.clear();
     if (!metInfected)
     {
+        display.drawString(0, 0, "You were not");
+        display.drawString(0, 20, "exposed.");
     }
     else
     {
+        display.drawString(0, 0, "You were exposed.");
+        display.drawString(0, 20, "Check in with");
+        display.drawString(0, 40, "your Doctor.");
+        while (true)
+        {
+            delay(100000);
+            yield();
+        }
+        //TODO show saved exposure keys or something for health authority
     }
+    display.display();
 }
 
-void buttonPressedInMain()
+void buttonPressedInMainOnDisplay()
 {
     Serial.println("Boot button was pressed.");
-    display.drawString(0, 20, "Something Something");
-    display.display();
-    delay(3000);
-    Serial.println("Clear display!");
     display.clear();
+    display.drawString(0, 20, "Woke up.");
     display.display();
-    delay(5000);
 }
 
 void clearDisplay()
 {
-    //throws core panic exception
     display.clear();
     display.display();
-    delay(5000);
+}
+
+void wifiConfiguredSuccessfullyOnDisplay()
+{
+    display.clear();
+    display.drawString(0, 20, "Wifi configured.");
+    display.display();
+}
+
+void configureWifiFailedOnDisplay()
+{
+    display.clear();
+    display.drawString(0, 0, "Configure Wifi");
+    display.drawString(0, 20, "failed.");
+    display.display();
 }
