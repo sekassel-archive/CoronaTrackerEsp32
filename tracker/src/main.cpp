@@ -1,15 +1,13 @@
 #include <Arduino.h>
 #include <Ticker.h>
-#include <SparkFunLSM9DS1.h>
 
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
 #include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
 
-#define LED_PIN 4
-#define TP_PWR_PIN 25
-#define TP_PIN_PIN 33
+#define BUTTON_PIN 0
+#define LED_PIN 16
 
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
@@ -31,7 +29,7 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
-RTC_DATA_ATTR bool requuestOnStartUp = true; //For disabling startup request
+RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -41,8 +39,6 @@ int lastButtonState = 0;
 int startPressed = 0;
 
 Ticker buttonTicker;
-
-LSM9DS1 imu;
 
 //Time Variables
 const char *ntpServer = "pool.ntp.org";
@@ -79,7 +75,7 @@ bool initializeTime()
 
 void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
 {
-    digitalWrite(LED_PIN, HIGH);
+    digitalWrite(LED_PIN, LOW);
     Serial.println(errorMessage);
     delay(delayMS);
     ESP.restart();
@@ -153,22 +149,19 @@ void setup()
     //Setting up pinModes
     Serial.println("Setting up pinModes");
     pinMode(LED_PIN, OUTPUT);
-    pinMode(TP_PIN_PIN, INPUT); // Button input
-    pinMode(TP_PWR_PIN, PULLUP);
-    digitalWrite(TP_PWR_PIN, HIGH);
+    pinMode(BUTTON_PIN, PULLUP);
 
     //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Awaiting Button Press for Wifi-Configuration");
-        tftInit();
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
         showStartWifiMessageOnDisplay();
     }
     else
     {
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_PIN, HIGH);
         if (firstBoot)
         {
             firstBoot = false;
@@ -228,7 +221,7 @@ void setup()
                 Serial.println("Disconnect Failed");
             }
 
-            goIntoDeepSleep(requuestOnStartUp);
+            goIntoDeepSleep(requestOnStartUp);
         }
 
         Serial.println("Initializing SPIFFS");
@@ -248,7 +241,6 @@ void setup()
 
         if (nextAction == ACTION_INFECTION_REQUEST)
         {
-            tftInit();
         }
     }
 
@@ -280,17 +272,16 @@ void setup()
         {
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
-            digitalWrite(LED_PIN, LOW);
+            digitalWrite(LED_PIN, HIGH);
         }
         else
         {
             Serial.println("Could not connect to Wifi");
-            digitalWrite(LED_PIN, HIGH);
+            digitalWrite(LED_PIN, LOW);
             //Delay so feedback can be seen on LED
             delay(5000);
         }
         disconnectWifi();
-        //ESP.restart(); //Loop exit
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
