@@ -77,6 +77,8 @@ bool printDatabases()
     printSQLResult(cwa_db, "SELECT * FROM cwa");
     Serial.println("___________________________________________________________");
     sqlite3_close(cwa_db);
+
+    return true;
 }
 
 bool initSPIFFS(bool createDataBases)
@@ -192,7 +194,7 @@ bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
     }
 
     char *zErrMsg;
-    if (sqlite3_exec(db, delete_sql, NULL, NULL, &zErrMsg) != SQLITE_OK)
+    if (sqlite3_exec(db, delete_sql, NULL, NULL, &zErrMsg) != SQLITE_OK) //Clears the table
     {
         Serial.printf("SQL error on executing DELETE (%s): %s\n", delete_sql, zErrMsg);
         sqlite3_free(zErrMsg);
@@ -201,7 +203,7 @@ bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
 
     const char *sql = sql_ss.str().c_str();
 
-    if (sqlite3_exec(db, sql, NULL, NULL, &zErrMsg) != SQLITE_OK)
+    if (sqlite3_exec(db, sql, NULL, NULL, &zErrMsg) != SQLITE_OK) //Fills it again
     {
         Serial.printf("SQL error on executing INSERT (%s): %s\n", sql, zErrMsg);
         sqlite3_free(zErrMsg);

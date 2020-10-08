@@ -78,9 +78,7 @@ bool checkForInfections()
     else
     {
         Serial.println("Requesting infections numbers");
-        Serial.printf("Heap before map: %d\n", ESP.getFreeHeap());
         auto rsinMap = getRSINAsMap(false);
-        Serial.printf("Heap after map: %d\n", ESP.getFreeHeap());
 
         std::map<uint32_t, uint16_t> currentProgress = getCurrentProgress();
         if (currentProgress.empty())

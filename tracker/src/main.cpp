@@ -21,7 +21,7 @@
 
 //average time for one boot: 4000ms (with a cpu frequency of 80)
 #define BOOTS_UNTIL_SCAN 15
-#define BOOTS_UNTIL_INFECTION_REQUEST 15 //probably just if the esp is charging
+#define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
 
 #define SCAN_TIME 3        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
