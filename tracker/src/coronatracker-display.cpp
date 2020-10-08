@@ -1,8 +1,6 @@
 #include "coronatracker-display.h"
 #include "SSD1306Wire.h"
 
-int REQUEST_DELAY_SECONDS = 1;
-
 SSD1306Wire display(0x3c, 5, 4);
 
 void initDisplay()
@@ -15,63 +13,19 @@ void initDisplay()
     display.setTextAlignment(TEXT_ALIGN_LEFT);
 }
 
-void showRequestDelayOnDisplay()
+void showRequestDelayOnDisplay(int bootsLeftUntilNextRequest, int bootsUntilScan)
 {
-    struct tm timeinfo;
-    Serial.printf("Time get: %d\n", getLocalTime(&timeinfo));
-    //convert REQUEST_DELAY_SECONDS into hour, minute format
-    int currentHoursInSeconds = timeinfo.tm_hour * HOUR;
-    int currentMinutesInSeconds = timeinfo.tm_min * MINUTE;
-    int request_delay_seconds = REQUEST_DELAY_SECONDS;
-
-    if (request_delay_seconds + currentHoursInSeconds + currentMinutesInSeconds + timeinfo.tm_sec >= DAY)
-    {
-        timeinfo.tm_wday += 1;
-    }
-
-    if ((request_delay_seconds % HOUR) + currentMinutesInSeconds + timeinfo.tm_sec >= HOUR)
-    {
-        timeinfo.tm_hour = (timeinfo.tm_hour + (request_delay_seconds / HOUR) + 1) % 24;
-        request_delay_seconds = REQUEST_DELAY_SECONDS % HOUR;
-
-        if ((request_delay_seconds % MINUTE) + timeinfo.tm_sec >= MINUTE)
-        {
-            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE) + 1) % 60;
-            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
-            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
-        }
-        else
-        {
-            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE)) % 60;
-            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
-            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
-        }
-    }
-    else
-    {
-        timeinfo.tm_hour = (timeinfo.tm_hour + (request_delay_seconds / HOUR)) % 24;
-        request_delay_seconds = REQUEST_DELAY_SECONDS % HOUR;
-
-        if ((request_delay_seconds % MINUTE) + timeinfo.tm_sec >= MINUTE)
-        {
-            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE) + 1) % 60;
-            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
-            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
-        }
-        else
-        {
-            timeinfo.tm_min = (timeinfo.tm_min + (request_delay_seconds / MINUTE)) % 60;
-            request_delay_seconds = REQUEST_DELAY_SECONDS % MINUTE;
-            timeinfo.tm_sec = (timeinfo.tm_sec + request_delay_seconds) % 60;
-        }
-    }
+    Serial.println("showRequestDelayOnDisplay");
+    display.drawString(0, 32, "Next request: ");
+    display.drawString(0, 48, (String)(bootsLeftUntilNextRequest / bootsUntilScan) + " minutes");
+    display.display();
 }
 
 void configureWifiMessageOnDisplay()
 {
     Serial.println("showStartWifiMessageOnDisplay");
-    display.clear();
-    display.drawString(0, 0, "Configure wifi on"); //probably 18 letters with size 16
+    // display.clear();
+    display.drawString(0, 0, "Configure wifi on"); //probably 17 letters with size 16
     display.drawString(0, 20, "your Phone or ");
     display.drawString(0, 40, "Computer.");
     display.display();
@@ -79,6 +33,12 @@ void configureWifiMessageOnDisplay()
 
 void showLocalTimeOnDisplay(struct tm timeinfo)
 {
+    display.clear();
+    int HOUR = timeinfo.tm_hour + 2;//the time difference from the server was not saved
+    display.drawString(0, 0, (String) "Time: " + (HOUR < 10 ? "0" : "") + (String)HOUR + ":" + 
+    (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min + ":" + 
+    (timeinfo.tm_sec < 10 ? "0" : "") + (String)timeinfo.tm_sec);
+    display.display();
 }
 
 void showIsInfectedOnDisplay(bool metInfected)
@@ -104,23 +64,10 @@ void showIsInfectedOnDisplay(bool metInfected)
     display.display();
 }
 
-void buttonPressedInMainOnDisplay()
-{
-    Serial.println("Boot button was pressed.");
-    display.clear();
-    display.drawString(0, 20, "Woke up.");
-    display.display();
-}
-
-void clearDisplay()
-{
-    display.clear();
-    display.display();
-}
-
 void wifiConfiguredSuccessfullyOnDisplay()
 {
     display.clear();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.drawString(0, 20, "Wifi configured.");
     display.display();
 }
@@ -130,5 +77,11 @@ void configureWifiFailedOnDisplay()
     display.clear();
     display.drawString(0, 0, "Configure Wifi");
     display.drawString(0, 20, "failed.");
+    display.display();
+}
+
+void showNumberOfScanedDevicesOnDisplay(int scanedDevices)
+{
+    display.drawString(0, 16, "Seen devices: " + (String)scanedDevices);
     display.display();
 }

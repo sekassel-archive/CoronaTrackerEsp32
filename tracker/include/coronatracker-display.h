@@ -11,8 +11,7 @@ void showIsInfectedOnDisplay(bool metInfected);
 //TODO Change behaviour of time requestDelay on screen
 void showLocalTimeOnDisplay(struct tm timeinfo);
 void configureWifiMessageOnDisplay();
-void showRequestDelayOnDisplay();
-void buttonPressedInMainOnDisplay();
-void clearDisplay();
+void showRequestDelayOnDisplay(int bootsLeftUntilNextRequest, int bootsUntilScan);
 void wifiConfiguredSuccessfullyOnDisplay();
 void configureWifiFailedOnDisplay();
+void showNumberOfScanedDevicesOnDisplay(int scanedDevices);

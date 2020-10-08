@@ -18,16 +18,18 @@
 #define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
 
 //average time for one boot: 4000ms (with a cpu frequency of 80)
-#define BOOTS_UNTIL_SCAN 15
-#define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
+#define BOOTS_UNTIL_SCAN 21                //approximately every minute
+#define BOOTS_UNTIL_INFECTION_REQUEST 1260 //probably just if the esp is charging //approximately every hour
 
-#define SCAN_TIME 3        //in seconds
+#define SCAN_TIME 5        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
 
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR int scanedDevices = 0;
+RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
+RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 
@@ -69,7 +71,8 @@ bool initializeTime()
     } while (!getLocalTime(&timeinfo));
     Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    //showLocalTimeOnDisplay(timeinfo);
+    showLocalTimeOnDisplay(timeinfo);
+    delay(5000);
     return true;
 }
 
@@ -152,16 +155,23 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, PULLUP);
 
+    digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
+
     Serial.println("Initialize display");
     initDisplay();
-    
+
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
+    struct tm timeinfo;
+    getLocalTime(&timeinfo);
 
     buttonState = digitalRead(BUTTON_PIN);
-    if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW){ //LOW means clicked
+    if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW)
+    { //LOW means clicked
         Serial.println("Wakeup caused by external signal using RTC_IO");
-        buttonPressedInMainOnDisplay();
+        showLocalTimeOnDisplay(timeinfo);
+        showNumberOfScanedDevicesOnDisplay(scanedDevices);
+        showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
     }
 
     //Wifi not initialized
@@ -173,7 +183,6 @@ void setup()
     }
     else
     {
-        digitalWrite(LED_PIN, HIGH);
         if (firstBoot)
         {
             firstBoot = false;
@@ -235,10 +244,6 @@ void setup()
                 restartAfterErrorWithDelay("BLE initialize failed");
             }
         }
-
-        if (nextAction == ACTION_INFECTION_REQUEST)
-        {
-        }
     }
 
     //printDatabases();
@@ -248,6 +253,15 @@ void setup()
 
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
+        scanedDevices = rpis.size();
+        if (bootsLeftUntilNextRequest <= 0)
+        {
+            bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST;
+        }
+        else
+        {
+            bootsLeftUntilNextRequest -= BOOTS_UNTIL_SCAN;
+        }
 
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
@@ -273,7 +287,7 @@ void setup()
             wifiConfiguredSuccessfullyOnDisplay();
         }
         else
-        { 
+        {
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
             configureWifiFailedOnDisplay();
@@ -285,7 +299,6 @@ void setup()
     {
         bool result = checkForInfections();
         showIsInfectedOnDisplay(result);
-        showRequestDelayOnDisplay();//have to be reworked
         delay(5000);
     }
 
