@@ -223,10 +223,6 @@ void setup()
                 restartAfterErrorWithDelay("BLE initialize failed");
             }
         }
-
-        if (nextAction == ACTION_INFECTION_REQUEST)
-        {
-        }
     }
 
     //printDatabases();
