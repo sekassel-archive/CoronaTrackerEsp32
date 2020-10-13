@@ -67,13 +67,13 @@ std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi)
     return rsinMap;
 }
 
-bool checkForInfections()
+exposure_status checkForInfections()
 {
     Serial.println("Connecting to server and checking for infections");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
-        return false;
+        return EXPOSURE_UPDATE_FAILED;
     }
     else
     {
@@ -84,13 +84,13 @@ bool checkForInfections()
         if (currentProgress.empty())
         {
             Serial.println("Failed to read current progress");
-            return false;
+            return EXPOSURE_UPDATE_FAILED;
         }
 
         if (rsinMap.empty())
         {
             Serial.println("Failed to get rsins");
-            return false;
+            return EXPOSURE_UPDATE_FAILED;
         }
         else
         {
@@ -102,7 +102,7 @@ bool checkForInfections()
             if (!con)
             {
                 Serial.println("Could not connect to websocket");
-                return false;
+                return EXPOSURE_UPDATE_FAILED;
             }
             else
             {
@@ -110,7 +110,7 @@ bool checkForInfections()
                 if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
                 {
                     Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
-                    return false;
+                    return EXPOSURE_UPDATE_FAILED;
                 }
 
                 for (auto it = rsinMap.begin(); it != rsinMap.end(); it++)
@@ -179,7 +179,7 @@ bool checkForInfections()
                             disconnectWifi();
                             sqlite3_close(db);
                             Serial.println("User was exposed to someone infected!");
-                            return true;
+                            return EXPOSURE_DETECT;
                         }
                     }
                 }
@@ -190,7 +190,7 @@ bool checkForInfections()
         insertCWAProgress(rsinMap);
     }
     disconnectWifi();
-    return false;
+    return EXPOSURE_NO_DETECT;
 }
 
 bool configureWifi()

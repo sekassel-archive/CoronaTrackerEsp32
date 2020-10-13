@@ -24,9 +24,9 @@ static int callback(void *data, int argc, char **argv, char **azColName)
     return 0;
 }
 
-char *zErrMsg = 0;
 int printSQLResult(sqlite3 *db, const char *sql)
 {
+    char *zErrMsg = 0;
     int rc = sqlite3_exec(db, sql, callback, (void *)dataf, &zErrMsg);
     if (rc != SQLITE_OK)
     {
@@ -508,8 +508,10 @@ static int mainInsertCallback(void *data, int argc, char **argv, char **azColNam
 
 bool cleanUpTempDatabase()
 {
-    Serial.println("Cleaning up database");
+    Serial.println("Cleaning up databases");
     sqlite3 *main_db;
+    char *zErrMsg;
+
     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
     {
         Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(main_db));
@@ -525,13 +527,25 @@ bool cleanUpTempDatabase()
     }
 
     //Delete old entries
-    std::stringstream delete_sql;
-    delete_sql << "DELETE FROM temp WHERE time <";
-    delete_sql << time(NULL) - (15 * 60); //15 Minutes
-    delete_sql << ";";
+    std::stringstream delete_sql_temp;
+    delete_sql_temp << "DELETE FROM temp WHERE time <";
+    delete_sql_temp << time(NULL) - (15 * 60); //15 Minutes
+    delete_sql_temp << ";";
 
-    char *zErrMsg;
-    if (sqlite3_exec(main_db, delete_sql.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    if (sqlite3_exec(main_db, delete_sql_temp.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    //Delete old entries from main
+    std::stringstream delete_sql_main;
+    delete_sql_main << "DELETE FROM main WHERE time <";
+    delete_sql_main << time(NULL) - (60 * 60 * 24 * 7 * 2); //2 Weeks
+    delete_sql_main << ";";
+
+    if (sqlite3_exec(main_db, delete_sql_main.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
     {
         Serial.printf("SQL error on delete: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
