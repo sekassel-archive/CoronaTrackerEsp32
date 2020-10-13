@@ -183,7 +183,7 @@ void setup()
     getLocalTime(&timeinfo);
 
     buttonState = digitalRead(BUTTON_PIN);
-    if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW)
+    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
     { //LOW means clicked
         Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
