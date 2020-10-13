@@ -15,26 +15,29 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-#define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
+#define SLEEP_INTERVAL 3000000 //In microseconds
 
-//average time for one boot: 4000ms (with a cpu frequency of 80)
-#define BOOTS_UNTIL_SCAN 21                //approximately every minute
-#define BOOTS_UNTIL_INFECTION_REQUEST 1260 //probably just if the esp is charging //approximately every hour
 #define BOOTS_UNTIL_DISPLAY_TURNS_OFF 4
+#define SCAN_TIME 10       //in seconds
+#define ADVERTISE_TIME 500 //in milliseconds
 
-#define SCAN_TIME 5        //in seconds
+#define SCAN_TIME 3        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
 
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
+RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = 0;
 RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
 RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
-RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
+RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
+
+RTC_DATA_ATTR time_t scanTime;
+RTC_DATA_ATTR time_t updateTime;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -114,19 +117,20 @@ void setNextAction(int action)
 
 void goIntoDeepSleep(bool requestInfections)
 {
-    bootCount++;
+    time_t nextBootTime = time(NULL) + (SLEEP_INTERVAL / (1000 * 1000)) - 1; //Next Boot with Offset
 
-    //TODO: Rework System to use actual time instead of counting boots
     if (requestInfections) //Request Infection on First boot after initialize
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % BOOTS_UNTIL_INFECTION_REQUEST == 0)
+    else if (nextBootTime >= updateTime)
     {
+        updateTime += (60 * 60);
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % BOOTS_UNTIL_SCAN == 0)
+    else if (nextBootTime >= scanTime)
     {
+        scanTime += (60);
         setNextAction(ACTION_SCAN);
     }
     else
@@ -219,10 +223,25 @@ void setup()
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
-            //Getting Time
+            std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
+
+            //Setting up CWA Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
+            }
+
+            if (progressMap.empty())
+            {
+                Serial.println("Initializing CWA Progress");
+                if (!insertCWAProgress(getRSINAsMap(false)))
+                {
+                    restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+                }
+            }
+            else
+            {
+                Serial.println("Progress already initialized");
             }
 
             Serial.println("Initializing Time");
@@ -252,6 +271,10 @@ void setup()
             {
                 Serial.println("Disconnect Failed");
             }
+
+            time_t now = time(NULL);
+            scanTime = now + (60);
+            updateTime = now + (60 * 60);
 
             goIntoDeepSleep(requestOnStartUp);
         }
@@ -294,7 +317,9 @@ void setup()
     }
     else if (nextAction == ACTION_ADVERTISE)
     {
+        digitalWrite(LED_PIN, LOW);
         delay(ADVERTISE_TIME);
+        digitalWrite(LED_PIN, HIGH);
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
@@ -317,14 +342,17 @@ void setup()
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
             configureWifiFailedOnDisplay();
+            //Delay so feedback can be seen on LED
+            delay(5000);
+            ESP.restart();
         }
         delay(5000);
         disconnectWifi();
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        bool result = checkForInfections();
-        showIsInfectedOnDisplay(result);
+        exposureStatus = checkForInfections();
+        showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
         delay(5000);
     }
 

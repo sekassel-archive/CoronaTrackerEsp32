@@ -7,7 +7,7 @@ static int callback(void *data, int argc, char **argv, char **azColName)
     Serial.println("------");
     for (i = 0; i < argc; i++)
     {
-        if (strcmp(azColName[i], "time") == 0 || strcmp(azColName[i], "enin") == 0)
+        if (strcmp(azColName[i], "time") == 0 || strcmp(azColName[i], "enin") == 0 || strcmp(azColName[i], "entry") == 0)
         {
             Serial.printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
         }
@@ -24,9 +24,9 @@ static int callback(void *data, int argc, char **argv, char **azColName)
     return 0;
 }
 
-char *zErrMsg = 0;
 int printSQLResult(sqlite3 *db, const char *sql)
 {
+    char *zErrMsg = 0;
     int rc = sqlite3_exec(db, sql, callback, (void *)dataf, &zErrMsg);
     if (rc != SQLITE_OK)
     {
@@ -64,6 +64,19 @@ bool printDatabases()
     printSQLResult(tek_db, "SELECT * FROM tek");
     Serial.println("___________________________________________________________");
     sqlite3_close(tek_db);
+
+    sqlite3 *cwa_db;
+
+    if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &cwa_db) != SQLITE_OK)
+    {
+        Serial.println("Error on opening database");
+        return false;
+    }
+
+    Serial.println("_________________CWA Progress___________________");
+    printSQLResult(cwa_db, "SELECT * FROM cwa");
+    Serial.println("___________________________________________________________");
+    sqlite3_close(cwa_db);
 
     return true;
 }
@@ -124,8 +137,120 @@ bool initSPIFFS(bool createDataBases)
 
         sqlite3_free(errMsg);
         sqlite3_close(db);
+
+        createFile(SERVER_DATADASE_PATH);
+
+        if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
+        {
+            return false;
+        }
+
+        //Saves progress on already preocessed keys from server
+        if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS cwa (time INTEGER, entry INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
+        {
+            Serial.printf("Failed to create table cwa in database: %s\n", errMsg);
+            sqlite3_close(db);
+            return false;
+        }
+
+        sqlite3_free(errMsg);
+        sqlite3_close(db);
     }
     return true;
+}
+
+bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
+{
+    std::stringstream sql_ss;
+    sql_ss << "INSERT INTO cwa VALUES ";
+
+    int i = 0;
+    for (auto element : progressMap)
+    {
+        sql_ss << "(";
+        sql_ss << (int)element.first;
+        sql_ss << ",";
+        sql_ss << (int)element.second;
+        sql_ss << ")";
+
+        if (i == progressMap.size() - 1)
+        {
+            sql_ss << ";";
+        }
+        else
+        {
+            sql_ss << ",";
+        }
+        i++;
+    }
+
+    const char *delete_sql = "DELETE FROM cwa;";
+
+    sqlite3 *db;
+    if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
+        return false;
+    }
+
+    char *zErrMsg;
+    if (sqlite3_exec(db, delete_sql, NULL, NULL, &zErrMsg) != SQLITE_OK) //Clears the table
+    {
+        Serial.printf("SQL error on executing DELETE (%s): %s\n", delete_sql, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    const char *sql = sql_ss.str().c_str();
+
+    if (sqlite3_exec(db, sql, NULL, NULL, &zErrMsg) != SQLITE_OK) //Fills it again
+    {
+        Serial.printf("SQL error on executing INSERT (%s): %s\n", sql, zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    sqlite3_free(zErrMsg);
+    sqlite3_close(db);
+
+    return true;
+}
+
+std::map<uint32_t, uint16_t> getCurrentProgress()
+{
+    sqlite3_stmt *res;
+    const char *tail;
+    sqlite3 *db;
+    const char *sql = "SELECT * FROM cwa;";
+
+    std::map<uint32_t, uint16_t> progressMap;
+
+    if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return progressMap;
+    }
+
+    if (sqlite3_prepare_v2(db, sql, strlen(sql), &res, &tail) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql(%s): %s\n", sql, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        return progressMap;
+    }
+
+    while (sqlite3_step(res) == SQLITE_ROW)
+    {
+        int i1 = sqlite3_column_int(res, 0);
+        int i2 = sqlite3_column_int(res, 1);
+
+        progressMap.insert(std::make_pair(i1, i2));
+    }
+
+    sqlite3_finalize(res);
+    sqlite3_close(db);
+
+    return progressMap;
 }
 
 bool createFile(const char *path)
@@ -211,22 +336,25 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
     sqlite3_stmt *res;
     const char *tail;
 
-    std::stringstream sql;
-    sql << "INSERT INTO tek VALUES (?,";
-    sql << enin;
-    sql << ");";
-
-    const char *sql_command = sql.str().c_str();
+    const char *sql_command = "INSERT INTO tek VALUES (?,?);";
 
     if (sqlite3_prepare_v2(tek_db, sql_command, strlen(sql_command), &res, &tail) != SQLITE_OK)
     {
-        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
+        Serial.printf("ERROR preparing sql(%s) : %s\n", sql_command, sqlite3_errmsg(tek_db));
         sqlite3_close(tek_db);
         return false;
     }
+
     if (sqlite3_bind_blob(res, 1, tek, tek_length, SQLITE_STATIC) != SQLITE_OK)
     {
-        Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(tek_db));
+        Serial.printf("ERROR binding blob(%s): %s\n", tek, sqlite3_errmsg(tek_db));
+        sqlite3_close(tek_db);
+        return false;
+    }
+
+    if (sqlite3_bind_int(res, 2, enin) != SQLITE_OK)
+    {
+        Serial.printf("ERROR binding int(%d): %s\n", enin, sqlite3_errmsg(tek_db));
         sqlite3_close(tek_db);
         return false;
     }
@@ -258,9 +386,7 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
         return false;
     }
 
-    sqlite3_exec(tek_db, "SELECT * FROM tek", callback, (void *)dataf, &zErrMsg);
     sqlite3_free(zErrMsg);
-
     sqlite3_close(tek_db);
 
     return true;
@@ -382,8 +508,10 @@ static int mainInsertCallback(void *data, int argc, char **argv, char **azColNam
 
 bool cleanUpTempDatabase()
 {
-    Serial.println("Cleaning up database");
+    Serial.println("Cleaning up databases");
     sqlite3 *main_db;
+    char *zErrMsg;
+
     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
     {
         Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(main_db));
@@ -399,13 +527,25 @@ bool cleanUpTempDatabase()
     }
 
     //Delete old entries
-    std::stringstream delete_sql;
-    delete_sql << "DELETE FROM temp WHERE time <";
-    delete_sql << time(NULL) - (15 * 60); //15 Minutes
-    delete_sql << ";";
+    std::stringstream delete_sql_temp;
+    delete_sql_temp << "DELETE FROM temp WHERE time <";
+    delete_sql_temp << time(NULL) - (15 * 60); //15 Minutes
+    delete_sql_temp << ";";
 
-    char *zErrMsg;
-    if (sqlite3_exec(main_db, delete_sql.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    if (sqlite3_exec(main_db, delete_sql_temp.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return false;
+    }
+
+    //Delete old entries from main
+    std::stringstream delete_sql_main;
+    delete_sql_main << "DELETE FROM main WHERE time <";
+    delete_sql_main << time(NULL) - (60 * 60 * 24 * 7 * 2); //2 Weeks
+    delete_sql_main << ";";
+
+    if (sqlite3_exec(main_db, delete_sql_main.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
     {
         Serial.printf("SQL error on delete: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
