@@ -55,3 +55,12 @@ Choose a suitable ESP32 board.
    <img src="doc\images\WiFI_1.png" style="zoom: 10%;" /><img src="doc\images\WiFi_2.png" style="zoom: 10%;" />
 
 7. The ESP will now start initialization and afterwards simulating the CWA-App.
+
+## Known Issues
+
+- After initial configuration, WiFi credentials can not be changed without re-flashing the device.
+- WiFi Credentials will be lost if the device looses power.
+- There is no official protocol for uploading infected keys.
+- Power consumption is a problem on small batteries.
+- Time displayed is always in CEST.
+- There is no real solution for full storage.
