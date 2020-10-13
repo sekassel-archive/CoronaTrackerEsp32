@@ -15,3 +15,4 @@ void showRequestDelayOnDisplay(int bootsLeftUntilNextRequest, int bootsUntilScan
 void wifiConfiguredSuccessfullyOnDisplay();
 void configureWifiFailedOnDisplay();
 void showNumberOfScanedDevicesOnDisplay(int scanedDevices);
+void clearDisplay();

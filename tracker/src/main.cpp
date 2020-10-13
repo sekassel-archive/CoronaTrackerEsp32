@@ -20,6 +20,7 @@
 //average time for one boot: 4000ms (with a cpu frequency of 80)
 #define BOOTS_UNTIL_SCAN 21                //approximately every minute
 #define BOOTS_UNTIL_INFECTION_REQUEST 1260 //probably just if the esp is charging //approximately every hour
+#define BOOTS_UNTIL_DISPLAY_TURNS_OFF 4
 
 #define SCAN_TIME 5        //in seconds
 #define ADVERTISE_TIME 200 //in milliseconds
@@ -29,9 +30,11 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = 0;
 RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
-RTC_DATA_ATTR bool wifiInitialized = true;
+RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
+RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
+RTC_DATA_ATTR bool isDisplayActive = false;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -71,7 +74,6 @@ bool initializeTime()
     } while (!getLocalTime(&timeinfo));
     Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    showLocalTimeOnDisplay(timeinfo);
     delay(5000);
     return true;
 }
@@ -158,7 +160,22 @@ void setup()
     digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
 
     Serial.println("Initialize display");
-    initDisplay();
+    if (!isDisplayActive)
+    {
+        initDisplay();
+        bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
+    }
+    else
+    {
+        if (bootsLeftUntilDisplayTurnsOff <= 0)
+        {
+            isDisplayActive = false; //next boot the display will be initialized again
+        }
+        else
+        {
+            bootsLeftUntilDisplayTurnsOff -= 1;
+        }
+    }
 
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
@@ -168,10 +185,19 @@ void setup()
     buttonState = digitalRead(BUTTON_PIN);
     if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW)
     { //LOW means clicked
-        Serial.println("Wakeup caused by external signal using RTC_IO");
-        showLocalTimeOnDisplay(timeinfo);
-        showNumberOfScanedDevicesOnDisplay(scanedDevices);
-        showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
+        if (!isDisplayActive)
+        {
+            Serial.println("Wakeup caused by external signal using RTC_IO");
+            showLocalTimeOnDisplay(timeinfo);
+            showNumberOfScanedDevicesOnDisplay(scanedDevices);
+            showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
+            isDisplayActive = true;
+        }
+        else
+        { 
+            clearDisplay();
+            isDisplayActive = false;
+        }
     }
 
     //Wifi not initialized

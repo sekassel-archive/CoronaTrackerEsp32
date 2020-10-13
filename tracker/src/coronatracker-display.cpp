@@ -85,3 +85,8 @@ void showNumberOfScanedDevicesOnDisplay(int scanedDevices)
     display.drawString(0, 16, "Seen devices: " + (String)scanedDevices);
     display.display();
 }
+
+void clearDisplay(){
+    display.clear();
+    display.display();
+}
