@@ -34,7 +34,7 @@ Choose a suitable ESP32 board.
 
       <img src="doc\images\PIO_Home.png"  />
 
-   2. Click on `Open Folder`and search the downloaded project.
+   2. Click on `Open Folder`and search for the downloaded project.
 
       <img src="doc\images\PIO_Open.png"  />
 
@@ -42,7 +42,7 @@ Choose a suitable ESP32 board.
 
       <img src="doc\images\PIO_OpenFolder.png"  />
 
-5. Connect your ESP32 via USB and upload the project. (If you are using our board you have to press the `Boot` Button at this point)
+5. Connect your ESP32 via USB and upload the project. (If you are using our board you have to press the `Boot` button, when the console reads `Connecting...`)
 
    <img src="doc\images\PIO_Upload.png"  />
 
@@ -50,8 +50,8 @@ Choose a suitable ESP32 board.
 
    ![](doc\images\PIO_Success.png)
 
-6. The ESP will now start an Access Point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there i no connection to the Internet) Enter your WiFi Credentials and click safe.
+6. The ESP will now start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
-   <img src="doc\images\WiFI_1.png" style="zoom: 25%;" /><img src="doc\images\WiFi_2.png" style="zoom: 25%;" />
+   <img src="doc\images\WiFI_1.png" style="zoom: 10%;" /><img src="doc\images\WiFi_2.png" style="zoom: 10%;" />
 
 7. The ESP will now start initialization and afterwards simulating the CWA-App.
