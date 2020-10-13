@@ -14,7 +14,15 @@
 
 const size_t JSON_CAPACITY = JSON_ARRAY_SIZE(16);
 
+typedef enum
+{
+    EXPOSURE_NO_DETECT = 0,
+    EXPOSURE_DETECT = 1,
+    EXPOSURE_UPDATE_FAILED = 2,
+    EXPOSURE_NO_UPDATE = 3, //No update happened yet
+} exposure_status;
+
 bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
-bool checkForInfections();
+exposure_status checkForInfections();

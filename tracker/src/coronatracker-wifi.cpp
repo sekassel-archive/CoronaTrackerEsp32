@@ -22,13 +22,13 @@ void onMessageCallback(WebsocketsMessage message)
     lastMessage = message.data();
 }
 
-bool checkForInfections()
+exposure_status checkForInfections()
 {
     Serial.println("Connecting to server and checking for infections");
     if (!connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
-        return false;
+        return EXPOSURE_UPDATE_FAILED;
     }
     else
     {
@@ -41,7 +41,7 @@ bool checkForInfections()
         if (!(code == HTTP_CODE_OK))
         {
             Serial.println("Failed to connect to server");
-            return false;
+            return EXPOSURE_UPDATE_FAILED;
         }
         else
         {
@@ -53,7 +53,7 @@ bool checkForInfections()
             {
                 Serial.print(F("deserializeJson() failed with code "));
                 Serial.println(err.c_str());
-                return false;
+                return EXPOSURE_UPDATE_FAILED;
             }
             else
             {
@@ -65,7 +65,7 @@ bool checkForInfections()
                 if (!con)
                 {
                     Serial.println("Could not connect to websocket");
-                    return false;
+                    return EXPOSURE_UPDATE_FAILED;
                 }
                 else
                 {
@@ -73,7 +73,7 @@ bool checkForInfections()
                     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
                     {
                         Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
-                        return false;
+                        return EXPOSURE_UPDATE_FAILED;
                     }
 
                     JsonObject json = doc.as<JsonObject>();
@@ -136,7 +136,7 @@ bool checkForInfections()
                                 disconnectWifi();
                                 sqlite3_close(db);
                                 Serial.println("User was exposed to someone infected!");
-                                return true;
+                                return EXPOSURE_DETECT;
                             }
                         }
                     }
@@ -148,7 +148,7 @@ bool checkForInfections()
         http.end();
     }
     disconnectWifi();
-    return false;
+    return EXPOSURE_NO_DETECT;
 }
 
 bool configureWifi()

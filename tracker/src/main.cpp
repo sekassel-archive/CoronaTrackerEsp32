@@ -30,6 +30,7 @@ RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
+RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -272,8 +273,8 @@ void setup()
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        bool result = checkForInfections();
-        showIsInfectedOnDisplay(result);
+        exposureStatus = checkForInfections();
+        showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
         showRequestDelayOnDisplay();
     }
 
