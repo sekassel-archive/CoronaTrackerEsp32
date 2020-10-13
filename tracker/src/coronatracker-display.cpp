@@ -24,7 +24,6 @@ void showRequestDelayOnDisplay(int bootsLeftUntilNextRequest, int bootsUntilScan
 void configureWifiMessageOnDisplay()
 {
     Serial.println("showStartWifiMessageOnDisplay");
-    // display.clear();
     display.drawString(0, 0, "Configure wifi on"); //probably 17 letters with size 16
     display.drawString(0, 20, "your Phone or ");
     display.drawString(0, 40, "Computer.");
@@ -34,10 +33,8 @@ void configureWifiMessageOnDisplay()
 void showLocalTimeOnDisplay(struct tm timeinfo)
 {
     display.clear();
-    int HOUR = timeinfo.tm_hour + 2;//the time difference from the server was not saved
-    display.drawString(0, 0, (String) "Time: " + (HOUR < 10 ? "0" : "") + (String)HOUR + ":" + 
-    (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min + ":" + 
-    (timeinfo.tm_sec < 10 ? "0" : "") + (String)timeinfo.tm_sec);
+    int HOUR = timeinfo.tm_hour + 2; //the time difference from the server was not saved
+    display.drawString(0, 0, (String) "Time: " + (HOUR < 10 ? "0" : "") + (String)HOUR + ":" + (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min + ":" + (timeinfo.tm_sec < 10 ? "0" : "") + (String)timeinfo.tm_sec);
     display.display();
 }
 
@@ -83,10 +80,5 @@ void configureWifiFailedOnDisplay()
 void showNumberOfScanedDevicesOnDisplay(int scanedDevices)
 {
     display.drawString(0, 16, "Seen devices: " + (String)scanedDevices);
-    display.display();
-}
-
-void clearDisplay(){
-    display.clear();
     display.display();
 }

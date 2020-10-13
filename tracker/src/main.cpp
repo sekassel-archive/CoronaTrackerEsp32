@@ -31,7 +31,7 @@ RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = 0;
 RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
 RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
-RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR bool isDisplayActive = false;
@@ -142,8 +142,8 @@ void goIntoDeepSleep(bool requestInfections)
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
-    //WiFiManager manager;
-    //manager.resetSettings();
+    // WiFiManager manager;
+    // manager.resetSettings();
 
     //Setting up Serial
     Serial.begin(115200);
@@ -159,9 +159,9 @@ void setup()
 
     digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
 
-    Serial.println("Initialize display");
     if (!isDisplayActive)
     {
+        Serial.println("Initialize display");
         initDisplay();
         bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
     }
@@ -185,9 +185,9 @@ void setup()
     buttonState = digitalRead(BUTTON_PIN);
     if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW)
     { //LOW means clicked
+        Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
         {
-            Serial.println("Wakeup caused by external signal using RTC_IO");
             showLocalTimeOnDisplay(timeinfo);
             showNumberOfScanedDevicesOnDisplay(scanedDevices);
             showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
@@ -195,7 +195,7 @@ void setup()
         }
         else
         { 
-            clearDisplay();
+            initDisplay();
             isDisplayActive = false;
         }
     }
