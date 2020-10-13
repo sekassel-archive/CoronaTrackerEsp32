@@ -27,7 +27,7 @@
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR bool wifiInitialized = true;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 
@@ -172,10 +172,25 @@ void setup()
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
-            //Getting Time
+            std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
+
+            //Setting up CWA Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
+            }
+
+            if (progressMap.empty())
+            {
+                Serial.println("Initializing CWA Progress");
+                if (!insertCWAProgress(getRSINAsMap(false)))
+                {
+                    restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+                }
+            }
+            else
+            {
+                Serial.println("Progress already initialized");
             }
 
             Serial.println("Initializing Time");

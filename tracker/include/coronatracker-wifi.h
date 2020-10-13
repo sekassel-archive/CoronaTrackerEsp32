@@ -18,3 +18,4 @@ bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
 bool checkForInfections();
+std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi);
