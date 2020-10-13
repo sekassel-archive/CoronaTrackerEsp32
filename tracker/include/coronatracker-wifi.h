@@ -25,4 +25,5 @@ typedef enum
 bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
+std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi);
 exposure_status checkForInfections();

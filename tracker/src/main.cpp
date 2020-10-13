@@ -171,10 +171,25 @@ void setup()
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
-            //Getting Time
+            std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
+
+            //Setting up CWA Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
+            }
+
+            if (progressMap.empty())
+            {
+                Serial.println("Initializing CWA Progress");
+                if (!insertCWAProgress(getRSINAsMap(false)))
+                {
+                    restartAfterErrorWithDelay("Failed to initialize CWA Progress");
+                }
+            }
+            else
+            {
+                Serial.println("Progress already initialized");
             }
 
             Serial.println("Initializing Time");
