@@ -161,7 +161,6 @@ void setup()
     }
     else
     {
-        digitalWrite(LED_PIN, HIGH);
         if (firstBoot)
         {
             firstBoot = false;
@@ -242,7 +241,9 @@ void setup()
     }
     else if (nextAction == ACTION_ADVERTISE)
     {
+        digitalWrite(LED_PIN, LOW);
         delay(ADVERTISE_TIME);
+        digitalWrite(LED_PIN, HIGH);
     }
     else if (nextAction == ACTION_WIFI_CONFIG)
     {
