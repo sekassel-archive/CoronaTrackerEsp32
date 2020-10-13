@@ -48,7 +48,7 @@ Choose a suitable ESP32 board.
 
    This message should appear at the bottom of the terminal if the upload was successful.
 
-   ![](doc\images\PIO_Success.png)
+   <img src="doc\images\PIO_Success.png"/>
 
 6. The ESP will now start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
