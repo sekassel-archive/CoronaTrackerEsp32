@@ -15,22 +15,20 @@
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
 
-#define SLEEP_INTERVAL 1000000 //In microseconds --> 1000 milliseconds
+#define SLEEP_INTERVAL 3000000 //In microseconds
 
-//average time for one boot: 4000ms (with a cpu frequency of 80)
-#define BOOTS_UNTIL_SCAN 15
-#define BOOTS_UNTIL_INFECTION_REQUEST 30000 //probably just if the esp is charging
-
-#define SCAN_TIME 3        //in seconds
-#define ADVERTISE_TIME 200 //in milliseconds
+#define SCAN_TIME 10       //in seconds
+#define ADVERTISE_TIME 500 //in milliseconds
 
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
-RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
+
+RTC_DATA_ATTR time_t scanTime;
+RTC_DATA_ATTR time_t updateTime;
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -110,19 +108,20 @@ void setNextAction(int action)
 
 void goIntoDeepSleep(bool requestInfections)
 {
-    bootCount++;
+    time_t nextBootTime = time(NULL) + (SLEEP_INTERVAL / (1000 * 1000)) - 1; //Next Boot with Offset
 
-    //TODO: Rework System to use actual time instead of counting boots
     if (requestInfections) //Request Infection on First boot after initialize
     {
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % BOOTS_UNTIL_INFECTION_REQUEST == 0)
+    else if (nextBootTime >= updateTime)
     {
+        updateTime += (60 * 60);
         setNextAction(ACTION_INFECTION_REQUEST);
     }
-    else if (bootCount % BOOTS_UNTIL_SCAN == 0)
+    else if (nextBootTime >= scanTime)
     {
+        scanTime += (60);
         setNextAction(ACTION_SCAN);
     }
     else
@@ -205,6 +204,10 @@ void setup()
             {
                 Serial.println("Disconnect Failed");
             }
+
+            time_t now = time(NULL);
+            scanTime = now + (60);
+            updateTime = now + (60 * 60);
 
             goIntoDeepSleep(requestOnStartUp);
         }
