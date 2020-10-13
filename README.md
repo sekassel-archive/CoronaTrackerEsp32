@@ -14,7 +14,7 @@ This project is still work in progress and some features are incomplete/not yet 
 
 The software should work on most ESP32 boards. Internally we use **LILYGO® TTGO ESP32 WiFi + Bluetooth 18650 Battery Protection Board**, mainly because of usability of 18650 batteries.
 
-<img src="doc\images\ESP_Front.jpg" style="zoom: 25%;" /><img src="doc\images\ESP_Back.jpg" style="zoom: 25%;" />
+<img src="doc\images\ESP_Front.jpg"  width=25% height=25%  /><img src="doc\images\ESP_Back.jpg" width=25% height=25% />
 
 Depending on how the pins on your board are configured you may need to change them.
 
@@ -44,7 +44,7 @@ Choose a suitable ESP32 board.
 
 5. Connect your ESP32 via USB and upload the project. (If you are using our board you have to press the `Boot` button, when the console reads `Connecting...`)
 
-   <img src="doc\images\PIO_Upload.png"  />
+   <img src="doc\images\PIO_Upload.png" width=50% height=50% />
 
    This message should appear at the bottom of the terminal if the upload was successful.
 
@@ -52,14 +52,14 @@ Choose a suitable ESP32 board.
 
 6. The ESP will now start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
-   <img src="doc\images\WiFI_1.png" style="zoom: 10%;" /><img src="doc\images\WiFi_2.png" style="zoom: 10%;" />
+   <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% />
 
 7. The ESP will now start initialization and afterwards simulating the CWA-App.
 
 ## Known Issues
 
 - After initial configuration, WiFi credentials can not be changed without re-flashing the device.
-- WiFi Credentials will be lost if the device looses power.
+- WiFi credentials will be lost if the device looses power.
 - There is no official protocol for uploading infected keys.
 - Power consumption is a problem on small batteries.
 - Time displayed is always in CEST.
