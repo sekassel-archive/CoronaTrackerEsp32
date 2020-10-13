@@ -266,6 +266,7 @@ void setup()
             digitalWrite(LED_PIN, LOW);
             //Delay so feedback can be seen on LED
             delay(5000);
+            ESP.restart();
         }
         disconnectWifi();
     }
