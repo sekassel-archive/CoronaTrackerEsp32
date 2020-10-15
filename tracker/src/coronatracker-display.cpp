@@ -83,27 +83,50 @@ void showNumberOfScanedDevicesOnDisplay(int scanedDevices)
     display.display();
 }
 
-void defaultDisplay(struct tm timeinfo, String action, String status, int numberOfScanedDevices)
+void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfScanedDevices)
 {
     initDisplay();
-    Serial.println("Print time on display");
-    int HOUR = (timeinfo.tm_hour + 2) % 24; //tm_hour has a time offset of 2 hours
-    String wDay = weekDayToString(timeinfo.tm_wday);
-    String mDay = (timeinfo.tm_mday < 10 ? "0" : "") + (String)timeinfo.tm_mday;
-    String month = ((timeinfo.tm_mon + 1) < 10 ? "0" : "") + (String)(timeinfo.tm_mon + 1); //tm_mon starts at 0
-    String year = (String)(timeinfo.tm_year + 1900);                                        //tm_years are the years since 1900
-    String hour = (HOUR < 10 ? "0" : "") + (String)HOUR;
-    String minute = (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min;
-    //Mon, 24.07.2023 17:34
-    display.drawString(0, 0, wDay + ", " + mDay + "." + month + "." + year + " " + hour + ":" + minute);
-    display.drawString(0, 10, action);
-    display.drawString(0, 20, status);
-    display.drawString(0, 30, "Seen devices: " + (String)numberOfScanedDevices);
+    if (action == ACTION_WIFI_CONFIG)
+    {
+        //TODO
+    }
+    else
+    {
+        Serial.println("Print time on display");
+        int HOUR = (timeinfo.tm_hour + 2) % 24; //tm_hour has a time offset of 2 hours
+        String wDay = weekDayToString(timeinfo.tm_wday);
+        String mDay = (timeinfo.tm_mday < 10 ? "0" : "") + (String)timeinfo.tm_mday;
+        String month = ((timeinfo.tm_mon + 1) < 10 ? "0" : "") + (String)(timeinfo.tm_mon + 1); //tm_mon starts at 0
+        String year = (String)(timeinfo.tm_year + 1900);                                        //tm_years are the years since 1900
+        String hour = (HOUR < 10 ? "0" : "") + (String)HOUR;
+        String minute = (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min;
+        //Mon, 24.07.2023 17:34
+        display.drawString(0, 0, wDay + ", " + mDay + "." + month + "." + year + " " + hour + ":" + minute);
+        if (action == ACTION_NOTHING)
+        {
+            display.drawString(0, 10, "Initialize");
+        }
+        else if (action == ACTION_ADVERTISE)
+        {
+            display.drawString(0, 10, "Advertise");
+        }
+        else if (action == ACTION_SCAN)
+        {
+            display.drawString(0, 10, "Scan");
+        }
+        else if (action == ACTION_INFECTION_REQUEST)
+        {
+            display.drawString(0, 10, "CWA-Update");
+        }
+        else if (action == ACTION_SLEEP)
+        {
+            display.drawString(0, 10, "Sleep");
+        }
+        display.drawString(0, 20, status);
+        display.drawString(0, 30, "Seen devices: " + (String)numberOfScanedDevices);
 
-    display.display();
-    // display.setColor(BLACK);
-    // display.fillRect(0, 10, 128, 10);
-    // display.display();
+        display.display();
+    }
 }
 
 String weekDayToString(int weekDay)

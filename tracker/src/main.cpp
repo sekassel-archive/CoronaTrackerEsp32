@@ -14,6 +14,7 @@
 #define ACTION_SCAN 2
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
+#define ACTION_SLEEP 5 //Just for display
 
 #define SLEEP_INTERVAL 3000000 //In microseconds
 
@@ -36,7 +37,6 @@ RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
 RTC_DATA_ATTR String status = "No Exposures Detected";
-RTC_DATA_ATTR String action = "Initializing";
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -165,20 +165,24 @@ void setup()
 
     digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
 
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo))
+    {
+        Serial.println("getLocalTime true");
+    }
+
     if (!isDisplayActive)
     {
         Serial.println("Initialize display");
         initDisplay();
     }
+    else
+    {
+        defaultDisplay(timeinfo, nextAction, status, scanedDevices);
+    }
 
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
-    struct tm timeinfo;
-    // configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    if (getLocalTime(&timeinfo))
-    {
-        Serial.println("getLocalTime true");
-    }
 
     buttonState = digitalRead(BUTTON_PIN);
     if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
@@ -186,21 +190,12 @@ void setup()
         Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
         {
-            // showLocalTimeOnDisplay(timeinfo);
-            // showNumberOfScanedDevicesOnDisplay(scanedDevices);
-            // showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
-            // defaultDisplay(timeinfo);
+            defaultDisplay(timeinfo, nextAction, status, scanedDevices);
             isDisplayActive = true;
         }
         else
         {
-            // initDisplay();
-            // float start1 = micros();
-            // float end1;
-            // end1 = micros();
-            // float result1 = end1 - start1;
-            // result1 /= 1000; //convert to milliseconds
-            // Serial.printf("Time(milliseconds): %g\n", result1);
+            initDisplay();
             isDisplayActive = false;
         }
     }
@@ -300,11 +295,6 @@ void setup()
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
-        action = "Scanning";
-        if (isDisplayActive)
-        {
-            defaultDisplay(timeinfo, action, status, scanedDevices);
-        }
 
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
@@ -323,11 +313,6 @@ void setup()
     }
     else if (nextAction == ACTION_ADVERTISE)
     {
-        action = "Advertising";
-        if (isDisplayActive)
-        {
-            defaultDisplay(timeinfo, action, status, scanedDevices);
-        }
         digitalWrite(LED_PIN, LOW);
         delay(ADVERTISE_TIME);
         digitalWrite(LED_PIN, HIGH);
@@ -367,10 +352,9 @@ void setup()
         delay(5000);
     }
 
-    action = "Sleeping";
     if (isDisplayActive)
     {
-        defaultDisplay(timeinfo, action, status, scanedDevices);
+        defaultDisplay(timeinfo, ACTION_SLEEP, status, scanedDevices);
     }
 
     end = micros();
