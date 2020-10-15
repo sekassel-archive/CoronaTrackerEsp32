@@ -29,12 +29,14 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = 0;
-RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
-RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
+// RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
+// RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
+RTC_DATA_ATTR String status = "No Exposures Detected";
+RTC_DATA_ATTR String action = "Initializing";
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -167,24 +169,16 @@ void setup()
     {
         Serial.println("Initialize display");
         initDisplay();
-        bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
-    }
-    else
-    {
-        if (bootsLeftUntilDisplayTurnsOff <= 0)
-        {
-            isDisplayActive = false; //next boot the display will be initialized again
-        }
-        else
-        {
-            bootsLeftUntilDisplayTurnsOff -= 1;
-        }
     }
 
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
     struct tm timeinfo;
-    getLocalTime(&timeinfo);
+    // configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    if (getLocalTime(&timeinfo))
+    {
+        Serial.println("getLocalTime true");
+    }
 
     buttonState = digitalRead(BUTTON_PIN);
     if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
@@ -192,14 +186,21 @@ void setup()
         Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
         {
-            showLocalTimeOnDisplay(timeinfo);
-            showNumberOfScanedDevicesOnDisplay(scanedDevices);
-            showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
+            // showLocalTimeOnDisplay(timeinfo);
+            // showNumberOfScanedDevicesOnDisplay(scanedDevices);
+            // showRequestDelayOnDisplay(bootsLeftUntilNextRequest, BOOTS_UNTIL_SCAN);
+            // defaultDisplay(timeinfo);
             isDisplayActive = true;
         }
         else
-        { 
-            initDisplay();
+        {
+            // initDisplay();
+            // float start1 = micros();
+            // float end1;
+            // end1 = micros();
+            // float result1 = end1 - start1;
+            // result1 /= 1000; //convert to milliseconds
+            // Serial.printf("Time(milliseconds): %g\n", result1);
             isDisplayActive = false;
         }
     }
@@ -299,24 +300,34 @@ void setup()
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
+        action = "Scanning";
+        if (isDisplayActive)
+        {
+            defaultDisplay(timeinfo, action, status, scanedDevices);
+        }
 
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
         scanedDevices = rpis.size();
-        if (bootsLeftUntilNextRequest <= 0)
+        /* if (bootsLeftUntilNextRequest <= 0)
         {
-            bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST;
+            // bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST;
         }
         else
         {
-            bootsLeftUntilNextRequest -= BOOTS_UNTIL_SCAN;
-        }
+            // bootsLeftUntilNextRequest -= BOOTS_UNTIL_SCAN;
+        } */
 
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
     }
     else if (nextAction == ACTION_ADVERTISE)
     {
+        action = "Advertising";
+        if (isDisplayActive)
+        {
+            defaultDisplay(timeinfo, action, status, scanedDevices);
+        }
         digitalWrite(LED_PIN, LOW);
         delay(ADVERTISE_TIME);
         digitalWrite(LED_PIN, HIGH);
@@ -326,7 +337,7 @@ void setup()
         Serial.println("Starting WifiManger-Config");
         buttonTicker.attach_ms(500, blinkLED);
 
-        configureWifiMessageOnDisplay();
+        // configureWifiMessageOnDisplay();
         bool res = configureWifi();
 
         buttonTicker.detach();
@@ -335,13 +346,13 @@ void setup()
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
             digitalWrite(LED_PIN, HIGH);
-            wifiConfiguredSuccessfullyOnDisplay();
+            // wifiConfiguredSuccessfullyOnDisplay();
         }
         else
         {
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
-            configureWifiFailedOnDisplay();
+            // configureWifiFailedOnDisplay();
             //Delay so feedback can be seen on LED
             delay(5000);
             ESP.restart();
@@ -352,8 +363,14 @@ void setup()
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
         exposureStatus = checkForInfections();
-        showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
+        // showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
         delay(5000);
+    }
+
+    action = "Sleeping";
+    if (isDisplayActive)
+    {
+        defaultDisplay(timeinfo, action, status, scanedDevices);
     }
 
     end = micros();
