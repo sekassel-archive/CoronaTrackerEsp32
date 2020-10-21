@@ -3,7 +3,6 @@
 
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
-#include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
 
 #define BUTTON_PIN 0
@@ -30,13 +29,11 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = 0;
-// RTC_DATA_ATTR int bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST; //Should be deleted when it's not depending on boots anymore
-// RTC_DATA_ATTR int bootsLeftUntilDisplayTurnsOff = BOOTS_UNTIL_DISPLAY_TURNS_OFF;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
-RTC_DATA_ATTR String status = "No Exposures Detected";
+RTC_DATA_ATTR String status = "No Exposures";
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -299,15 +296,6 @@ void setup()
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
         scanedDevices = rpis.size();
-        /* if (bootsLeftUntilNextRequest <= 0)
-        {
-            // bootsLeftUntilNextRequest = BOOTS_UNTIL_INFECTION_REQUEST;
-        }
-        else
-        {
-            // bootsLeftUntilNextRequest -= BOOTS_UNTIL_SCAN;
-        } */
-
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
     }
@@ -322,7 +310,7 @@ void setup()
         Serial.println("Starting WifiManger-Config");
         buttonTicker.attach_ms(500, blinkLED);
 
-        // configureWifiMessageOnDisplay();
+        configureWifiMessageOnDisplay();
         bool res = configureWifi();
 
         buttonTicker.detach();
@@ -331,13 +319,13 @@ void setup()
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
             digitalWrite(LED_PIN, HIGH);
-            // wifiConfiguredSuccessfullyOnDisplay();
+            wifiConfiguredOnDisplay(true);
         }
         else
         {
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
-            // configureWifiFailedOnDisplay();
+            wifiConfiguredOnDisplay(false);
             //Delay so feedback can be seen on LED
             delay(5000);
             ESP.restart();
@@ -347,8 +335,10 @@ void setup()
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
+        defaultDisplay(timeinfo, nextAction, status, scanedDevices);//display is always on if 
+        isDisplayActive = true;
         exposureStatus = checkForInfections();
-        // showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
+        isDisplayActive = false;//display turns off when the check is done
         delay(5000);
     }
 

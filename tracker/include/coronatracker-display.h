@@ -1,5 +1,7 @@
 #include <Arduino.h>
 
+#include "coronatracker-wifi.h"
+
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
 #define ACTION_SCAN 2
@@ -12,8 +14,8 @@ void showIsInfectedOnDisplay(bool metInfected);
 void showLocalTimeOnDisplay(struct tm timeinfo);
 void configureWifiMessageOnDisplay();
 void showRequestDelayOnDisplay(int bootsLeftUntilNextRequest, int bootsUntilScan);
-void wifiConfiguredSuccessfullyOnDisplay();
-void configureWifiFailedOnDisplay();
+void wifiConfiguredOnDisplay(bool configured);
 void showNumberOfScanedDevicesOnDisplay(int scanedDevices);
 void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfScanedDevices);
 String weekDayToString(int weekDay);
+String afterInfectionRequestOnDisplay(exposure_status exposureStatus);
