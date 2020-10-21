@@ -33,7 +33,7 @@ RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
-RTC_DATA_ATTR String status = "No Exposures";
+RTC_DATA_ATTR String status = "No update yet";
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -163,9 +163,9 @@ void setup()
     digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
 
     struct tm timeinfo;
-    if (getLocalTime(&timeinfo))
+    if (!getLocalTime(&timeinfo))
     {
-        Serial.println("getLocalTime true");
+        Serial.println("Get local time error");
     }
 
     if (!isDisplayActive)
@@ -338,6 +338,7 @@ void setup()
         defaultDisplay(timeinfo, nextAction, status, scanedDevices);//display is always on if 
         isDisplayActive = true;
         exposureStatus = checkForInfections();
+        status = afterInfectionRequestOnDisplay(exposureStatus);
         isDisplayActive = false;//display turns off when the check is done
         delay(5000);
     }
