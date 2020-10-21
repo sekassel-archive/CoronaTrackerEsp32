@@ -24,7 +24,7 @@ All you need to do is follow this tutorial as well as a suitable ESP32 board.
 
 ### Flashing the ESP32
 
-You can either flash the ESP with our precompiled [binaries](#using binaries) or use the [source code](#using source code) from this repository. There are tutorial for both approaches below.
+You can either flash the ESP with our precompiled [binaries](#using-binaries) or use the [source code](#using-source-code) from this repository. There are tutorial for both approaches below.
 
 #### Using binaries
 
@@ -93,7 +93,7 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
       <img src="doc\images\FDT_FINISH.png"  />
 
-10. You can now [setup](#setting up the esp) your ESP.
+10. You can now [setup](#setting-up-the-esp) your ESP.
 
 ### Using source code
 
@@ -127,7 +127,7 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
    <img src="doc\images\PIO_Success.png"/>
 
-6. You can now [setup](#setting up the esp) your ESP.
+6. You can now [setup](#setting-up-the-esp) your ESP.
 
 ### Setting up the ESP
 
