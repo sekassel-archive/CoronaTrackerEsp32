@@ -12,6 +12,6 @@
 void initDisplay();
 void configureWifiMessageOnDisplay();
 void wifiConfiguredOnDisplay(bool configured);
-void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfScanedDevices);
+void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices);
 String weekDayToString(int weekDay);
-String afterInfectionRequestOnDisplay(exposure_status exposureStatus);
+void afterInfectionRequestOnDisplay(exposure_status exposureStatus);

@@ -33,7 +33,6 @@ RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
-RTC_DATA_ATTR String status = "No update yet";
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -175,7 +174,7 @@ void setup()
     }
     else
     {
-        defaultDisplay(timeinfo, nextAction, status, scanedDevices);
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
     }
 
     esp_sleep_wakeup_cause_t wakeup_reason;
@@ -187,7 +186,7 @@ void setup()
         Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
         {
-            defaultDisplay(timeinfo, nextAction, status, scanedDevices);
+            defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
             isDisplayActive = true;
         }
         else
@@ -335,17 +334,17 @@ void setup()
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        defaultDisplay(timeinfo, nextAction, status, scanedDevices);//display is always on if 
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);//while infection request the display is always on
         isDisplayActive = true;
         exposureStatus = checkForInfections();
-        status = afterInfectionRequestOnDisplay(exposureStatus);
+        afterInfectionRequestOnDisplay(exposureStatus);
         isDisplayActive = false;//display turns off when the check is done
-        delay(5000);
+        delay(10000);
     }
 
     if (isDisplayActive)
     {
-        defaultDisplay(timeinfo, ACTION_SLEEP, status, scanedDevices);
+        defaultDisplay(timeinfo, ACTION_SLEEP, exposureStatus, scanedDevices);
     }
 
     end = micros();

@@ -39,10 +39,10 @@ void wifiConfiguredOnDisplay(bool configured)
     display.display();
 }
 
-void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfScanedDevices)
+void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices)
 {
     initDisplay();
-    Serial.println("Print time on display");
+    Serial.println("Default display");
     int HOUR = (timeinfo.tm_hour + 2) % 24; //tm_hour has a time offset of 2 hours
     String wDay = weekDayToString(timeinfo.tm_wday);
     String mDay = (timeinfo.tm_mday < 10 ? "0" : "") + (String)timeinfo.tm_mday;
@@ -51,7 +51,6 @@ void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfS
     String hour = (HOUR < 10 ? "0" : "") + (String)HOUR;
     String minute = (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min;
     //Mon, 24.07.2023 17:34
-    // display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.drawString(0, 0, wDay + ", " + mDay + "." + month + "." + year);
     display.setTextAlignment(TEXT_ALIGN_RIGHT);
     display.drawString(128, 16, " " + hour + ":" + minute);
@@ -70,15 +69,32 @@ void defaultDisplay(struct tm timeinfo, int action, String status, int numberOfS
     }
     else if (action == ACTION_INFECTION_REQUEST)
     {
-        display.drawString(0, 16, "CWA-Update");
+        display.drawString(0, 16, "cwa update");
     }
     else if (action == ACTION_SLEEP)
     {
         display.drawString(0, 16, "Sleep");
     }
     display.drawString(0, 32, "Seen devices: " + (String)numberOfScanedDevices);
-    display.drawString(0, 47, status);
+    String status = "";
+    if (exposureStatus == EXPOSURE_NO_DETECT)
+    {
+        status = "No exposures";
+    }
+    else if (exposureStatus == EXPOSURE_DETECT)
+    {
+        status = "!Exposures found!";
+    }
+    else if (exposureStatus == EXPOSURE_UPDATE_FAILED)
+    {
+        status = "Update failed";
+    }
+    else
+    {
+        status = "No update yet";
+    }
 
+    display.drawString(0, 47, status);
     display.display();
 }
 
@@ -113,34 +129,33 @@ String weekDayToString(int weekDay)
     }
 }
 
-String afterInfectionRequestOnDisplay(exposure_status exposureStatus)
+void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
 {
     initDisplay();
     String ret = "";
     display.setTextAlignment(TEXT_ALIGN_CENTER);
-    if (EXPOSURE_NO_DETECT)
+    if (exposureStatus == EXPOSURE_NO_DETECT)
     {
         display.drawString(64, 0, "No exposure");
         display.drawString(64, 16, "detected");
-        ret = "No exposures";
     }
-    else if (EXPOSURE_DETECT)
+    else if (exposureStatus == EXPOSURE_DETECT)
     {
         display.drawString(64, 0, "Exposure");
         display.drawString(64, 16, "detected!");
-        ret = "!Exposures found!";
+        while(true){
+            Serial.println("Exposure detected");
+            delay(100000);
+        }
     }
-    else if (EXPOSURE_UPDATE_FAILED)
+    else if (exposureStatus == EXPOSURE_UPDATE_FAILED)
     {
         display.drawString(64, 0, "Update failed");
-        ret = "Update failed";
     }
     else
     {
         display.drawString(64, 0, "No update yet");
-        ret = "No update yet";
     }
 
     display.display();
-    return ret;
 }
