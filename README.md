@@ -139,9 +139,9 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 ## Known Issues
 
-- After initial configuration, WiFi credentials can not be changed without re-flashing the device.
-- WiFi credentials will be lost if the device looses power.
-- There is no official protocol for uploading infected keys.
+- [After initial configuration, WiFi credentials can not be changed without re-flashing the device.](https://github.com/sekassel/CoronaTrackerEsp32/issues/21)
+- [WiFi credentials will be lost if the device looses power.](https://github.com/sekassel/CoronaTrackerEsp32/issues/22)
+- [There is no official protocol for uploading infected keys.](https://github.com/sekassel/CoronaTrackerEsp32/issues/23)
 - Power consumption is a problem on small batteries.
-- Time displayed is always in CEST.
-- There is no real solution for full storage.
+- [Time displayed is always in CEST.](https://github.com/sekassel/CoronaTrackerEsp32/issues/24)
+- [There is no real solution for full storage.](https://github.com/sekassel/CoronaTrackerEsp32/issues/25)
