@@ -34,15 +34,15 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
 3. Unpack the Flash Download Tool and start it.
 
-   ![Start Download Tool](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_START_TOOL.png)
+   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_START_TOOL.png" alt="Start Download Tool" />
 
    1. Select `Developer Mode`
 
-      ![FDT Developer Mode](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DEV.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DEV.png" alt="FDT Developer Mode" />
 
    2. Select `ESP32 DownloadTool`
 
-      ![FDT ESp32 DownloadTool](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ESP32.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ESP32.png" alt="FDT ESp32 DownloadTool" />
 
    
 
@@ -50,29 +50,29 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
    1. First click on the shown button to open file explorer.
 
-      ![FDT ADD BIN](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADD_BIN.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADD_BIN.png" alt="FDT ADD BIN" />
 
    2. Navigate to the downloaded binaries and open the first one. (`_a_0x[...].bin`)
 
-      ![FDT BIN CHOOSE](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_CHOOSE_BIN.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_CHOOSE_BIN.png" alt="FDT BIN CHOOSE" />
 
    3. Repeat these steps until all binaries are added. Select them in alphabetical order. Afterwards it should look like this:
 
-      ![FDT BINS ADDED](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_BINS_ADDED.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_BINS_ADDED.png" alt="FDT BINS ADDED" />
 
 5. Input the addresses to the corresponding binaries. Those are located after the second `_` of the file name and before `.bin`. For example, the address corresponding to  `_a_0x1000.bin` would be `0x1000`.
 
-   ![FDT ADDRESS](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADDRESS_ADDED.png)
+   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADDRESS_ADDED.png" alt="FDT ADDRESS" />
 
 6. Check all checkmarks for the added binaries.
 
-   ![FDT CHECKMARK](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_CHECKMARKS.png)
+   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_CHECKMARKS.png" alt="FDT CHECKMARK" />
 
 7. If not already connected plug in your ESP32. Make sure the Flash Download Tool has recognized your device. Open the `COM` drop-down menu and select the available port. (There should only be one port selectable if only one device is connected)
 
    You can also check this image to see if your settings are correct.
 
-   ![FDT COM](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_COM_PORT.png)
+   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_COM_PORT.png" alt="FDT COM" />
 
 8. Hold down the `Boot` button on your ESP and then press the `EN` button to enter bootloader mode. Let go of both buttons.
 
@@ -87,11 +87,11 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
    2. Now press the `Boot` button again. The status should change to `Download`.
 
-      ![FDT_DOWNLOAD](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DOWNLOAD.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DOWNLOAD.png" alt="FDT_DOWNLOAD" />
 
    3. When the ESP is successfully flashed the status will show `Finish`.
 
-      ![FDT_FINISH](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_FINISH.png)
+      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_FINISH.png" alt="FDT_FINISH" />
 
 10. You can now [setup](#setting up the esp) your ESP.
 
