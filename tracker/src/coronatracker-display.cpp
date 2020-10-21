@@ -143,10 +143,6 @@ void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
     {
         display.drawString(64, 0, "Exposure");
         display.drawString(64, 16, "detected!");
-        while(true){
-            Serial.println("Exposure detected");
-            delay(100000);
-        }
     }
     else if (exposureStatus == EXPOSURE_UPDATE_FAILED)
     {
