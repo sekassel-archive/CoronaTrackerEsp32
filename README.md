@@ -6,27 +6,104 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
 
 Goal of the project is to create a do it yourself coronatracker and replace the CWA-App on your phone with this device. Advantages of using it is its cheapness and availability, as well as not having to use the app on your phone.
 
-The program mimics the [Exposure Notification Protocol](https://www.google.com/covid19/exposurenotifications/) by Apple/Google, that is used by CWA. Parts that could not be done on the microcontroller itself are done by our server (mainly Googles [Protocol Buffers](https://developers.google.com/android/exposure-notifications/exposure-key-file-format))
+The program mimics the [Exposure Notification Protocol](https://www.google.com/covid19/exposurenotifications/) by Apple/Google, that is used by CWA. Parts that could not be done on the microcontroller itself are done by our server (mainly Google's [Protocol Buffers](https://developers.google.com/android/exposure-notifications/exposure-key-file-format))
 
 This project is still work in progress and some features are incomplete/not yet implemented.
 
 ## Hardware
 
-The software should work on most ESP32 boards. Internally we use **LILYGO® TTGO ESP32 WiFi + Bluetooth 18650 Battery Protection Board**, mainly because of usability of 18650 batteries.
+The software should work on most ESP32 boards. Internally we use **LILYGO® TTGO ESP32 WiFi + Bluetooth 18650 Battery Protection Board**, mainly because of usability of 18650 batteries. We recommend using this board as the software as well as the installation process was tested on it.
 
 <img src="doc\images\ESP_Front.jpg"  width=25% height=25%  /><img src="doc\images\ESP_Back.jpg" width=25% height=25% />
 
 Depending on how the pins on your board are configured you may need to change them.
 
-## How you can built your own tracker?
+## Building your own tracker
 
-Choose a suitable ESP32 board.
+All you need to do is follow this tutorial as well as a suitable ESP32 board.
+
+### Flashing the ESP32
+
+You can either flash the ESP with our precompiled [binaries](#using binaries) or use the [source code](#using source code) from this repository. There are tutorial for both approaches below.
+
+#### Using binaries
+
+1. Download the [Flash Download Tools](https://www.espressif.com/en/support/download/other-tools) from Espressif.
+
+2. Download and unzip the release binaries.
+
+3. Unpack the Flash Download Tool and start it.
+
+   ![Start Download Tool](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_START_TOOL.png)
+
+   1. Select `Developer Mode`
+
+      ![FDT Developer Mode](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DEV.png)
+
+   2. Select `ESP32 DownloadTool`
+
+      ![FDT ESp32 DownloadTool](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ESP32.png)
+
+   
+
+4. Add the binary files.
+
+   1. First click on the shown button to open file explorer.
+
+      ![FDT ADD BIN](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADD_BIN.png)
+
+   2. Navigate to the downloaded binaries and open the first one. (`_a_0x[...].bin`)
+
+      ![FDT BIN CHOOSE](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_CHOOSE_BIN.png)
+
+   3. Repeat these steps until all binaries are added. Select them in alphabetical order. Afterwards it should look like this:
+
+      ![FDT BINS ADDED](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_BINS_ADDED.png)
+
+5. Input the addresses to the corresponding binaries. Those are located after the second `_` of the file name and before `.bin`. For example, the address corresponding to  `_a_0x1000.bin` would be `0x1000`.
+
+   ![FDT ADDRESS](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADDRESS_ADDED.png)
+
+6. Check all checkmarks for the added binaries.
+
+   ![FDT CHECKMARK](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_CHECKMARKS.png)
+
+7. If not already connected plug in your ESP32. Make sure the Flash Download Tool has recognized your device. Open the `COM` drop-down menu and select the available port. (There should only be one port selectable if only one device is connected)
+
+   You can also check this image to see if your settings are correct.
+
+   ![FDT COM](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_COM_PORT.png)
+
+8. Hold down the `Boot` button on your ESP and then press the `EN` button to enter bootloader mode. Let go of both buttons.
+
+9. Flash your ESP.
+
+   1. Click on `Start`. The status should now change to `Sync`.
+
+      <p float="left">
+      	<img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_START.png" width=35% height=25% />
+      	<img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_SYNCH.png" width=50% height=50% />
+      </p>
+
+   2. Now press the `Boot` button again. The status should change to `Download`.
+
+      ![FDT_DOWNLOAD](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DOWNLOAD.png)
+
+   3. When the ESP is successfully flashed the status will show `Finish`.
+
+      ![FDT_FINISH](C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_FINISH.png)
+
+10. You can now [setup](#setting up the esp) your ESP.
+
+### Using source code
 
 1. Download and install [Visual Studio Code](https://code.visualstudio.com/). 
 
 2. Install [PlatformIO](https://platformio.org/) for VS Code. ([Instructions](https://platformio.org/install/ide?install=vscode)) There may be a prompt to restart VS Code after installing.
 
-3. Clone or download this project. You can use `Download ZIP`on the top right of this site. Unzip it in a suitable directory.<img src="doc\images\git_download.png"  />
+3. Clone or download this project. You can use `Download ZIP`on the top right of this site. Unzip it in a suitable directory.
+
+   <img src="doc\images\git_download.png"  />
 
 4. Open the project with PlatformIO. 
 
@@ -50,11 +127,15 @@ Choose a suitable ESP32 board.
 
    <img src="doc\images\PIO_Success.png"/>
 
-6. The ESP will now start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
+6. You can now [setup](#setting up the esp) your ESP.
+
+### Setting up the ESP
+
+1. After a successful flash the ESP will start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
    <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% />
 
-7. The ESP will now start initialization and afterwards simulating the CWA-App.
+2. The ESP will now start initialization and afterwards simulating the CWA-App.
 
 ## Known Issues
 
