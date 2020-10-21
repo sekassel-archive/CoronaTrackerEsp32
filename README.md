@@ -34,15 +34,15 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
 3. Unpack the Flash Download Tool and start it.
 
-   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_START_TOOL.png" />
+   <img src="doc\images\EXPLORER_START_TOOL.png"  />
 
    1. Select `Developer Mode`
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DEV.png" />
+      <img src="doc\images\FDT_DEV.png"  />
 
    2. Select `ESP32 DownloadTool`
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ESP32.png" />
+      <img src="doc\images\FDT_ESP32.png"  />
 
    
 
@@ -50,29 +50,29 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
 
    1. First click on the shown button to open file explorer.
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADD_BIN.png" />
+      <img src="doc\images\FDT_ADD_BIN.png"  />
 
    2. Navigate to the downloaded binaries and open the first one. (`_a_0x[...].bin`)
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\EXPLORER_CHOOSE_BIN.png" />
+      <img src="doc\images\EXPLORER_CHOOSE_BIN.png"  />
 
    3. Repeat these steps until all binaries are added. Select them in alphabetical order. Afterwards it should look like this:
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_BINS_ADDED.png" />
+      <img src="doc\images\FDT_BINS_ADDED.png"  />
 
 5. Input the addresses to the corresponding binaries. Those are located after the second `_` of the file name and before `.bin`. For example, the address corresponding to  `_a_0x1000.bin` would be `0x1000`.
 
-   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_ADDRESS_ADDED.png" />
+   <img src="doc\images\FDT_ADDRESS_ADDED.png"  />
 
 6. Check all checkmarks for the added binaries.
 
-   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_CHECKMARKS.png" />
+   <img src="doc\images\FDT_CHECKMARKS.png"  />
 
 7. If not already connected plug in your ESP32. Make sure the Flash Download Tool has recognized your device. Open the `COM` drop-down menu and select the available port. (There should only be one port selectable if only one device is connected)
 
    You can also check this image to see if your settings are correct.
 
-   <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_COM_PORT.png" />
+   <img src="doc\images\FDT_COM_PORT.png"  />
 
 8. Hold down the `Boot` button on your ESP and then press the `EN` button to enter bootloader mode. Let go of both buttons.
 
@@ -81,17 +81,17 @@ You can either flash the ESP with our precompiled [binaries](#using binaries) or
    1. Click on `Start`. The status should now change to `Sync`.
 
       <p float="left">
-      	<img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_START.png" width=35% height=25% />
-      	<img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_SYNCH.png" width=50% height=50% />
+      	<img src="doc\images\FDT_START.png" width=35% height=25%  />
+      	<img src="doc\images\FDT_SYNCH.png" width=50% height=50%  />
       </p>
 
    2. Now press the `Boot` button again. The status should change to `Download`.
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_DOWNLOAD.png" />
+      <img src="doc\images\FDT_DOWNLOAD.png"  />
 
    3. When the ESP is successfully flashed the status will show `Finish`.
 
-      <img src="C:\Users\Yannick\Documents\Git\CoronaTrackerEsp32\doc\images\FDT_FINISH.png" />
+      <img src="doc\images\FDT_FINISH.png"  />
 
 10. You can now [setup](#setting up the esp) your ESP.
 
