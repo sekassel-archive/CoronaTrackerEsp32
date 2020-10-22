@@ -3,7 +3,6 @@
 
 #include "coronatracker-display.h"
 #include "coronatracker-ble.h"
-#include "coronatracker-wifi.h"
 #include "coronatracker-spiffs.h"
 
 #define BUTTON_PIN 0
@@ -14,18 +13,23 @@
 #define ACTION_SCAN 2
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
+#define ACTION_SLEEP 5 //Just for display
 
 #define SLEEP_INTERVAL 3000000 //In microseconds
 
+#define BOOTS_UNTIL_DISPLAY_TURNS_OFF 4
 #define SCAN_TIME 10       //in seconds
 #define ADVERTISE_TIME 500 //in milliseconds
 
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
+RTC_DATA_ATTR int bootCount = 0;
+RTC_DATA_ATTR int scanedDevices = -1;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
+RTC_DATA_ATTR bool isDisplayActive = false;
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
@@ -68,7 +72,7 @@ bool initializeTime()
     } while (!getLocalTime(&timeinfo));
     Serial.print("Local Time: ");
     Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    //showLocalTimeOnDisplay(timeinfo);
+    delay(5000);
     return true;
 }
 
@@ -129,6 +133,7 @@ void goIntoDeepSleep(bool requestInfections)
         setNextAction(ACTION_ADVERTISE);
     }
 
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, LOW);
     esp_sleep_enable_timer_wakeup(SLEEP_INTERVAL);
     esp_deep_sleep_start();
 }
@@ -136,8 +141,8 @@ void goIntoDeepSleep(bool requestInfections)
 void setup()
 {
     //Deletes stored Wifi Credentials if uncommented
-    //WiFiManager manager;
-    //manager.resetSettings();
+    // WiFiManager manager;
+    // manager.resetSettings();
 
     //Setting up Serial
     Serial.begin(115200);
@@ -151,13 +156,49 @@ void setup()
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, PULLUP);
 
+    digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
+
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo))
+    {
+        Serial.println("Get local time error");
+    }
+
+    if (!isDisplayActive)
+    {
+        Serial.println("Initialize display");
+        initDisplay();
+    }
+    else
+    {
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+    }
+
+    esp_sleep_wakeup_cause_t wakeup_reason;
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+
+    buttonState = digitalRead(BUTTON_PIN);
+    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
+    { //LOW means clicked
+        Serial.println("Wakeup caused by external signal using RTC_IO");
+        if (!isDisplayActive)
+        {
+            defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+            isDisplayActive = true;
+        }
+        else
+        {
+            initDisplay();
+            isDisplayActive = false;
+        }
+    }
+
     //Wifi not initialized
     if (!wifiInitialized)
     {
-        Serial.println("Awaiting Button Press for Wifi-Configuration");
+        Serial.println("Wifi-Configuration");
         digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
-        showStartWifiMessageOnDisplay();
     }
     else
     {
@@ -250,7 +291,7 @@ void setup()
 
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
-
+        scanedDevices = rpis.size();
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
     }
@@ -274,22 +315,31 @@ void setup()
             Serial.println("We connected to Wifi...");
             wifiInitialized = true;
             digitalWrite(LED_PIN, HIGH);
+            wifiConfiguredOnDisplay(true);
         }
         else
         {
             Serial.println("Could not connect to Wifi");
             digitalWrite(LED_PIN, LOW);
+            wifiConfiguredOnDisplay(false);
             //Delay so feedback can be seen on LED
             delay(5000);
             ESP.restart();
         }
+        delay(5000);
         disconnectWifi();
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices); //while infection request the display is always on
         exposureStatus = checkForInfections();
-        showIsInfectedOnDisplay(exposureStatus == EXPOSURE_DETECT);
-        showRequestDelayOnDisplay();
+        afterInfectionRequestOnDisplay(exposureStatus);
+        delay(10000);
+    }
+
+    if (isDisplayActive)
+    {
+        defaultDisplay(timeinfo, ACTION_SLEEP, exposureStatus, scanedDevices);
     }
 
     end = micros();

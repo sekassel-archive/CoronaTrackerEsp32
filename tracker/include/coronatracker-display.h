@@ -1,13 +1,17 @@
 #include <Arduino.h>
 
-//Time Constants
-const static int HOUR = 3600;
-const static int MINUTE = 60;
-const static int DAY = 86400;
+#include "coronatracker-wifi.h"
 
-void showIsInfectedOnDisplay(bool metInfected);
-//TODO Change behaviour of time requestDelay on screen
-void showLocalTimeOnDisplay(struct tm timeinfo);
-void showStartWifiMessageOnDisplay();
+#define ACTION_NOTHING 0
+#define ACTION_ADVERTISE 1
+#define ACTION_SCAN 2
+#define ACTION_WIFI_CONFIG 3
+#define ACTION_INFECTION_REQUEST 4
+#define ACTION_SLEEP 5
+
+void initDisplay();
 void configureWifiMessageOnDisplay();
-void showRequestDelayOnDisplay();
+void wifiConfiguredOnDisplay(bool configured);
+void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices);
+String weekDayToString(int weekDay);
+void afterInfectionRequestOnDisplay(exposure_status exposureStatus);
