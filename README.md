@@ -30,7 +30,7 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 1. Download the [Flash Download Tools](https://www.espressif.com/en/support/download/other-tools) from Espressif.
 
-2. Download and unzip the release binaries.
+2. Download and unzip the [latest release binaries](https://github.com/sekassel/CoronaTrackerEsp32/releases). (These are called `bin_release_[version].zip`)
 
 3. Unpack the Flash Download Tool and start it.
 
@@ -101,7 +101,8 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 2. Install [PlatformIO](https://platformio.org/) for VS Code. ([Instructions](https://platformio.org/install/ide?install=vscode)) There may be a prompt to restart VS Code after installing.
 
-3. Clone or download this project. You can use `Download ZIP`on the top right of this site. Unzip it in a suitable directory.
+3. Clone or download this project. You can use `Download ZIP`on the top right of this site. Alternatively the source code can be downloaded [here](https://github.com/sekassel/CoronaTrackerEsp32/releases).
+   Unzip it in a suitable directory.
 
    <img src="doc\images\git_download.png"  />
 
@@ -142,6 +143,6 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 - [After initial configuration, WiFi credentials can not be changed without re-flashing the device.](https://github.com/sekassel/CoronaTrackerEsp32/issues/21)
 - [WiFi credentials will be lost if the device looses power.](https://github.com/sekassel/CoronaTrackerEsp32/issues/22)
 - [There is no official protocol for uploading infected keys.](https://github.com/sekassel/CoronaTrackerEsp32/issues/23)
-- Power consumption is a problem on small batteries.
 - [Time displayed is always in CEST.](https://github.com/sekassel/CoronaTrackerEsp32/issues/24)
 - [There is no real solution for full storage.](https://github.com/sekassel/CoronaTrackerEsp32/issues/25)
+- Power consumption is a problem on small batteries.
