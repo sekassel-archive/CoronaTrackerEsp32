@@ -29,7 +29,7 @@ void wifiConfiguredOnDisplay(bool configured)
 {
     initDisplay();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.drawString(0, 0, "Wifi-Config:");
+    display.drawString(64, 0, "Wifi-Config:");
     if (configured)
     {
         display.drawString(64, 16, "success!");

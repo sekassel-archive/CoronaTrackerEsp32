@@ -331,11 +331,9 @@ void setup()
     }
     else if (nextAction == ACTION_INFECTION_REQUEST)
     {
-        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);//while infection request the display is always on
-        isDisplayActive = true;
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices); //while infection request the display is always on
         exposureStatus = checkForInfections();
         afterInfectionRequestOnDisplay(exposureStatus);
-        isDisplayActive = false;//display turns off when the check is done
         delay(10000);
     }
 
