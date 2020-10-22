@@ -93,7 +93,9 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
       <img src="doc\images\FDT_FINISH.png"  />
 
-10. You can now [setup](#setting-up-the-esp) your ESP.
+10. Press the `EN` button. The ESP should restart now and the display will turn on.
+
+11. You can now [setup](#setting-up-the-esp) your ESP.
 
 ### Using source code
 
