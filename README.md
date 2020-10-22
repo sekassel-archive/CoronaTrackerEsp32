@@ -30,7 +30,7 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 1. Download the [Flash Download Tools](https://www.espressif.com/en/support/download/other-tools) from Espressif.
 
-2. Download and unzip the [latest release binaries](https://github.com/sekassel/CoronaTrackerEsp32/releases). (These are called `bin_release_[version].zip`)
+2. Download and unzip the [latest release binaries](https://github.com/sekassel/CoronaTrackerEsp32/releases). (These are called `release_[version].zip`)
 
 3. Unpack the Flash Download Tool and start it.
 
