@@ -21,14 +21,11 @@
 #define SCAN_TIME 10       //in seconds
 #define ADVERTISE_TIME 500 //in milliseconds
 
-#define SCAN_TIME 3        //in seconds
-#define ADVERTISE_TIME 200 //in milliseconds
-
 //Saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
-RTC_DATA_ATTR int scanedDevices = 0;
+RTC_DATA_ATTR int scanedDevices = -1;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;

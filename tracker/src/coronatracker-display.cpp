@@ -16,18 +16,20 @@ void initDisplay()
 void configureWifiMessageOnDisplay()
 {
     Serial.println("showStartWifiMessageOnDisplay");
-    display.drawString(0, 0, "Connect to Wifi"); //probably 17 letters with size 16
-    display.drawString(0, 16, "Coronatracker");
-    display.drawString(0, 32, "SignIn to Network");
-    display.drawString(0, 48, "orUse 192.168.4.1");
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(0, 0, "Connect to Wifi-Portal"); //probably 17 letters with size 16
+    display.drawString(0, 16, "Name: Coronatracker");
+    display.drawString(0, 32, "Sign-in to Network or");
+    display.drawString(0, 48, "connect to 192.168.4.1");
     display.display();
+    display.setFont(ArialMT_Plain_16);
 }
 
 void wifiConfiguredOnDisplay(bool configured)
 {
     initDisplay();
-    display.drawString(0, 0, "Wifi-Config:");
     display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(0, 0, "Wifi-Config:");
     if (configured)
     {
         display.drawString(64, 16, "success!");
@@ -75,7 +77,7 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
     {
         display.drawString(0, 16, "Sleep");
     }
-    display.drawString(0, 32, "Seen devices: " + (String)numberOfScanedDevices);
+    display.drawString(0, 32, "Seen devices: " + ((numberOfScanedDevices == -1) ? "-" : (String)numberOfScanedDevices));
     String status = "";
     if (exposureStatus == EXPOSURE_NO_DETECT)
     {
