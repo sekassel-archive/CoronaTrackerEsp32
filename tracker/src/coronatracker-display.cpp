@@ -1,5 +1,6 @@
 #include "coronatracker-display.h"
 #include "SSD1306Wire.h"
+#include "coronatracker-display-font.h"
 
 SSD1306Wire display(0x3c, 5, 4);
 
@@ -16,11 +17,11 @@ void initDisplay()
 void configureWifiMessageOnDisplay()
 {
     Serial.println("showStartWifiMessageOnDisplay");
-    display.setFont(ArialMT_Plain_10);
+    display.setFont(Nimbus_Sans_L_Regular_Condensed_15);
     display.drawString(0, 0, "Connect to Wifi-Portal"); //probably 17 letters with size 16
-    display.drawString(0, 16, "Name: Coronatracker");
-    display.drawString(0, 32, "Sign-in to Network or");
-    display.drawString(0, 48, "connect to 192.168.4.1");
+    display.drawString(0, 15, "Name: Coronatracker");
+    display.drawString(0, 30, "Sign-in to network or");
+    display.drawString(0, 45, "connect to 192.168.4.1");
     display.display();
     display.setFont(ArialMT_Plain_16);
 }
