@@ -35,34 +35,7 @@ public class Main {
     public static void main(String[] args) {
         get("/hello", (request, response) -> "Hello World");
 
-        post("/infections", ((request, response) -> {
-            ObjectMapper mapper = new ObjectMapper();
-            InfectionPostPayload input;
-            try {
-                input = mapper.readValue(request.body(), InfectionPostPayload.class);
-            } catch (JsonParseException | JsonMappingException e) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request body invalid";
-            }
-
-            if (!input.isValid()) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request values invalid";
-            }
-
-            if (!input.isAuthenticated()) {
-                response.status(HTTP_UNAUTHORIZED);
-                return "Not authenticated";
-            }
-
-            try {
-                SQLite.addTemporaryExposureKey(input.getRsin(), input.getKeyData());
-            } catch (SQLException e) {
-                response.status(HTTP_INTERNAL_ERROR);
-                return e.getMessage();
-            }
-            return "Success!";
-        }));
+        get("/cwa/status", (request, response) -> cwaStatus);
 
         get("/infections/rsin", (request, response) -> {
             JSONObject json = new JSONObject();
@@ -133,6 +106,35 @@ public class Main {
             return new JSONArray(tek);
         });
 
+/*        post("/infections", ((request, response) -> {
+            ObjectMapper mapper = new ObjectMapper();
+            InfectionPostPayload input;
+            try {
+                input = mapper.readValue(request.body(), InfectionPostPayload.class);
+            } catch (JsonParseException | JsonMappingException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid";
+            }
+
+            if (!input.isValid()) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request values invalid";
+            }
+
+            if (!input.isAuthenticated()) {
+                response.status(HTTP_UNAUTHORIZED);
+                return "Not authenticated";
+            }
+
+            try {
+                SQLite.addTemporaryExposureKey(input.getRsin(), input.getKeyData());
+            } catch (SQLException e) {
+                response.status(HTTP_INTERNAL_ERROR);
+                return e.getMessage();
+            }
+            return "Success!";
+        }));
+
         delete("/infections/rsin/:rsin", (request, response) -> {
             int rsin;
             try {
@@ -186,9 +188,7 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-
-        get("/cwa/status", (request, response) -> cwaStatus);
-
+*/
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
     }
 
