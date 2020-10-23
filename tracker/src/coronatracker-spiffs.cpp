@@ -161,6 +161,11 @@ bool initSPIFFS(bool createDataBases)
 
 bool insertCWAProgress(std::map<uint32_t, uint16_t> progressMap)
 {
+    if (progressMap.empty())
+    {
+        return false;
+    }
+
     std::stringstream sql_ss;
     sql_ss << "INSERT INTO cwa VALUES ";
 
