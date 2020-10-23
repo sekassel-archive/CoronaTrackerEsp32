@@ -192,7 +192,7 @@ public class Main {
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
     }
 
-    private static String cwaStatus;
+    private static String cwaStatus = "No update yet";
 
     private static void updateCWAKeys() {
         try {
