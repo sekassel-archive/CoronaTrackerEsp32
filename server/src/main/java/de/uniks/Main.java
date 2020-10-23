@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
-import de.uniks.CWA.CWAWebsocket;
 import de.uniks.SQLite.SQLite;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONArray;
@@ -32,8 +31,6 @@ public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
-        webSocket("/cwa", CWAWebsocket.class);
-
         get("/hello", (request, response) -> "Hello World");
 
         post("/infections", ((request, response) -> {
