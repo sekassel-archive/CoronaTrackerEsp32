@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
-import de.uniks.CWA.CWAWebsocket;
 import de.uniks.SQLite.SQLite;
 import de.uniks.payload.InfectionPostPayload;
 import org.json.JSONArray;
@@ -14,6 +13,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -26,44 +26,16 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static java.net.HttpURLConnection.*;
+import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
 
 public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
-        webSocket("/cwa", CWAWebsocket.class);
-
         get("/hello", (request, response) -> "Hello World");
 
-        post("/infections", ((request, response) -> {
-            ObjectMapper mapper = new ObjectMapper();
-            InfectionPostPayload input;
-            try {
-                input = mapper.readValue(request.body(), InfectionPostPayload.class);
-            } catch (JsonParseException | JsonMappingException e) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request body invalid";
-            }
-
-            if (!input.isValid()) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request values invalid";
-            }
-
-            if (!input.isAuthenticated()) {
-                response.status(HTTP_UNAUTHORIZED);
-                return "Not authenticated";
-            }
-
-            try {
-                SQLite.addTemporaryExposureKey(input.getRsin(), input.getKeyData());
-            } catch (SQLException e) {
-                response.status(HTTP_INTERNAL_ERROR);
-                return e.getMessage();
-            }
-            return "Success!";
-        }));
+        get("/cwa/status", (request, response) -> cwaStatus);
 
         get("/infections/rsin", (request, response) -> {
             JSONObject json = new JSONObject();
@@ -92,6 +64,76 @@ public class Main {
             }
             return new JSONArray(table);
         });
+
+        get("/infections/rsin/:rsin/teknr/:teknr", (request, response) -> {
+            int rsin;
+            try {
+                rsin = Integer.parseInt(request.params(":rsin"));
+                if (Math.ceil(Math.log10(rsin + 1)) != 7) {
+                    throw new NumberFormatException();
+                }
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number and 7 digits long";
+            }
+
+            int teknr;
+            try {
+                teknr = Integer.parseInt(request.params(":teknr"));
+            } catch (NumberFormatException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Input must be number";
+            }
+
+            byte[] tek;
+            Connection connection = null;
+            try {
+                connection = SQLite.openDatabase();
+                tek = SQLite.getKeyData(rsin, teknr, connection);
+            } catch (SQLException e) {
+                if (e.getErrorCode() == SQLITE_NOTFOUND.code) {
+                    response.status(HTTP_NOT_FOUND);
+                    return "Key not found";
+                } else {
+                    response.status(HTTP_INTERNAL_ERROR);
+                    return "Error " + e.getErrorCode() + ": " + e.getMessage();
+                }
+            } finally {
+                if (connection != null) {
+                    SQLite.closeDatabase(connection);
+                }
+            }
+            return new JSONArray(tek);
+        });
+
+/*        post("/infections", ((request, response) -> {
+            ObjectMapper mapper = new ObjectMapper();
+            InfectionPostPayload input;
+            try {
+                input = mapper.readValue(request.body(), InfectionPostPayload.class);
+            } catch (JsonParseException | JsonMappingException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid";
+            }
+
+            if (!input.isValid()) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request values invalid";
+            }
+
+            if (!input.isAuthenticated()) {
+                response.status(HTTP_UNAUTHORIZED);
+                return "Not authenticated";
+            }
+
+            try {
+                SQLite.addTemporaryExposureKey(input.getRsin(), input.getKeyData());
+            } catch (SQLException e) {
+                response.status(HTTP_INTERNAL_ERROR);
+                return e.getMessage();
+            }
+            return "Success!";
+        }));
 
         delete("/infections/rsin/:rsin", (request, response) -> {
             int rsin;
@@ -146,13 +188,11 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-
-        get("/cwa/status", (request, response) -> cwaStatus);
-
+*/
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
     }
 
-    private static String cwaStatus;
+    private static String cwaStatus = "No update yet";
 
     private static void updateCWAKeys() {
         try {
