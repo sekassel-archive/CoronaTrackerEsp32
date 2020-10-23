@@ -9,6 +9,7 @@ import java.sql.*;
 import java.util.*;
 
 import static de.uniks.CWA.CWARequests.getUnzippedInfectionData;
+import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 
 public class SQLite {
 
@@ -195,7 +196,11 @@ public class SQLite {
         final String SELECT_SQL = "SELECT key_data FROM RSIN_" + rsin + " WHERE rowid=" + (index + 1);//Database is not zero indexed
 
         try (Statement stmt = db.createStatement(); ResultSet resultSet = stmt.executeQuery(SELECT_SQL)) {
-            return resultSet.getBytes(1);
+            if (resultSet.next()) {
+                return resultSet.getBytes(1);
+            } else {
+                throw new SQLiteException("Not Found", SQLITE_NOTFOUND);
+            }
         }
     }
 
