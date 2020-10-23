@@ -1,7 +1,5 @@
 #include "coronatracker-wifi.h"
 
-using namespace websockets;
-
 bool disconnectWifi()
 {
     Serial.println("Deactivating Wifi");
@@ -14,12 +12,6 @@ bool connectToStoredWifi()
     WiFi.mode(WIFI_STA);
     WiFi.begin();
     return WiFi.waitForConnectResult() == WL_CONNECTED;
-}
-
-String lastMessage;
-void onMessageCallback(WebsocketsMessage message)
-{
-    lastMessage = message.data();
 }
 
 std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi)
@@ -40,6 +32,7 @@ std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi)
         if (!(code == HTTP_CODE_OK))
         {
             Serial.println("Failed to connect to server");
+            http.end();
             return rsinMap;
         }
         else
@@ -94,98 +87,87 @@ exposure_status checkForInfections()
         }
         else
         {
-            WebsocketsClient client;
-            client.onMessage(onMessageCallback);
-
-            bool con = client.connect(WS_URL);
-
-            if (!con)
+            sqlite3 *db;
+            if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
             {
-                Serial.println("Could not connect to websocket");
+                Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
                 return EXPOSURE_UPDATE_FAILED;
             }
-            else
+
+            for (auto it = rsinMap.begin(); it != rsinMap.end(); it++)
             {
-                sqlite3 *db;
-                if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
+                uint32_t rsin = it->first;
+                uint16_t values = it->second;
+                int i = 0;
+
+                Serial.printf("Starting to check rsin: %d\n", rsin);
+
+                //We only need to check keys, if we haven't checked them before
+                if (currentProgress.find(rsin) != currentProgress.end())
                 {
-                    Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
-                    return EXPOSURE_UPDATE_FAILED;
+                    i = currentProgress.find(rsin)->second;
                 }
 
-                for (auto it = rsinMap.begin(); it != rsinMap.end(); it++)
+                for (; i < values; i++)
                 {
-                    uint32_t rsin = it->first;
-                    uint16_t values = it->second;
-                    int i = 0;
+                    Serial.printf("Entry %d/%d\n", i, values);
 
-                    Serial.printf("Starting to check rsin: %d\n", rsin);
+                    HTTPClient http;
+                    http.begin(String(SERVER_URL) + String(RSIN_URL) + "/" + String(rsin) + "/teknr/" + String(i));
+                    int httpCode = http.GET();
 
-                    //We only need to check keys, if we haven't checked them before
-                    if (currentProgress.find(rsin) != currentProgress.end())
+                    if (httpCode != HTTP_CODE_OK)
                     {
-                        i = currentProgress.find(rsin)->second;
+                        Serial.println("Failed to get key");
+                        http.end();
+                        return EXPOSURE_UPDATE_FAILED;
                     }
 
-                    for (i; i < values; i++)
+                    String message = http.getString();
+                    http.end();
+
+                    if (message.equals("Failed to retreive key"))
                     {
-                        Serial.printf("Entry %d/%d\n", i, values);
+                        Serial.println("Failed to retrieve key");
+                        continue;
+                    }
 
-                        String stringToSend = String(rsin);
-                        stringToSend.concat(":");
-                        stringToSend.concat(i);
+                    StaticJsonDocument<JSON_CAPACITY> doc;
+                    deserializeJson(doc, message);
 
-                        client.send(stringToSend);
+                    JsonArray byteArray = doc.as<JsonArray>();
+                    signed char keyData[16];
 
-                        while (!client.poll())
-                        {
-                            delay(1);
-                        }
+                    int j = 0;
+                    for (JsonVariant elem : byteArray)
+                    {
+                        keyData[j] = elem.as<int>();
+                        j++;
+                    }
 
-                        if (lastMessage.equals("Not found") || lastMessage.equals("Wrong Input!"))
-                        {
-                            continue;
-                        }
+                    signed char rpis[EKROLLING_PERIOD][16];
+                    for (int j = 0; j < EKROLLING_PERIOD; j++)
+                    {
+                        calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpis[j]);
+                    }
+                    int occ = checkForKeysInDatabase(db, rpis, EKROLLING_PERIOD, 16);
 
-                        StaticJsonDocument<JSON_CAPACITY> doc;
-                        deserializeJson(doc, lastMessage);
+                    if (occ == -1)
+                    {
+                        Serial.println("There was an Error checking keys");
 
-                        JsonArray byteArray = doc.as<JsonArray>();
-                        signed char keyData[16];
-
-                        int j = 0;
-                        for (JsonVariant elem : byteArray)
-                        {
-                            keyData[j] = elem.as<int>();
-                            j++;
-                        }
-
-                        signed char rpis[EKROLLING_PERIOD][16];
-                        for (int j = 0; j < EKROLLING_PERIOD; j++)
-                        {
-                            calculateRollingProximityIdentifier((const unsigned char *)keyData, (rsin + j), (unsigned char *)rpis[j]);
-                        }
-                        int occ = checkForKeysInDatabase(db, rpis, EKROLLING_PERIOD, 16);
-
-                        if (occ == -1)
-                        {
-                            Serial.println("There was an Error checking keys");
-
-                            i--; //Temporary Workaround for Out Of Memory Error, will simply retry the current entry
-                        }
-                        else if (occ > 0)
-                        {
-                            client.close();
-                            disconnectWifi();
-                            sqlite3_close(db);
-                            Serial.println("User was exposed to someone infected!");
-                            return EXPOSURE_DETECT;
-                        }
+                        i--; //Temporary Workaround for Out Of Memory Error, will simply retry the current entry
+                    }
+                    else if (occ > 0)
+                    {
+                        disconnectWifi();
+                        sqlite3_close(db);
+                        Serial.println("User was exposed to someone infected!");
+                        return EXPOSURE_DETECT;
                     }
                 }
-                sqlite3_close(db);
             }
-            client.close();
+            sqlite3_close(db);
         }
         insertCWAProgress(rsinMap);
     }
