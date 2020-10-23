@@ -2,10 +2,11 @@
 #include "SSD1306Wire.h"
 #include "coronatracker-display-font.h"
 
-#define DISPLAY_PIN1 5
-#define DISPLAY_PIN2 4
+#define DISPLAY_ADRESS 0x3c
+#define DISPLAY_SDA 5
+#define DISPLAY_SCL 4
 
-SSD1306Wire display(0x3c, DISPLAY_PIN1, DISPLAY_PIN2);
+SSD1306Wire display(DISPLAY_ADRESS, DISPLAY_SDA, DISPLAY_SCL);
 
 void initDisplay()
 {
