@@ -155,8 +155,6 @@ exposure_status checkForInfections()
                     if (occ == -1)
                     {
                         Serial.println("There was an Error checking keys");
-
-                        i--; //Temporary Workaround for Out Of Memory Error, will simply retry the current entry
                     }
                     else if (occ > 0)
                     {
