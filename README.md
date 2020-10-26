@@ -4,14 +4,14 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
 
 ## Table of contents
 
-- [Overview](##Overview)
-- [Hardware](##Hardware)
-- [Building your own tracker](##Building-your-own-tracker)
-  * [Flashing the ESP32](###Flashing-the-ESP32)
-    + [Using binaries](####Using-binaries)
-    + [Using source code](####Using-source-code)
-  * [Setting up the ESP](###Setting-up-the-ESP)
-- [Known issues](##Known-issues)
+* [Overview](#Overview)
+* [Hardware](#Hardware)
+* [Building your own tracker](#Building-your-own-tracker)
+  * [Flashing the ESP32](#Flashing-the-ESP32)
+    * [Using binaries](#Using-binaries)
+    * [Using source code](#Using-source-code)
+  * [Setting up the ESP](#Setting-up-the-ESP)
+* [Known issues](#Known-issues)
 
 
 
