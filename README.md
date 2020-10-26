@@ -2,6 +2,19 @@
 
 An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the ESP32. 
 
+## Table of contents
+
+- [Overview](##Overview)
+- [Hardware](##Hardware)
+- [Building your own tracker](##Building-your-own-tracker)
+  * [Flashing the ESP32](###Flashing-the-ESP32)
+    + [Using binaries](####Using-binaries)
+    + [Using source code](####Using-source-code)
+  * [Setting up the ESP](###Setting-up-the-ESP)
+- [Known issues](##Known-issues)
+
+
+
 ## Overview
 
 Goal of the project is to create a do it yourself coronatracker and replace the CWA-App on your phone with this device. Advantages of using it is its cheapness and availability, as well as not having to use the app on your phone.
@@ -97,7 +110,7 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 11. You can now [setup](#setting-up-the-esp) your ESP.
 
-### Using source code
+#### Using source code
 
 1. Download and install [Visual Studio Code](https://code.visualstudio.com/). 
 
@@ -140,7 +153,7 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 2. The ESP will now start initialization and afterwards simulating the CWA-App.
 
-## Known Issues
+## Known issues
 
 - [After initial configuration, WiFi credentials can not be changed without re-flashing the device.](https://github.com/sekassel/CoronaTrackerEsp32/issues/21)
 - [WiFi credentials will be lost if the device looses power.](https://github.com/sekassel/CoronaTrackerEsp32/issues/22)
