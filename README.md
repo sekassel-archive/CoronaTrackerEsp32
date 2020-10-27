@@ -12,7 +12,7 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
     * [Using source code](#Using-source-code)
   * [Setting up the ESP](#Setting-up-the-ESP)
 * [Known issues](#Known-issues)
-
+* [What the tracker displays](#What-the-tracker-displays)
 
 
 ## Overview
@@ -161,9 +161,13 @@ When you start the device you will see the following message to configure your W
 
 <img src="doc\images\DISPLAY_Wifi_message.jpeg" width=20% height=20%/>
 
+
+
 Once the WiFi configuration was successful the display prints another message.
 
 <img src="doc\images\DISPLAY_Wifi-Config_success.jpeg" width=20% height=20%/>
+
+
 
 If the WiFi configuration failed the device displays a different message and starts from the beginning. The tracker also restarts after a few minutes if the WiFi was not configured.
 
@@ -171,33 +175,59 @@ If the WiFi configuration failed the device displays a different message and sta
 
 
 
+After the WiFi configuration is done the device needs a few seconds to initialize. Afterwards the "Boot" button can be pressed to activate the display and pressed again to deactivate the display. Most of the time the screen shows something like this.
+
 <img src="doc\images\DISPLAY_Before_first_scan.jpeg" width=20% height=20%/>
 
-<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/> 
 
-<img src="doc\images\DISPLAY_CWA_Update.jpeg" width=20% height=20%/> 
 
-<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/> 
+The **time** is shown as marked.
 
-<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/> 
+<img src="doc\images\DISPLAY_Before_first_scan_markiert1.jpeg" width=20% height=20%/>
 
-<img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
 
-<img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/> 
 
-<img src="doc\images\DISPLAY_Scan.jpeg" width=20% height=20%/> 
+The **action** is shown in the second line as marked.
 
-<img src="doc\images\DISPLAY_Sleep.jpeg" width=20% height=20%/> 
+<img src="doc\images\DISPLAY_Before_first_scan_markiert2.jpeg" width=20% height=20%/>
 
-<img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/> 
 
-<img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/>  
+
+Possible other **actions** are:
+
+<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/><img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
+
+
+
+In the third line you can see how many devices the tracker has seen during the last scan. Before the first scan there is a little dash instead of a number.
+
+<img src="doc\images\DISPLAY_Before_first_scan_markiert3.jpeg" width=20% height=20%/>
+
+
+
+In the last line you can see your **exposure status**. The status tells you if a contact with a registered person was detected.
+
+<img src="doc\images\DISPLAY_Before_first_scan_markiert4.jpeg" width=20% height=20%/>
+
+
+
+Possible other **exposure statuses** are:
+
+<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/>
+
+
+
+While the tracker is being updated, the screen is permanently on and remains unchanged until the end of the update.
+
+<img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/>
+
+
+
+After the update, the display shows the result and switches back to the previous display after a few seconds. One of the following results are possible.
+
+<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
 
  
-
- 
-
-
 
 ## Known issues
 
