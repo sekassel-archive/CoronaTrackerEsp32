@@ -201,7 +201,7 @@ The **action** is shown in the second line as marked.
 
 Possible other **actions** are:
 
-<img src="doc\images\DISPLAY_Advertising.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
+<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
 
 * Advertise: The tracker announces that it is present.
 * Scan: The tracker searches for present devices.
