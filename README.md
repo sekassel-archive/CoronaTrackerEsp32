@@ -11,8 +11,8 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
     * [Using binaries](#Using-binaries)
     * [Using source code](#Using-source-code)
   * [Setting up the ESP](#Setting-up-the-ESP)
-* [Known issues](#Known-issues)
 * [What the tracker displays](#What-the-tracker-displays)
+* [Known issues](#Known-issues)
 
 
 ## Overview
@@ -225,7 +225,7 @@ While the tracker is being updated, the screen is permanently on and remains unc
 
 After the update, the display shows the result and switches back to the previous display after a few seconds. One of the following results are possible.
 
-<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
+<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
 
  
 
