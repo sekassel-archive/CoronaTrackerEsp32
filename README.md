@@ -153,6 +153,52 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 2. The ESP will now start initialization and afterwards simulating the CWA-App.
 
+
+
+## What the tracker displays
+
+When you start the device you will see the following message to configure your WiFi.
+
+<img src="doc\images\DISPLAY_Wifi_message.jpeg" width=20% height=20%/>
+
+Once the WiFi configuration was successful the display prints another message.
+
+<img src="doc\images\DISPLAY_Wifi-Config_success.jpeg" width=20% height=20%/>
+
+If the WiFi configuration failed the device displays a different message and starts from the beginning. The tracker also restarts after a few minutes if the WiFi was not configured.
+
+<img src="doc\images\DISPLAY_Wifi-Config_failed.jpeg" width=20% height=20%/>
+
+
+
+<img src="doc\images\DISPLAY_Before_first_scan.jpeg" width=20% height=20%/>
+
+<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_CWA_Update.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Scan.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Sleep.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/> 
+
+<img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/>  
+
+ 
+
+ 
+
+
+
 ## Known issues
 
 - [After initial configuration, WiFi credentials can not be changed without re-flashing the device.](https://github.com/sekassel/CoronaTrackerEsp32/issues/21)
