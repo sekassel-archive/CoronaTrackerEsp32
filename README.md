@@ -11,7 +11,7 @@ An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the
     * [Using binaries](#Using-binaries)
     * [Using source code](#Using-source-code)
   * [Setting up the ESP](#Setting-up-the-ESP)
-* [What the tracker displays](#What-the-tracker-displays)
+* [Using the tracker](#Using-the-tracker)
 * [Known issues](#Known-issues)
 
 
@@ -149,33 +149,39 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 1. After a successful flash the ESP will start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
-   <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% />
+   On your phone (or desktop):
 
-2. The ESP will now start initialization and afterwards simulating the CWA-App.
+   <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% /> 
+
+   
+
+   On the device:
+
+   <img src="doc\images\DISPLAY_Wifi_message.jpeg" width=20% height=20%/>
+
+   
+
+   If the WiFi configuration was successful the display says:
+
+   <img src="doc\images\DISPLAY_Wifi-Config_success.jpeg" width=20% height=20%/>
+
+   
+
+   Otherwise it says:
+
+   <img src="doc\images\DISPLAY_Wifi-Config_failed.jpeg" width=20% height=20%/>
+
+   If the WiFi configuration failed the device starts from the beginning. The tracker also restarts and prints "Wifi-Config:  failed!" after a few minutes if the WiFi was not configured.
+
+   
+
+2. After the WiFi configuration is done the device needs a few seconds to initialize and afterwards it starts simulating the CWA-App.
 
 
 
-## What the tracker displays
+## Using the tracker
 
-When you start the device you will see the following message to configure your WiFi.
-
-<img src="doc\images\DISPLAY_Wifi_message.jpeg" width=20% height=20%/>
-
-
-
-Once the WiFi configuration was successful the display prints another message.
-
-<img src="doc\images\DISPLAY_Wifi-Config_success.jpeg" width=20% height=20%/>
-
-
-
-If the WiFi configuration failed the device displays a different message and starts from the beginning. The tracker also restarts after a few minutes if the WiFi was not configured.
-
-<img src="doc\images\DISPLAY_Wifi-Config_failed.jpeg" width=20% height=20%/>
-
-
-
-After the WiFi configuration is done the device needs a few seconds to initialize. Afterwards the "Boot" button can be pressed to activate the display and pressed again to deactivate the display. Most of the time the screen shows something like this.
+You can press the "Boot" button to activate the display and press it again to deactivate the display. Most of the time the screen shows something like this.
 
 <img src="doc\images\DISPLAY_Before_first_scan.jpeg" width=20% height=20%/>
 
@@ -183,31 +189,35 @@ After the WiFi configuration is done the device needs a few seconds to initializ
 
 The **time** is shown as marked.
 
-<img src="doc\images\DISPLAY_Before_first_scan_markiert1.jpeg" width=20% height=20%/>
+<img src="doc\images\DISPLAY_Before_first_scan_marked1.jpeg" width=20% height=20%/>
 
 
 
 The **action** is shown in the second line as marked.
 
-<img src="doc\images\DISPLAY_Before_first_scan_markiert2.jpeg" width=20% height=20%/>
+<img src="doc\images\DISPLAY_Before_first_scan_marked2.jpeg" width=20% height=20%/>
 
 
 
 Possible other **actions** are:
 
-<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
+<img src="doc\images\DISPLAY_Advertising.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
+
+* Advertise: The tracker announces that it is present.
+* Scan: The tracker searches for present devices.
+* CWA update: The tracker receives an update from the server.
 
 
 
 In the third line you can see how many devices the tracker has seen during the last scan. Before the first scan there is a little dash instead of a number.
 
-<img src="doc\images\DISPLAY_Before_first_scan_markiert3.jpeg" width=20% height=20%/>
+<img src="doc\images\DISPLAY_Before_first_scan_marked3.jpeg" width=20% height=20%/>
 
 
 
 In the last line you can see your **exposure status**. The status tells you if a contact with a registered person was detected.
 
-<img src="doc\images\DISPLAY_Before_first_scan_markiert4.jpeg" width=20% height=20%/>
+<img src="doc\images\DISPLAY_Before_first_scan_marked4.jpeg" width=20% height=20%/>
 
 
 
