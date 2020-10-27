@@ -195,7 +195,7 @@ The **action** is shown in the second line as marked.
 
 Possible other **actions** are:
 
-<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/><img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
+<img src="doc\images\DISPLAY_Advertise.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/> 
 
 
 
@@ -213,7 +213,7 @@ In the last line you can see your **exposure status**. The status tells you if a
 
 Possible other **exposure statuses** are:
 
-<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/><img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/>
+<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/>
 
 
 
