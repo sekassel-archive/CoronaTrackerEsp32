@@ -2,6 +2,19 @@
 
 An alternative for the [Corona-Warn-App](https://www.coronawarn.app/de/) for the ESP32. 
 
+## Table of contents
+
+* [Overview](#Overview)
+* [Hardware](#Hardware)
+* [Building your own tracker](#Building-your-own-tracker)
+  * [Flashing the ESP32](#Flashing-the-ESP32)
+    * [Using binaries](#Using-binaries)
+    * [Using source code](#Using-source-code)
+  * [Setting up the ESP](#Setting-up-the-ESP)
+* [Using the tracker](#Using-the-tracker)
+* [Known issues](#Known-issues)
+
+
 ## Overview
 
 Goal of the project is to create a do it yourself coronatracker and replace the CWA-App on your phone with this device. Advantages of using it is its cheapness and availability, as well as not having to use the app on your phone.
@@ -97,7 +110,7 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 11. You can now [setup](#setting-up-the-esp) your ESP.
 
-### Using source code
+#### Using source code
 
 1. Download and install [Visual Studio Code](https://code.visualstudio.com/). 
 
@@ -136,11 +149,97 @@ You can either flash the ESP with our precompiled [binaries](#using-binaries) or
 
 1. After a successful flash the ESP will start an access point called `Coronatracker`to set up WiFi. Connect to the AP and open `192.168.4.1`. (Depending on the device you might get a notification that there is no connection to the internet) Enter your WiFi credentials and click safe.
 
-   <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% />
+   On your phone (or desktop):
 
-2. The ESP will now start initialization and afterwards simulating the CWA-App.
+   <img src="doc\images\WiFI_1.png" width=25% height=25% /><img src="doc\images\WiFi_2.png" width=25% height=25% /> 
 
-## Known Issues
+   
+
+   On the device:
+
+   <img src="doc\images\DISPLAY_Wifi_message.jpeg" width=20% height=20%/>
+
+   
+
+   If the WiFi configuration was successful the display says:
+
+   <img src="doc\images\DISPLAY_Wifi-Config_success.jpeg" width=20% height=20%/>
+
+   
+
+   Otherwise it says:
+
+   <img src="doc\images\DISPLAY_Wifi-Config_failed.jpeg" width=20% height=20%/>
+
+   If the WiFi configuration failed the device starts from the beginning. The tracker also restarts and prints "Wifi-Config:  failed!" after a few minutes if the WiFi was not configured.
+
+   
+
+2. After the WiFi configuration is done the device needs a few seconds to initialize and afterwards it starts simulating the CWA-App.
+
+
+
+## Using the tracker
+
+You can press the "Boot" button to activate the display and press it again to deactivate the display. Most of the time the screen shows something like this.
+
+<img src="doc\images\DISPLAY_Before_first_scan.jpeg" width=20% height=20%/>
+
+
+
+The **time** is shown as marked.
+
+<img src="doc\images\DISPLAY_Before_first_scan_marked1.jpeg" width=20% height=20%/>
+
+
+
+The **action** is shown in the second line as marked.
+
+<img src="doc\images\DISPLAY_Before_first_scan_marked2.jpeg" width=20% height=20%/>
+
+
+
+Possible other **actions** are:
+
+<img src="doc\images\xACTION_Advertise.png" width=21% height=21%/> <img src="doc\images\DISPLAY_Scan.jpeg" width=21% height=21%/> <img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/>
+
+* Advertise: The tracker announces that it is present.
+* Scan: The tracker searches for present devices.
+* CWA update: The tracker receives an update from the server.
+
+
+
+In the third line you can see how many devices the tracker has seen during the last scan. Before the first scan there is a little dash instead of a number.
+
+<img src="doc\images\DISPLAY_Before_first_scan_marked3.jpeg" width=20% height=20%/>
+
+
+
+In the last line you can see your **exposure status**. The status tells you if a contact with a registered person was detected.
+
+<img src="doc\images\DISPLAY_Before_first_scan_marked4.jpeg" width=20% height=20%/>
+
+
+
+Possible other **exposure statuses** are:
+
+<img src="doc\images\DISPLAY_Exposures_found.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_No_exposures.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Update_failed1.jpeg" width=20% height=20%/>
+
+
+
+While the tracker is being updated, the screen is permanently on and remains unchanged until the end of the update.
+
+<img src="doc\images\DISPLAY_CWA_Update.jpeg" width=21% height=21%/>
+
+
+
+After the update, the display shows the result and switches back to the previous display after a few seconds. One of the following results are possible.
+
+<img src="doc\images\DISPLAY_Exposure_detected.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_Update_failed2.jpeg" width=20% height=20%/> <img src="doc\images\DISPLAY_No_exposure_detected.jpeg" width=20% height=20%/> 
+
+ 
+
+## Known issues
 
 - [After initial configuration, WiFi credentials can not be changed without re-flashing the device.](https://github.com/sekassel/CoronaTrackerEsp32/issues/21)
 - [WiFi credentials will be lost if the device looses power.](https://github.com/sekassel/CoronaTrackerEsp32/issues/22)
