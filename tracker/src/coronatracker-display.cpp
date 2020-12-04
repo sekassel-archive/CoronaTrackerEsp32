@@ -1,11 +1,11 @@
 #include "coronatracker-display.h"
 #include "SSD1306Wire.h"
 #include "coronatracker-display-font.h"
-#include "config.h"
+
 
 #if defined TWATCH2020LILYGO
 
-
+#include "LilyGoWatch.h"
 
 
 #define DISPLAY_ADRESS 0x3c
@@ -16,7 +16,7 @@ SSD1306Wire display(DISPLAY_ADRESS, DISPLAY_SDA, DISPLAY_SCL);
 
 void initDisplay()
 {
-    /*
+    
     TTGOClass *ttgo;
     Serial.println("TTGO Watch flash works!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!.");
      ttgo = TTGOClass::getWatch();
@@ -28,7 +28,7 @@ void initDisplay()
     
     ttgo->tft->fillCircle(120, 120, 118, TFT_WHITE);
     ttgo->tft->fillCircle(120, 120, 110, TFT_BLACK);
-*/
+
 
 
     if (!display.init())
