@@ -1,7 +1,10 @@
 #include <Arduino.h>
 #include <Ticker.h>
 
-#include "coronatracker-display.h"
+#ifdef ESP32DEVOTA_COMMON
+#include "coronatracker-display-ssd1306wire.h"
+#endif
+
 #include "coronatracker-ble.h"
 #include "coronatracker-spiffs.h"
 
