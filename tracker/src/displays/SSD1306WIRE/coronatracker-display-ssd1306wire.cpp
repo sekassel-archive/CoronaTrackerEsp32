@@ -1,3 +1,5 @@
+#ifdef ESP32DEVOTA_COMMON
+
 #include "coronatracker-display-ssd1306wire.h"
 #include "SSD1306Wire.h"
 #include "coronatracker-display-font.h"
@@ -162,3 +164,5 @@ String weekDayToString(int weekDay)
         break;
     }
 }
+
+#endif

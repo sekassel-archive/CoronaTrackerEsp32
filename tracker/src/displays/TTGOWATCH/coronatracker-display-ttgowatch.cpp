@@ -1,3 +1,4 @@
+#ifdef LILYGO_WATCH_2020
 #include "coronatracker-display-ttgowatch.h"
 #include "LilyGoWatch.h"
 
@@ -154,3 +155,5 @@ void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
         ttgo->tft->drawString("No update yet", 64, 0, 2);
     }
 }
+
+#endif
