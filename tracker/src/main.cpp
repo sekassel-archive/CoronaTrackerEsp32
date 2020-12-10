@@ -2,11 +2,11 @@
 
 #ifdef LILYGO_WATCH_2020
 #include <LilyGoWatch.h>
-#include "displays/TTGOWATCH/coronatracker-display-ttgowatch.h"
+#include "coronatracker-display-ttgowatch.h"
 #endif
 
 #ifdef ESP32DEVOTA_COMMON
-#include "displays/SSD1306WIRE/coronatracker-display-ssd1306wire.h"
+#include "coronatracker-display-ssd1306wire.h"
 #endif
 
 #include <Ticker.h>

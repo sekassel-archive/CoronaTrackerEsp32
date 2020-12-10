@@ -1,3 +1,5 @@
+#ifdef ESP32DEVOTA_COMMON
+
 #include <Arduino.h>
 
 #include "coronatracker-wifi.h"
@@ -15,3 +17,5 @@ void wifiConfiguredOnDisplay(bool configured);
 void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices);
 String weekDayToString(int weekDay);
 void afterInfectionRequestOnDisplay(exposure_status exposureStatus);
+
+#endif
