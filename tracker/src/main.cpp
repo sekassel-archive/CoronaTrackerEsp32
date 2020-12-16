@@ -1,15 +1,15 @@
 #include <Arduino.h>
 
-#ifdef LILYGO_WATCH_2020
+#ifdef LILYGO_WATCH_2020_V1
 #include <LilyGoWatch.h>
 #include "coronatracker-display-ttgowatch.h"
 #endif
 
+#include <Ticker.h>
+
 #ifdef ESP32DEVOTA_COMMON
 #include "coronatracker-display-ssd1306wire.h"
 #endif
-
-#include <Ticker.h>
 
 // #include "coronatracker-display.h"
 #include "coronatracker-ble.h"

@@ -1,4 +1,4 @@
-#ifdef LILYGO_WATCH_2020
+#ifdef LILYGO_WATCH_2020_V1
 
 #include <Arduino.h>
 #include "coronatracker-wifi.h"
