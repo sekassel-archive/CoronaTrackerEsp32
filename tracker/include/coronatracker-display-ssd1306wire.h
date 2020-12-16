@@ -1,7 +1,6 @@
 #ifdef ESP32DEVOTA_COMMON
 
 #include <Arduino.h>
-
 #include "coronatracker-wifi.h"
 
 #define ACTION_NOTHING 0

@@ -1,4 +1,5 @@
 #ifdef LILYGO_WATCH_2020_V1
+
 #include "coronatracker-display-ttgowatch.h"
 #include "LilyGoWatch.h"
 

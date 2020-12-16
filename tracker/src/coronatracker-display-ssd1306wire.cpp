@@ -1,8 +1,9 @@
 #ifdef ESP32DEVOTA_COMMON
 
+#include "coronatracker-display-font.h"
 #include "coronatracker-display-ssd1306wire.h"
 #include "SSD1306Wire.h"
-#include "coronatracker-display-font.h"
+
 
 #define DISPLAY_ADRESS 0x3c
 #define DISPLAY_SDA 5
