@@ -1,7 +1,7 @@
 #include <Arduino.h>
-#include <WifiManager.h>
+#include <WiFiManager.h>
 #include <HTTPClient.h>
-#include <ArduinoJSON.h>
+#include <ArduinoJson.h>
 
 #include "coronatracker-crypto.h"
 #include "coronatracker-spiffs.h"
