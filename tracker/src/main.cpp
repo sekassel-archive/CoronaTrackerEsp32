@@ -9,6 +9,10 @@
 #include "coronatracker-display-ssd1306wire.h"
 #endif
 
+#ifdef LILYGO_WRISTBAND
+#include "coronatracker-display-wristband.h"
+#endif
+
 #include <Ticker.h>
 #include "coronatracker-ble.h"
 #include "coronatracker-spiffs.h"
