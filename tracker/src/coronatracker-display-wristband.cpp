@@ -4,6 +4,8 @@
 
 TFT_eSPI tft = TFT_eSPI();
 
+// TODO:    change X & Y coordinates for display purposes
+
 void initDisplay()
 {
   tft.init();
