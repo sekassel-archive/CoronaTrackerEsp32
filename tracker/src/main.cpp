@@ -18,7 +18,9 @@
 #include "coronatracker-spiffs.h"
 
 #define BUTTON_PIN 0
+#ifndef LED_PIN
 #define LED_PIN 16
+#endif
 
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
