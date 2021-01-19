@@ -63,6 +63,7 @@ bool initBLE(bool initScan, bool initAdvertisment)
 
         esp_power_level_t power = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
         //Starts at 0 with -12dbm, each step adds 3 dbm
+        //its about 6m irl
         signed char tpl = -12 + power * 3;
 
         signed char version = 1; //00000001, Stands for 01:00
