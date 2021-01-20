@@ -47,6 +47,7 @@ void wifiConfiguredOnDisplay(bool configured)
 
 void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices)
 {
+    initDisplay();
     tft.fillScreen(TFT_BLACK);
     tft.setTextDatum(L_BASELINE);
     tft.setTextColor(TFT_WHITE);
@@ -61,7 +62,7 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
     String minute = (timeinfo.tm_min < 10 ? "0" : "") + (String)timeinfo.tm_min;
     //Mon, 24.07.2023 17:34
     tft.drawString(wDay + ", " + mDay + "." + month + "." + year, 2, 10, 2);
-    tft.drawString(" " + hour + ":" + minute, 2, 20, 2);
+    tft.drawString(" " + hour + ":" + minute, 2, 25, 2);
     if (action == ACTION_NOTHING)
     {
         tft.drawString("Initialize", 2, 30, 1);
@@ -102,10 +103,12 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
     }
 
     tft.drawString(status, 2, 50, 1);
+    delay(1500);
 }
 
 void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
 {
+    initDisplay();
     tft.fillScreen(TFT_BLACK);
     tft.setTextDatum(L_BASELINE);
     tft.setTextColor(TFT_WHITE);
@@ -127,6 +130,7 @@ void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
     {
         tft.drawString("No update yet", 2, 10, 2);
     }
+    delay(1500);
 }
 
 String weekDayToString(int weekDay)
