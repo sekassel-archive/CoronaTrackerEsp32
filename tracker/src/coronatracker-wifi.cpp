@@ -94,6 +94,8 @@ exposure_status checkForInfections()
                 return EXPOSURE_UPDATE_FAILED;
             }
 
+            // this action can take up to 32500sec == 9h for 32500 Entrys
+            // 1 Entry is about 1 sec
             for (auto it = rsinMap.begin(); it != rsinMap.end(); it++)
             {
                 uint32_t rsin = it->first;
