@@ -191,6 +191,7 @@ void setup()
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
 
+    #ifndef LILYGO_WATCH_2020_V1
     buttonState = digitalRead(BUTTON_PIN);
     if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
     { //LOW means clicked
@@ -206,6 +207,13 @@ void setup()
             isDisplayActive = false;
         }
     }
+    #else
+    if (wifiInitialized) {
+        Serial.println("Update display every time for ttgo watch");
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+        isDisplayActive = true;
+    }
+    #endif
 
     //Wifi not initialized
     if (!wifiInitialized)
