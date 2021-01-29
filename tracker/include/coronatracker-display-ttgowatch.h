@@ -1,5 +1,6 @@
-#include <Arduino.h>
+#ifdef LILYGO_WATCH_2020_V1
 
+#include <Arduino.h>
 #include "coronatracker-wifi.h"
 
 #define ACTION_NOTHING 0
@@ -15,3 +16,5 @@ void wifiConfiguredOnDisplay(bool configured);
 void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices);
 String weekDayToString(int weekDay);
 void afterInfectionRequestOnDisplay(exposure_status exposureStatus);
+
+#endif

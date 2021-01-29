@@ -94,6 +94,8 @@ exposure_status checkForInfections()
                 return EXPOSURE_UPDATE_FAILED;
             }
 
+            // this action can take up to 32500sec == 9h for 32500 Entrys
+            // 1 Entry is about 1 sec
             for (auto it = rsinMap.begin(); it != rsinMap.end(); it++)
             {
                 uint32_t rsin = it->first;
@@ -178,7 +180,17 @@ bool configureWifi()
     WiFiManager wifiManager;
     wifiManager.setConfigPortalTimeout(300); //5 Minutes
     wifiManager.setConnectTimeout(30);       //30 Seconds
-    bool result = wifiManager.startConfigPortal("Coronatracker");
+
+    int buttonState = digitalRead(0); // Button Pin checked if Pressed == 0
+    bool result;
+
+    // connects to wifi automatically but if boot pressed while startup
+    // it will open hotspot for configuration
+    if(buttonState != 0) {
+        result = wifiManager.autoConnect("Coronatracker",NULL);
+    } else {
+        result = wifiManager.startConfigPortal("Coronatracker",NULL);
+    }
 
     if (!result)
     {

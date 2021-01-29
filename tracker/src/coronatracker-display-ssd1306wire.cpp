@@ -1,6 +1,9 @@
-#include "coronatracker-display.h"
-#include "SSD1306Wire.h"
+#ifdef ESP32DEVOTA_COMMON
+
 #include "coronatracker-display-font.h"
+#include "coronatracker-display-ssd1306wire.h"
+#include "SSD1306Wire.h"
+
 
 #define DISPLAY_ADRESS 0x3c
 #define DISPLAY_SDA 5
@@ -105,6 +108,33 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
     display.display();
 }
 
+void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
+{
+    initDisplay();
+    String ret = "";
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    if (exposureStatus == EXPOSURE_NO_DETECT)
+    {
+        display.drawString(64, 0, "No exposure");
+        display.drawString(64, 16, "detected");
+    }
+    else if (exposureStatus == EXPOSURE_DETECT)
+    {
+        display.drawString(64, 0, "Exposure");
+        display.drawString(64, 16, "detected!");
+    }
+    else if (exposureStatus == EXPOSURE_UPDATE_FAILED)
+    {
+        display.drawString(64, 0, "Update failed");
+    }
+    else
+    {
+        display.drawString(64, 0, "No update yet");
+    }
+
+    display.display();
+}
+
 String weekDayToString(int weekDay)
 {
     switch (weekDay)
@@ -136,29 +166,4 @@ String weekDayToString(int weekDay)
     }
 }
 
-void afterInfectionRequestOnDisplay(exposure_status exposureStatus)
-{
-    initDisplay();
-    String ret = "";
-    display.setTextAlignment(TEXT_ALIGN_CENTER);
-    if (exposureStatus == EXPOSURE_NO_DETECT)
-    {
-        display.drawString(64, 0, "No exposure");
-        display.drawString(64, 16, "detected");
-    }
-    else if (exposureStatus == EXPOSURE_DETECT)
-    {
-        display.drawString(64, 0, "Exposure");
-        display.drawString(64, 16, "detected!");
-    }
-    else if (exposureStatus == EXPOSURE_UPDATE_FAILED)
-    {
-        display.drawString(64, 0, "Update failed");
-    }
-    else
-    {
-        display.drawString(64, 0, "No update yet");
-    }
-
-    display.display();
-}
+#endif

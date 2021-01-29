@@ -1,12 +1,26 @@
 #include <Arduino.h>
-#include <Ticker.h>
 
-#include "coronatracker-display.h"
+#ifdef LILYGO_WATCH_2020_V1
+#include "LilyGoWatch.h"
+#include "coronatracker-display-ttgowatch.h"
+#endif
+
+#ifdef ESP32DEVOTA_COMMON
+#include "coronatracker-display-ssd1306wire.h"
+#endif
+
+#ifdef LILYGO_WRISTBAND
+#include "coronatracker-display-wristband.h"
+#endif
+
+#include <Ticker.h>
 #include "coronatracker-ble.h"
 #include "coronatracker-spiffs.h"
 
 #define BUTTON_PIN 0
+#ifndef LED_PIN
 #define LED_PIN 16
+#endif
 
 #define ACTION_NOTHING 0
 #define ACTION_ADVERTISE 1
@@ -177,6 +191,7 @@ void setup()
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
 
+    #ifdef ESP32DEVOTA_COMMON
     buttonState = digitalRead(BUTTON_PIN);
     if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
     { //LOW means clicked
@@ -192,6 +207,15 @@ void setup()
             isDisplayActive = false;
         }
     }
+    #endif
+
+    #if defined(LILYGO_WATCH_2020_V1) || defined(LILYGO_WRISTBAND)
+    if (wifiInitialized) {
+        Serial.println("Update display every time for lilygo devices");
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+        isDisplayActive = true;
+    }
+    #endif
 
     //Wifi not initialized
     if (!wifiInitialized)
