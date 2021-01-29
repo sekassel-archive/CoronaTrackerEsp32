@@ -14,10 +14,15 @@ function App() {
 
   async function click2() {
     // writeToStream(outputStream.getWriter(), '\x01');
-    
 
-    writeToStream(writer, '\xc0', '\x00', '\x08','\x07','\x07','\x12','\x20', '\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55', '\xc0'); //, 'echo(false);', 'console.log("yes");'
+    writeToStream(writer, 0xc0, 0x00, 0x08, 0x07, 0x07, 0x12, 0x20, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xc0);
+    //writeToStream(writer, '\xc0', '\x00', '\x08','\x07','\x07','\x12','\x20', '\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55','\x55', '\xc0'); //, 'echo(false);', 'console.log("yes");'
     //b'\x07\x07\x12\x20' + 32 * b'\x55'
+  }
+
+  async function readreg(){
+    //c0000a0400000000000ca00160c0
+    writeToStream(writer, 0xc0, 0x00, 0x0a, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0c, 0xa0, 0x01, 0x60, 0xc0);
   }
 
 
@@ -27,18 +32,6 @@ function App() {
     await port.open({ baudRate: 115200 });
     //9600
     //460800
-
-    await port.setSignals({ dataTerminalReady: false });
-    await port.setSignals({ requestToSend: true });
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await port.setSignals({ dataTerminalReady: true });
-    await port.setSignals({ requestToSend: false });
-
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    await port.setSignals({ dataTerminalReady: false });
-
-    await new Promise(resolve => setTimeout(resolve, 3200));
 
     const decoder = new TextDecoderStream();
     const inputDone = port.readable.pipeTo(decoder.writable);
@@ -59,6 +52,28 @@ function App() {
     //writeToStream(outputStream.getWriter(), '\x01'); //, 'echo(false);', 'console.log("yes");'
 
 
+  }
+
+  async function enterBootloader(){
+    
+    await port.setSignals({ dataTerminalReady: false });
+    await port.setSignals({ requestToSend: true });
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await port.setSignals({ dataTerminalReady: true });
+    await port.setSignals({ requestToSend: false });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await port.setSignals({ dataTerminalReady: false });
+
+    await new Promise(resolve => setTimeout(resolve, 3200));
+  }
+
+  async function reset(){
+    
+    await port.setSignals({ requestToSend: true });
+    await new Promise(resolve => setTimeout(resolve, 100));
+    await port.setSignals({ requestToSend: false });
   }
 
   function writeToStream(writer, ...lines) {
@@ -105,7 +120,10 @@ function App() {
           Serial is {serialActive}
         </p>
         <button onClick={click}>Connect</button>
-        <button onClick={click2}>enter bootloader</button>
+        <button onClick={enterBootloader}>enter bootloader</button>
+        <button onClick={click2}>sync</button>
+        <button onClick={reset}>reset</button>
+        <button onClick={readreg}>readreg</button>
       </header>
     </div>
   );
