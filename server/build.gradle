@@ -24,6 +24,7 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.12.2'
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
+    implementation "com.vaadin:vaadin-core:14.+"
 }
 
 jar {
