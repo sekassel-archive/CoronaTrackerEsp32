@@ -30,9 +30,11 @@ import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.vaadin.artur.helpers.LaunchUtil;
 
 @SpringBootApplication
-public class Main {
+public class Main extends SpringBootServletInitializer {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
@@ -193,6 +195,8 @@ public class Main {
         });
 */
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
+
+        LaunchUtil.launchBrowserInDevelopmentMode(SpringApplication.run(Main.class, args));
     }
 
     private static String cwaStatus = "No update yet";

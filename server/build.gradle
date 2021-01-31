@@ -6,13 +6,15 @@ buildscript {
         maven { url 'https://maven.aliyun.com/repository/spring/' }
         maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
         maven { url 'https://maven.aliyun.com/repository/spring-plugin/' }
-
+        maven { url "https://plugins.gradle.org/m2/" }
         mavenCentral()
     }
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:2.3.2.RELEASE")
+        classpath "com.vaadin:vaadin-gradle-plugin:0.17.0.1"
     }
 }
+
 
 plugins {
     id 'java'
@@ -21,7 +23,11 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'org.springframework.boot' version '2.3.2.RELEASE'
     id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+
+    id "com.vaadin" version "0.17.0.1"
 }
+
+apply plugin: "com.vaadin"
 
 group 'de.uniks.projektcoronatracker'
 version '1.0-SNAPSHOT'
@@ -35,8 +41,17 @@ repositories {
     maven { url 'https://maven.aliyun.com/repository/spring/' }
     maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
     maven { url 'https://maven.aliyun.com/repository/spring-plugin/' }
+    maven { url "https://oss.sonatype.org/content/repositories/vaadin-snapshots" }
 
     mavenCentral()
+    maven { url "https://maven.vaadin.com/vaadin-prereleases" }
+    maven { url "http://maven.vaadin.com/vaadin-addons" }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom 'com.vaadin:vaadin-bom:8.0.0.beta1'
+    }
 }
 
 dependencies {
@@ -51,12 +66,15 @@ dependencies {
     compile 'com.google.protobuf:protobuf-java:3.12.2'
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
-    implementation "com.vaadin:vaadin-core:14.+"
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Spring Boot
+    compile 'org.springframework.boot:spring-boot-starter-jersey'
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile 'org.springframework.restdocs:spring-restdocs-mockmvc'
     implementation 'org.springframework.data:spring-data-mongodb:1.7.2.RELEASE'
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
-        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
-    }
+
+    compile 'org.vaadin.artur:a-vaadin-helper:1.5.0'
 }
 
 bootJar {
