@@ -1,6 +1,8 @@
 plugins {
     id 'java'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
+    //id 'org.springframework.boot' version '2.4.2'
+    //id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 }
 
 group 'de.uniks.projektcoronatracker'
@@ -25,6 +27,8 @@ dependencies {
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
     implementation "com.vaadin:vaadin-core:14.+"
+    //implementation 'org.springframework.boot:spring-boot-starter-web'
+    //testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 jar {
