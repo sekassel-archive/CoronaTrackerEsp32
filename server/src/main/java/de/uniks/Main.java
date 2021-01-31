@@ -28,7 +28,10 @@ import java.util.concurrent.TimeUnit;
 import static java.net.HttpURLConnection.*;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 

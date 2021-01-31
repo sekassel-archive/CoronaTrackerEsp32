@@ -1,8 +1,26 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        maven { url 'https://maven.aliyun.com/repository/google/' }
+        maven { url 'https://maven.aliyun.com/repository/public/' }
+        maven { url 'https://maven.aliyun.com/repository/spring/' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
+        maven { url 'https://maven.aliyun.com/repository/spring-plugin/' }
+
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:2.3.2.RELEASE")
+    }
+}
+
 plugins {
     id 'java'
+    id 'idea'
+    id 'eclipse'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
-    //id 'org.springframework.boot' version '2.4.2'
-    //id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '2.3.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
 
 group 'de.uniks.projektcoronatracker'
@@ -11,6 +29,13 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/google/' }
+    maven { url 'https://maven.aliyun.com/repository/public/' }
+    maven { url 'https://maven.aliyun.com/repository/spring/' }
+    maven { url 'https://maven.aliyun.com/repository/gradle-plugin/' }
+    maven { url 'https://maven.aliyun.com/repository/spring-plugin/' }
+
     mavenCentral()
 }
 
@@ -27,8 +52,19 @@ dependencies {
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
     implementation "com.vaadin:vaadin-core:14.+"
-    //implementation 'org.springframework.boot:spring-boot-starter-web'
-    //testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.data:spring-data-mongodb:1.7.2.RELEASE'
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+bootJar {
+    mainClassName = 'de.uniks.Main'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 jar {
