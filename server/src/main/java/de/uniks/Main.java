@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,13 +29,8 @@ import java.util.concurrent.TimeUnit;
 import static java.net.HttpURLConnection.*;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-//import org.vaadin.artur.helpers.LaunchUtil;
 
-@SpringBootApplication
-public class Main extends SpringBootServletInitializer {
+public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
@@ -196,8 +192,8 @@ public class Main extends SpringBootServletInitializer {
 */
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
 
-        //LaunchUtil.launchBrowserInDevelopmentMode(SpringApplication.run(Main.class, args));
-        SpringApplication.run(Main.class, args);
+        ExecutorService springExecutor = Executors.newSingleThreadExecutor();
+        springExecutor.submit(SpringBoot::startSpring);
     }
 
     private static String cwaStatus = "No update yet";

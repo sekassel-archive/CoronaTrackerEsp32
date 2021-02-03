@@ -3,7 +3,6 @@ plugins {
     id 'org.springframework.boot' version '2.4.2'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'com.vaadin' version '0.14.3.7'
-    id 'org.vaadin' version '0.14.3.7'
     id 'java'
     id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
@@ -37,10 +36,20 @@ dependencies {
     // Vaadin
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     implementation 'com.vaadin:vaadin-avatar-flow:1.0.1'
-    compile 'org.vaadin.artur:a-vaadin-helper:1.5.0'
+    //implementation 'org.vaadin.artur:a-vaadin-helper:1.5.0'
+
     // Spring Boot
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
+
+configurations {
+    all {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
+        exclude group: 'ch.qos.logback', module: 'logback-classic'
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-to-slf4j'
+    }
+}
+
 
 dependencyManagement {
     imports {
