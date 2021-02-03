@@ -87,7 +87,9 @@ fabric.properties
 
 # Databases
 *.db
+*.db-journal
 
+# Spring node_modules used by Vaadin
 /node_modules
 node_modules/
 **/node_modules
