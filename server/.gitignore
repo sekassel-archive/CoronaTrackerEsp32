@@ -25,6 +25,7 @@
 **/.idea/**/libraries
 **/.gradle
 **/build/
+/node_modules
 node_modules/
 !src/**/build/
 
@@ -88,5 +89,3 @@ fabric.properties
 
 # Databases
 *.db
-
-node_modules/
