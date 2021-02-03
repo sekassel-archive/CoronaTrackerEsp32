@@ -25,8 +25,6 @@
 **/.idea/**/libraries
 **/.gradle
 **/build/
-/node_modules
-node_modules/
 !src/**/build/
 
 # Ignore Gradle GUI config
