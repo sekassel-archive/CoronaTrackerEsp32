@@ -8,7 +8,7 @@ function addCssBlock(block) {
  tpl.innerHTML = block;
  document.head.appendChild(tpl.content);
 }
-import $css_0 from 'Frontend/styles/views/helloworld/hello-world-view.css';
+import $css_0 from 'Frontend/styles/views/rsinoverview/rsin-overview-view.css';
 addCssBlock(`<custom-style><style>${$css_0}</style></custom-style>`);
 import $css_1 from 'Frontend/styles/views/main/main-view.css';
 addCssBlock(`<custom-style><style>${$css_1}</style></custom-style>`);

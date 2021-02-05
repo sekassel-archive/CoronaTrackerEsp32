@@ -1,7 +1,7 @@
 package de.uniks.views.main;
 
 import de.uniks.views.about.AboutView;
-import de.uniks.views.helloworld.HelloWorldView;
+import de.uniks.views.rsinoverview.RsinOverviewView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -68,8 +68,9 @@ public class MainView extends AppLayout {
         HorizontalLayout logoLayout = new HorizontalLayout();
         logoLayout.setId("logo");
         logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        logoLayout.add(new Image("images/logo.png", "My Project logo"));
-        logoLayout.add(new H1("My Project"));
+        // TODO: add right path to picture
+        //logoLayout.add(new Image("META-INF.resources/images/logo.png", "My Project logo"));
+        logoLayout.add(new H1("Corona Tracker"));
         layout.add(logoLayout, menu);
         return layout;
     }
@@ -84,7 +85,7 @@ public class MainView extends AppLayout {
     }
 
     private Component[] createMenuItems() {
-        return new Tab[]{createTab("Hello World", HelloWorldView.class), createTab("About", AboutView.class)};
+        return new Tab[]{createTab("RSIN Overview", RsinOverviewView.class), createTab("About", AboutView.class)};
     }
 
     private static Tab createTab(String text, Class<? extends Component> navigationTarget) {
