@@ -1,8 +1,11 @@
 import { TextDecoderStream, TextEncoderStream } from "@stardazed/streams-text-encoding";
+import {ReadableStream, TransformStream} from "@stardazed/streams";
+//import {Transform} from 'stream';
 import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+//const {Transform} = require('stream');
 function App() {
   //var outputStream;
   var writer = null;
@@ -33,15 +36,46 @@ function App() {
     //9600
     //460800
 
+    /*const transRead = new ReadableStream({
+      start(controller){
+        this.chunks = [];
+        this.writer = 
+        var {value, done} = await reader.read();
+        if (done){
+          reader.releaseLock();
+        } else {
+
+        }
+      }
+    });*/
+
+    const transform = {
+      start(controller){this.arr = new Uint8Array();},
+      transform(chunk, controller) {
+
+        controller.enqueue(chunk);
+      }
+    }
+
+    const trans = new TransformStream(transform);
+
     const decoder = new TextDecoderStream();
-    const inputDone = port.readable.pipeTo(decoder.writable);
+    //const devReadable = port.readable;
+    const [stream1, stream2] = port.readable.tee();
+    //const webReadable = toWebReadableStream(stream1);
+    const inputDone = stream2.pipeThrough(trans).pipeTo(decoder.writable);
     const inputStream = decoder.readable;
+    //const inputStream = port.readable;
+
+
+    //pipe
+    //let reader = port.readable.pipeThrough(transformStream).getReader();
 
     let reader = inputStream.getReader();
     //let reader = port.readable.getReader();
 
     //write
-    const encoder = new TextEncoderStream();
+    //const encoder = new TextEncoderStream();
     //const outputDone = encoder.readable.pipeTo(port.writable);
     //const outputStream = encoder.writable;
     //writer = outputStream.getWriter();
@@ -95,7 +129,7 @@ function App() {
       try {
         const { value, done } = await reader.read();
         if (value) {
-          console.log(value + '\n');
+          console.log(value /*JSON.stringify(value, null, 2)*/ + '\n');
         }
         if (done) {
           console.log('[readLoop] DONE', done);
