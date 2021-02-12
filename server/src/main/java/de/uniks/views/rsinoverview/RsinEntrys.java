@@ -1,42 +1,59 @@
 package de.uniks.views.rsinoverview;
 
+import de.uniks.SQLite.SQLite;
+import org.json.JSONArray;
+
+import java.util.ArrayList;
+import java.util.List;
+
 public class RsinEntrys {
-    private int id;
-    private String name;
+    private int tekEntrys;
+    private String rsin;
 
     public RsinEntrys() {
     }
 
-    public RsinEntrys(int id, String name) {
+    public RsinEntrys(int tekEntrys, String rsin) {
         super();
-        this.id = id;
-        this.name = name;
+        this.tekEntrys = tekEntrys;
+        this.rsin = rsin;
     }
 
-    public int getId() {
-        return id;
+    public int getTekEntrys() {
+        return tekEntrys;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setTekEntrys(int tekEntrys) {
+        this.tekEntrys = tekEntrys;
     }
 
-    public String getName() {
-        return name;
+    public String getRsin() {
+        return rsin;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setRsin(String rsin) {
+        this.rsin = rsin;
     }
 
     public String getImage() {
-        return "https://randomuser.me/api/portraits/men/" + getId()
+        return "https://randomuser.me/api/portraits/men/" + getTekEntrys()
                 + ".jpg";
+    }
+
+    public String getTekListAsBlock(){
+        String tekList = "Empty";
+        try{
+            List<byte[]> table = SQLite.getRSINTable(Integer.parseInt(rsin));
+            tekList = new JSONArray(table).toString();
+        } catch(Exception e) {
+            tekList = "Error.";
+        }
+        return tekList;
     }
 
     @Override
     public int hashCode() {
-        return id;
+        return tekEntrys;
     }
 
     @Override
@@ -47,12 +64,12 @@ public class RsinEntrys {
             return false;
         }
         RsinEntrys other = (RsinEntrys) obj;
-        return id == other.id;
+        return tekEntrys == other.tekEntrys;
     }
 
     @Override
     public String toString() {
-        return name;
+        return rsin;
     }
 
     @Override

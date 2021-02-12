@@ -107,7 +107,8 @@ public class Main {
             return new JSONArray(tek);
         });
 
-/*        post("/infections", ((request, response) -> {
+/* */
+        post("/infections", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectionPostPayload input;
             try {
@@ -189,7 +190,7 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-*/
+/* */
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
 
         ExecutorService springExecutor = Executors.newSingleThreadExecutor();

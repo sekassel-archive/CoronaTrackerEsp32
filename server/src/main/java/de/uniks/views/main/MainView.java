@@ -68,8 +68,6 @@ public class MainView extends AppLayout {
         HorizontalLayout logoLayout = new HorizontalLayout();
         logoLayout.setId("logo");
         logoLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        // TODO: add right path to picture
-        //logoLayout.add(new Image("META-INF.resources/images/logo.png", "My Project logo"));
         logoLayout.add(new H1("Corona Tracker"));
         layout.add(logoLayout, menu);
         return layout;
