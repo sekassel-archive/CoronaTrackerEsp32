@@ -238,7 +238,7 @@ void setup()
 
             std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
 
-            //Setting up CWA Progress and getting time
+            //Setting up CWA (Corona Warn App) Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
@@ -269,6 +269,11 @@ void setup()
             if (getCurrentTek(tek, &enin))
             {
                 Serial.println("Already exists");
+                Serial.print("TEK: ");
+                for (int i=0 ; i < (sizeof(tek)/sizeof(tek[0])) ; i++) {
+                    Serial.print(tek[i]);
+                }
+                Serial.println(" ");
             }
             else
             {
@@ -277,6 +282,11 @@ void setup()
                     restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
                 }
                 Serial.println("Generated");
+                Serial.print("TEK: ");
+                for (int i=0 ; i < (sizeof(tek)/sizeof(tek[0])) ; i++) {
+                    Serial.print(tek[i]);
+                }
+                Serial.println(" ");
             }
 
             Serial.println("Disconnecting Wifi");
