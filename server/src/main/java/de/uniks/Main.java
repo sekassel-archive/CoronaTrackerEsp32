@@ -21,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -106,7 +107,8 @@ public class Main {
             return new JSONArray(tek);
         });
 
-/*        post("/infections", ((request, response) -> {
+/* */
+        post("/infections", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectionPostPayload input;
             try {
@@ -188,8 +190,11 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-*/
+/* */
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
+
+        ExecutorService springExecutor = Executors.newSingleThreadExecutor();
+        springExecutor.submit(SpringBoot::startSpring);
     }
 
     private static String cwaStatus = "No update yet";
