@@ -12,7 +12,7 @@ public class AboutView extends Div {
 
     public AboutView() {
         setId("about-view");
-        add(new Text("Content placeholder"));
+        add(new Text("see https://github.com/sekassel/CoronaTrackerEsp32"));
     }
 
 }

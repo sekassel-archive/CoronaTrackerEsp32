@@ -5,6 +5,7 @@ import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.treegrid.TreeGrid;
+import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import de.uniks.SQLite.SQLite;
 import de.uniks.views.main.MainView;
@@ -29,7 +30,7 @@ import java.util.Map;
 public class RsinOverviewView extends HorizontalLayout {
 
     private int rsinBuffer;
-    List<RsinEntrys> rsinList = new ArrayList<>();
+    private List<RsinEntrys> rsinList = new ArrayList<>();
 
     public RsinOverviewView() {
         setId("rsin-overview-view");
@@ -70,8 +71,8 @@ public class RsinOverviewView extends HorizontalLayout {
             if (tokens.length != 16) {
                 Notification.show("TEK data have to be 16 values instead of " + tokens.length + " values.");
             } else {
-                if(createRsinEntrysTEK(rsinBuffer, tokens)){
-                    // grid.getDataProvider().refreshAll();
+                if (createRsinEntrysTEK(rsinBuffer, tokens)) {
+                    grid.getDataProvider().refreshAll();
                     addRsinTekPopup.close();
                 } else {
                     Notification.show("Ups, something went wrong...");
@@ -89,14 +90,14 @@ public class RsinOverviewView extends HorizontalLayout {
 
 
         addRsinButton.setText("ADD TEK");
-        //addRsinButton.setEnabled(false);
+        addRsinButton.setEnabled(false);
         addRsinButton.setWidth("10em");
         addRsinButton.addClickListener(e -> {
             if (rsinInput.getValue().length() < 7) {
                 Notification.show("RSIN Number is to short.\nThere have to be 7 numbers,\ninstead of "
                         + rsinInput.getValue().length() + " numbers.");
-            // } else if (rsinList.stream().filter(re -> re.getRsin().equals(rsinInput.getValue())).findAny().isPresent()) {
-            //  Notification.show("RSIN already exists.");
+            } else if (rsinList.stream().filter(re -> re.getRsin().equals(rsinInput.getValue())).findAny().isPresent()) {
+                Notification.show("RSIN already exists.");
             } else {
                 rsinBuffer = Integer.parseInt(rsinInput.getValue());
                 addRsinTekPopup.open();
@@ -109,10 +110,10 @@ public class RsinOverviewView extends HorizontalLayout {
 
         // RSIN grid list, with RSIN and number of entrys (clickable column)
         getRsinEntrysList(rsinList);
-        try{
+        try {
             grid.setItems(rsinList);
-        } catch(Exception e){
-if(true);
+        } catch (Exception e) {
+            // prevent double init
         }
 
         grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
@@ -136,7 +137,7 @@ if(true);
 
     private List<RsinEntrys> getRsinEntrysList(List<RsinEntrys> colRsinEntrys) {
         // Get RSIN list as string from db
-        if(!colRsinEntrys.isEmpty()){
+        if (!colRsinEntrys.isEmpty()) {
             colRsinEntrys.clear();
         }
         try {
