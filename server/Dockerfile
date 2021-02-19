@@ -3,7 +3,7 @@ COPY --chown=gradle:gradle . /server
 WORKDIR /server
 RUN gradle shadowJar
 
-FROM openjdk:12-alpine
+FROM openjdk:8-alpine
 WORKDIR /server
 COPY --from=builder /server/build/libs .
 EXPOSE 4567 8080
