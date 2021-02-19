@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+hr {
+  border: 0;
+  width: 50%;
+  color: rgb(145, 154, 158);
+  background-color: rgb(145, 154, 158);
+  height: 2px;
+  margin: 20px;
+}
