@@ -139,6 +139,7 @@ bool initSPIFFS(bool createDataBases)
         sqlite3_close(db);
 
         createFile(SERVER_DATADASE_PATH);
+        createFile(UUID_FILE_PATH);
 
         if (sqlite3_open(SERVER_DATADASE_SQLITE_PATH, &db))
         {
@@ -276,6 +277,29 @@ bool createFile(const char *path)
     }
     Serial.println("Already exists.");
     return true;
+}
+
+const char * getUUID()
+{
+    File file = SPIFFS.open(UUID_FILE_PATH, FILE_READ);
+    if(!file){
+        Serial.println("There was an error opening the file for reading");
+        return;
+    }
+
+    std::stringstream uuid_ss;
+    const char *uuidstr;
+
+    for(int i=0 ; file.available() ; i++){
+        uuid_ss << file.read();
+    }
+    uuidstr = uuid_ss.str().c_str();
+ 
+    file.close();
+
+    Serial.print("Read uuid file: ");
+    Serial.println(uuidstr);
+    return uuidstr;
 }
 
 bool insertRPI(time_t time, signed char *data, int data_size, bool intoMain, sqlite3 *main_db)

@@ -13,7 +13,10 @@
 #define SERVER_DATADASE_PATH "/cwa.db"
 #define SERVER_DATADASE_SQLITE_PATH "/spiffs/cwa.db"
 
+#define UUID_FILE_PATH "/uuid.txt"
+
 bool createFile(const char *path);
+bool getUUID(const char *path);
 bool initSPIFFS(bool createDataBases);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);
 bool getCurrentTek(signed char *tek, int *enin);
