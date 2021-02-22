@@ -1,9 +1,9 @@
-FROM gradle:jdk11 as builder
+FROM gradle:5.6.4-jdk11 as builder
 COPY --chown=gradle:gradle . /server
 WORKDIR /server
 RUN gradle shadowJar
 
-FROM openjdk:8-alpine
+FROM openjdk:8-jdk-alpine
 WORKDIR /server
 COPY --from=builder /server/build/libs .
 EXPOSE 4567 8080
