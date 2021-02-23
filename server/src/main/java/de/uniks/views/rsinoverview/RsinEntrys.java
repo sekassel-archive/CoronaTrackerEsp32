@@ -3,7 +3,6 @@ package de.uniks.views.rsinoverview;
 import de.uniks.SQLite.SQLite;
 import org.json.JSONArray;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class RsinEntrys {

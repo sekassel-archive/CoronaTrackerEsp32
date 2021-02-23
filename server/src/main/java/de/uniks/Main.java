@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
 import de.uniks.SQLite.SQLite;
 import de.uniks.payload.InfectionPostPayload;
+import org.graalvm.compiler.replacements.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,12 +40,11 @@ import static java.net.HttpURLConnection.*;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
 
-@SpringBootApplication
-public class Main extends SpringBootServletInitializer {
+public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
-        /*
+
         get("/hello", (request, response) -> "Hello World");
 
         get("/cwa/status", (request, response) -> cwaStatus);
@@ -203,12 +203,13 @@ public class Main extends SpringBootServletInitializer {
 
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
 
-        ExecutorService springExecutor = Executors.newSingleThreadExecutor();
-        springExecutor.submit(SpringBoot::startSpring);
-
-         */
-
-        SpringApplication.run(Main.class, args);
+        try {
+            ExecutorService springExecutor = Executors.newSingleThreadExecutor();
+            springExecutor.submit(SpringBoot::startSpring);
+        } catch (Exception e) {
+            Log.print("UI Vaadin Springboot App crashed!");
+            Log.print("Exception Message: " + e.getMessage());
+        }
     }
 
     private static String cwaStatus = "No update yet";
