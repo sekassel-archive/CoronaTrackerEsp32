@@ -6,9 +6,19 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
 import de.uniks.SQLite.SQLite;
 import de.uniks.payload.InfectionPostPayload;
+import org.graalvm.compiler.replacements.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.util.ClassUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,6 +44,7 @@ public class Main {
     private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
     public static void main(String[] args) {
+
         get("/hello", (request, response) -> "Hello World");
 
         get("/cwa/status", (request, response) -> cwaStatus);
@@ -107,7 +118,6 @@ public class Main {
             return new JSONArray(tek);
         });
 
-/* */
         post("/infections", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectionPostPayload input;
@@ -190,11 +200,16 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-/* */
+
         executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
 
-        ExecutorService springExecutor = Executors.newSingleThreadExecutor();
-        springExecutor.submit(SpringBoot::startSpring);
+        try {
+            ExecutorService springExecutor = Executors.newSingleThreadExecutor();
+            springExecutor.submit(SpringBoot::startSpring);
+        } catch (Exception e) {
+            Log.print("UI Vaadin Springboot App crashed!");
+            Log.print("Exception Message: " + e.getMessage());
+        }
     }
 
     private static String cwaStatus = "No update yet";
@@ -214,4 +229,6 @@ public class Main {
         cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
                 .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
     }
+
+
 }
