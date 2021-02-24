@@ -47,9 +47,9 @@ public class Main {
 
         get("/api/hello", (request, response) -> "Hello World");
 
-        get("/cwa/status", (request, response) -> cwaStatus);
+        get("/api/cwa/status", (request, response) -> cwaStatus);
 
-        get("/infections/rsin", (request, response) -> {
+        get("/api/infections/rsin", (request, response) -> {
             JSONObject json = new JSONObject();
             Map<Integer, Integer> tablesizes = SQLite.getRSINTableSizes();
             for (Map.Entry<Integer, Integer> entry : tablesizes.entrySet()) {
@@ -58,7 +58,7 @@ public class Main {
             return json;
         });
 
-        get("/infections/rsin/:rsin", (request, response) -> {
+        get("/api/infections/rsin/:rsin", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -77,7 +77,7 @@ public class Main {
             return new JSONArray(table);
         });
 
-        get("/infections/rsin/:rsin/teknr/:teknr", (request, response) -> {
+        get("/api/infections/rsin/:rsin/teknr/:teknr", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -118,7 +118,7 @@ public class Main {
             return new JSONArray(tek);
         });
 
-        post("/infections", ((request, response) -> {
+        post("/api/infections", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectionPostPayload input;
             try {
@@ -147,7 +147,7 @@ public class Main {
             return "Success!";
         }));
 
-        delete("/infections/rsin/:rsin", (request, response) -> {
+        delete("/api/infections/rsin/:rsin", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -165,7 +165,7 @@ public class Main {
             return "Successfully removed " + rsin;
         });
 
-        delete("/infections/rsin/:rsin/tek/:tek", (request, response) -> {
+        delete("/api/infections/rsin/:rsin/tek/:tek", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
