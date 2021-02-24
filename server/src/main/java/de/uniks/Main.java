@@ -45,7 +45,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        get("/hello", (request, response) -> "Hello World");
+        get("/api/hello", (request, response) -> "Hello World");
 
         get("/cwa/status", (request, response) -> cwaStatus);
 
