@@ -1,11 +1,9 @@
 package de.uniks.views.rsinoverview;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.treegrid.TreeGrid;
-import com.vaadin.flow.data.provider.ListDataProvider;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import de.uniks.SQLite.SQLite;
 import de.uniks.views.main.MainView;

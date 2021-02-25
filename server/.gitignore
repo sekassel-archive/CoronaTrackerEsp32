@@ -93,3 +93,4 @@ fabric.properties
 /node_modules
 node_modules/
 **/node_modules
+**/target/frontend/generated-flow-imports.js

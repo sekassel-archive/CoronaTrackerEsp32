@@ -3,7 +3,7 @@ COPY --chown=gradle:gradle . /server
 WORKDIR /server
 RUN gradle bootJar -Pvaadin.productionMode
 
-FROM openjdk:8-jdk-alpine
+FROM openjdk:11-slim
 WORKDIR /server
 COPY --from=builder /server/build/libs .
 EXPOSE 4567 8080

@@ -6,19 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uniks.CWA.CWARequests;
 import de.uniks.SQLite.SQLite;
 import de.uniks.payload.InfectionPostPayload;
-import org.graalvm.compiler.replacements.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
-import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.Bean;
-import org.springframework.util.ClassUtils;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,13 +25,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static java.net.HttpURLConnection.*;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
 
 public class Main {
-    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final static Logger LOGGER = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
 
@@ -201,34 +192,54 @@ public class Main {
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
 
-        executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
+        try {
+            Thread cwaThread = new Thread(Main::updateCWAKeys);
+            cwaThread.start();
+        } catch (Exception e) {
+            LOGGER.warning("Spark REST API crashed!");
+            LOGGER.warning("Exception Message: " + e.getMessage());
+        }
 
         try {
-            ExecutorService springExecutor = Executors.newSingleThreadExecutor();
-            springExecutor.submit(SpringBoot::startSpring);
+            Thread springThread = new Thread(SpringBoot::startSpring);
+            springThread.start();
         } catch (Exception e) {
-            Log.print("UI Vaadin Springboot App crashed!");
-            Log.print("Exception Message: " + e.getMessage());
+            LOGGER.warning("UI Vaadin Springboot App crashed!");
+            LOGGER.warning("Exception Message: " + e.getMessage());
         }
     }
 
     private static String cwaStatus = "No update yet";
 
     private static void updateCWAKeys() {
-        try {
-            SQLite.initializeDatabase();
-            SQLite.insertExposures(CWARequests.getUnzippedInfectionData());
-            SQLite.cleanUpDatabases();
-        } catch (IOException | InterruptedException | SQLException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            cwaStatus = e.getMessage() + "\n" + sw.toString();
-            return;
+        while(true) {
+            try {
+                SQLite.initializeDatabase();
+                SQLite.insertExposures(CWARequests.getUnzippedInfectionData());
+                SQLite.cleanUpDatabases();
+            } catch (IOException | InterruptedException | SQLException e) {
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                cwaStatus = e.getMessage() + "\n" + sw.toString();
+                try {
+                    TimeUnit.HOURS.sleep(1);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                continue;
+                //return;
+            }
+
+            cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
+                    .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
+            LOGGER.info(cwaStatus);
+
+            try {
+                TimeUnit.HOURS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
-
-        cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
-                .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
     }
-
 
 }
