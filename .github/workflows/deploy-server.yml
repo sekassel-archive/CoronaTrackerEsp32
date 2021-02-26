@@ -29,7 +29,7 @@ jobs:
         docker push ${{ secrets.Docker_Registry }}/ctracker:latest
     - name: Deploy the Docker image to rancher
       run: |
-        curl -x PATCH \
+        curl -X PATCH \
           -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
           -H 'Content-Type: application/json-patch+json' \
           "${{ secrets.RANCHER_URL }}/k8s/clusters/${{ secrets.RANCHER_CLUSTER }}/apis/apps/v1/namespaces/corona-tracker/deployments/tracker-server" \
