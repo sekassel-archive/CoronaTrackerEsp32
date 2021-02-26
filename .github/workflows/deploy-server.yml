@@ -38,5 +38,5 @@ jobs:
           -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
           -H 'Accept: application/json' \
           -H 'Content-Type: application/json' \
-          "${{ secrets.RANCHER_URL }}/v3/projects/${{ secrets.RANCHER_CLUSTER }}:${{ secrets.RANCHER_PROJECT }}/workloads/deployment/corona-tracker:tracker-server?action=redeploy" \
+          "${{ secrets.RANCHER_URL }}/v3/projects/${{ secrets.RANCHER_CLUSTER }}:${{ secrets.RANCHER_PROJECT }}/workloads/deployment:corona-tracker:tracker-server?action=redeploy"
           
