@@ -33,7 +33,7 @@ jobs:
           -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
           -H 'Content-Type: application/json-patch+json' \
           "${{ secrets.RANCHER_URL }}/k8s/clusters/${{ secrets.RANCHER_CLUSTER }}/apis/apps/v1/namespaces/corona-tracker/deployments/tracker-server" \
-          -d '[{ "op": "replace", "path": "/spec/template/spec/container/0/image", "value": "'"${{ secrets.DOCKER_REGISTRY }}/ctracker:latest"'" }]'
+          -d '[{ "op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "'"${{ secrets.DOCKER_REGISTRY }}/ctracker:latest"'" }]'
         curl -X POST \
           -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
           -H 'Accept: application/json' \
