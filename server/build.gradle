@@ -36,10 +36,8 @@ dependencies {
     // Vaadin
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     implementation 'com.vaadin:vaadin-avatar-flow:1.0.1'
-    //implementation 'org.vaadin.artur:a-vaadin-helper:1.5.0'
 
     // Spring Boot
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 configurations {

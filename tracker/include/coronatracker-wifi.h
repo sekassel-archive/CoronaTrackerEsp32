@@ -6,7 +6,7 @@
 #include "coronatracker-crypto.h"
 #include "coronatracker-spiffs.h"
 
-#define SERVER_URL "https://tracing.uniks.de"
+#define SERVER_URL "https://tracing.uniks.de/api"
 #define RSIN_URL "/infections/rsin"
 
 const size_t JSON_CAPACITY = JSON_ARRAY_SIZE(16);

@@ -21,24 +21,29 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import static java.net.HttpURLConnection.*;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 import static spark.Spark.*;
 
 public class Main {
-    private static final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final static Logger LOGGER = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        get("/hello", (request, response) -> "Hello World");
 
-        get("/cwa/status", (request, response) -> cwaStatus);
+        get("/api/hello", (request, response) -> "Hello World");
 
-        get("/infections/rsin", (request, response) -> {
+        get("/api/uuid", (request, response) -> UUID.randomUUID().toString());
+
+        get("/api/cwa/status", (request, response) -> cwaStatus);
+
+        get("/api/infections/rsin", (request, response) -> {
             JSONObject json = new JSONObject();
             Map<Integer, Integer> tablesizes = SQLite.getRSINTableSizes();
             for (Map.Entry<Integer, Integer> entry : tablesizes.entrySet()) {
@@ -47,7 +52,7 @@ public class Main {
             return json;
         });
 
-        get("/infections/rsin/:rsin", (request, response) -> {
+        get("/api/infections/rsin/:rsin", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -66,7 +71,7 @@ public class Main {
             return new JSONArray(table);
         });
 
-        get("/infections/rsin/:rsin/teknr/:teknr", (request, response) -> {
+        get("/api/infections/rsin/:rsin/teknr/:teknr", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -107,8 +112,7 @@ public class Main {
             return new JSONArray(tek);
         });
 
-/* */
-        post("/infections", ((request, response) -> {
+        post("/api/infections", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectionPostPayload input;
             try {
@@ -137,7 +141,7 @@ public class Main {
             return "Success!";
         }));
 
-        delete("/infections/rsin/:rsin", (request, response) -> {
+        delete("/api/infections/rsin/:rsin", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -155,7 +159,7 @@ public class Main {
             return "Successfully removed " + rsin;
         });
 
-        delete("/infections/rsin/:rsin/tek/:tek", (request, response) -> {
+        delete("/api/infections/rsin/:rsin/tek/:tek", (request, response) -> {
             int rsin;
             try {
                 rsin = Integer.parseInt(request.params(":rsin"));
@@ -190,28 +194,55 @@ public class Main {
 
             return "Successfully removed " + Arrays.toString(tek) + " from " + rsin;
         });
-/* */
-        executorService.scheduleAtFixedRate(Main::updateCWAKeys, 0, 1, TimeUnit.HOURS);
 
-        ExecutorService springExecutor = Executors.newSingleThreadExecutor();
-        springExecutor.submit(SpringBoot::startSpring);
+        try {
+            Thread cwaThread = new Thread(Main::updateCWAKeys);
+            cwaThread.start();
+        } catch (Exception e) {
+            LOGGER.warning("Spark REST API crashed!");
+            LOGGER.warning("Exception Message: " + e.getMessage());
+        }
+
+        try {
+            Thread springThread = new Thread(SpringBoot::startSpring);
+            springThread.start();
+        } catch (Exception e) {
+            LOGGER.warning("UI Vaadin Springboot App crashed!");
+            LOGGER.warning("Exception Message: " + e.getMessage());
+        }
     }
 
     private static String cwaStatus = "No update yet";
 
     private static void updateCWAKeys() {
-        try {
-            SQLite.initializeDatabase();
-            SQLite.insertExposures(CWARequests.getUnzippedInfectionData());
-            SQLite.cleanUpDatabases();
-        } catch (IOException | InterruptedException | SQLException e) {
-            StringWriter sw = new StringWriter();
-            e.printStackTrace(new PrintWriter(sw));
-            cwaStatus = e.getMessage() + "\n" + sw.toString();
-            return;
-        }
+        while(true) {
+            try {
+                SQLite.initializeDatabase();
+                SQLite.insertExposures(CWARequests.getUnzippedInfectionData());
+                SQLite.cleanUpDatabases();
+            } catch (IOException | InterruptedException | SQLException e) {
+                StringWriter sw = new StringWriter();
+                e.printStackTrace(new PrintWriter(sw));
+                cwaStatus = e.getMessage() + "\n" + sw.toString();
+                try {
+                    TimeUnit.HOURS.sleep(1);
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                continue;
+                //return;
+            }
 
-        cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
-                .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
+            cwaStatus = "Updated at " + DateTimeFormatter.ISO_INSTANT.format(Instant.now()
+                    .truncatedTo(ChronoUnit.SECONDS)).replaceAll("[TZ]", " ") + " UTC";
+            LOGGER.info(cwaStatus);
+
+            try {
+                TimeUnit.HOURS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 }

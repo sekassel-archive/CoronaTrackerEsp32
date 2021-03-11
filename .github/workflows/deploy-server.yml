@@ -27,14 +27,16 @@ jobs:
         docker login ${{ secrets.Docker_Registry }} -u ${{ secrets.Docker_User }} -p ${{ secrets.Docker_Pass }}
         docker build -t ${{ secrets.Docker_Registry }}/ctracker:latest .
         docker push ${{ secrets.Docker_Registry }}/ctracker:latest
-    
     - name: Deploy the Docker image to rancher
-      uses: sekassel-research/actions-rancher-update@1.1.1
-      with:
-        rancher_url: ${{ secrets.Rancher_Url }}
-        rancher_access: ${{ secrets.Rancher_Access }}
-        rancher_key: ${{ secrets.Rancher_Key }}
-        project_id: ${{ secrets.Project_Id }}
-        stack_name: ${{ secrets.Stack_Name }}
-        service_name: ${{ secrets.Service_Name }}
-        docker_image: ${{ secrets.Docker_Registry }}/ctracker:latest
+      run: |
+        curl -X PATCH \
+          -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
+          -H 'Content-Type: application/json-patch+json' \
+          "${{ secrets.RANCHER_URL }}/k8s/clusters/${{ secrets.RANCHER_CLUSTER }}/apis/apps/v1/namespaces/corona-tracker/deployments/tracker-server" \
+          -d '[{ "op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "'"${{ secrets.DOCKER_REGISTRY }}/ctracker:latest"'" }]'
+        curl -X POST \
+          -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
+          -H 'Accept: application/json' \
+          -H 'Content-Type: application/json' \
+          "${{ secrets.RANCHER_URL }}/v3/projects/${{ secrets.RANCHER_CLUSTER }}:${{ secrets.RANCHER_PROJECT }}/workloads/deployment:corona-tracker:tracker-server?action=redeploy"
+          
