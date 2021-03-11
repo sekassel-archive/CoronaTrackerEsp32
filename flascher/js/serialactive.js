@@ -45,7 +45,8 @@ class SlipFrame {
     this.command = -1;
     this.size = new Uint8Array();
     this.value = new Uint8Array();
-    this.data = new Uint8Array();
+    this.data = null;
+    this.dataPosition = 0;
   }
 
   insert(value) {
@@ -82,6 +83,40 @@ class SlipFrame {
             this.command = value2;
             return;
           }
+
+          if (this.size.length < 1){
+            this.size = Uint8Array.of(value2)
+            return;
+          }
+          if (this.size.length < 2){
+            this.size = Uint8Array.of(this.size[0], value2)
+            return;
+          }
+
+          
+          if (this.value.length < 1){
+            this.value = Uint8Array.of(value2)
+            return;
+          }
+          if (this.value.length < 2){
+            this.value = Uint8Array.of(this.value[0], value2)
+            return;
+          }
+          if (this.value.length < 3){
+            this.value = Uint8Array.of(this.value[0], this.value[1], value2)
+            return;
+          }
+          if (this.value.length < 4){
+            this.value = Uint8Array.of(this.value[0], this.value[1], this.value[2], value2)
+            return;
+          }
+
+          if (this.data == null){
+            this.data = new Uint8Array(this.size[0] + 16 * this.size[1])
+          }
+          
+          this.data[this.dataPosition] = value2;
+          this.dataPosition = this.dataPosition + 1;
         }
 
         break;
@@ -90,8 +125,14 @@ class SlipFrame {
   }
 }
 
-const transformContent = {
-  start() { }, // required.
+class TransformContent {
+  constructor() {
+    this.slipFrame = new SlipFrame();
+  }
+
+  start() {
+    this.slipFrame = new SlipFrame();
+   } // required.
   async transform(chunk, controller) {
     var arr = new Uint8Array();
 
@@ -119,8 +160,14 @@ const transformContent = {
     }
 
     //console.log(JSON.stringify(arr, null, 2))
-    controller.enqueue(arr);
-  },
+    for (var i = 0; i < arr.length; i++){
+      this.slipFrame.insert(arr[i]);
+      if (this.slipFrame.endSetted){
+        controller.enqueue(this.slipFrame)
+        this.slipFrame = new SlipFrame();
+      }
+    }
+  }
   flush() { /* do any destructor work here */ }
 }
 
@@ -150,6 +197,8 @@ async function readreg() {
 document.getElementById('connectButton').addEventListener('click', () => {
   click();
 });
+
+let secReader = null;
 async function click() {
   port = await navigator.serial.requestPort();
   // - Wait for the port to open.
@@ -161,14 +210,13 @@ async function click() {
   const inputDone = stream2.pipeTo(decoder.writable);
   const inputStream = decoder.readable.pipeThrough(new TransformStream(new MyTransformer()));
 
-  const secReader = stream1.pipeThrough(new TransformStream(transformContent)).getReader();
+  secReader = stream1.pipeThrough(new TransformStream(new TransformContent())).getReader();
 
   const reader = inputStream.getReader();
 
   writer = port.writable.getWriter();
 
   readLoop(reader);
-  readLoop(secReader);
 }
 
 
@@ -188,6 +236,8 @@ async function enterBootloader() {
   await port.setSignals({ dataTerminalReady: false });
 
   await new Promise(resolve => setTimeout(resolve, 3200));
+
+  readLoop2(secReader);
 }
 
 async function reset() {
@@ -217,6 +267,29 @@ async function readLoop(reader) {
       const { value, done } = await reader.read();
       if (value) {
         console.log(value /*JSON.stringify(value, null, 2)*/ + '\n');
+      }
+      if (done) {
+        console.log('[readLoop] DONE', done);
+        reader.releaseLock();
+        break;
+      }
+    } catch (e) {
+      console.log(e);
+      break;
+    }
+
+  }
+  console.log('readloop end');
+
+}
+
+async function readLoop2(reader) {
+  console.log('readloop begin');
+  while (true) {
+    try {
+      const { value, done } = await reader.read();
+      if (value) {
+        console.log(JSON.stringify(value, null, 2) + '\n');
       }
       if (done) {
         console.log('[readLoop] DONE', done);
