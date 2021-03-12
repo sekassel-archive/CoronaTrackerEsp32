@@ -284,7 +284,7 @@ const char * getUUID()
     File file = SPIFFS.open(UUID_FILE_PATH, FILE_READ);
     if(!file){
         Serial.println("There was an error opening the file for reading");
-        return;
+        return NULL;
     }
 
     std::stringstream uuid_ss;

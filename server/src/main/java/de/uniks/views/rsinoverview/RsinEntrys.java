@@ -3,6 +3,7 @@ package de.uniks.views.rsinoverview;
 import de.uniks.SQLite.SQLite;
 import org.json.JSONArray;
 
+import java.util.Date;
 import java.util.List;
 
 public class RsinEntrys {
@@ -28,6 +29,10 @@ public class RsinEntrys {
 
     public String getRsin() {
         return rsin;
+    }
+
+    public String getRsinDate() {
+        return new Date(new Long( Integer.parseInt(rsin) * 600 * 1000)).toString();
     }
 
     public void setRsin(String rsin) {

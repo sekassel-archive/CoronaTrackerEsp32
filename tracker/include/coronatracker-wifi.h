@@ -8,6 +8,7 @@
 
 #define SERVER_URL "https://tracing.uniks.de/api"
 #define RSIN_URL "/infections/rsin"
+#define RSIN_UUID "/uuid"
 
 const size_t JSON_CAPACITY = JSON_ARRAY_SIZE(16);
 
@@ -23,4 +24,5 @@ bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
 std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi);
+bool checkUUID();
 exposure_status checkForInfections();

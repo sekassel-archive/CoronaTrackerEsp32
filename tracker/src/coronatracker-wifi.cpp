@@ -60,6 +60,35 @@ std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi)
     return rsinMap;
 }
 
+bool checkUUID() {
+    if (!WiFi.isConnected() && !connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return false;
+    }
+    else
+    {
+        HTTPClient http;
+
+        http.begin(String(SERVER_URL) + String(RSIN_UUID));
+        int code = http.GET();
+
+        if (!(code == HTTP_CODE_OK))
+        {
+            Serial.println("Failed to connect to server");
+            http.end();
+            return false;
+        }
+        else
+        {
+            Serial.print("Got UUID: ");
+            Serial.println(http.getString());
+            http.end();
+        }
+    }
+    return true;
+}
+
 exposure_status checkForInfections()
 {
     Serial.println("Connecting to server and checking for infections");

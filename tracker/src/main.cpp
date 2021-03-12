@@ -289,6 +289,8 @@ void setup()
                 Serial.println(" ");
             }
 
+            checkUUID();
+
             Serial.println("Disconnecting Wifi");
             if (!disconnectWifi())
             {
@@ -318,7 +320,7 @@ void setup()
         }
     }
 
-    //printDatabases();
+    
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
