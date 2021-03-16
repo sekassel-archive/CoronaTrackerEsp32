@@ -114,9 +114,8 @@ public class RsinOverviewView extends HorizontalLayout {
             // prevent double init
         }
 
+        grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date").setSortable(true);
         grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
-        Grid.Column orderC = grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date");
-        grid.setColumnOrder(orderC);
         grid.addColumn(RsinEntrys::getTekEntrys).setHeader("TEK Entrys");
         grid.setHeightByRows(true);
         //grid.setMaxHeight("700px");

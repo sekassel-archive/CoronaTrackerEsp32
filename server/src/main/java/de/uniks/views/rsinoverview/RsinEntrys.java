@@ -32,7 +32,7 @@ public class RsinEntrys {
     }
 
     public String getRsinDate() {
-        return new Date(new Long( Integer.parseInt(rsin) * 600 * 1000)).toString();
+        return new Date(new Long( Integer.parseInt(rsin)) * 600 * 1000).toLocaleString().split(",")[0];
     }
 
     public void setRsin(String rsin) {
