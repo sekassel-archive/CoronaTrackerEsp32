@@ -1,6 +1,6 @@
 package de.uniks.CWA;
 
-import de.uniks.proto.Exportkey;
+import de.uniks.CWA.proto.Exportkey;
 import org.json.JSONArray;
 import spark.utils.IOUtils;
 
@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -30,9 +31,9 @@ public class CWARequests {
     private static final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     //Returns List of all RollingStartIntervalNumbers with their TemporaryExposureKeys
-    public static Map<Integer, List<byte[]>> getUnzippedInfectionData() throws IOException, InterruptedException {
+    public static ConcurrentHashMap<Integer, List<byte[]>> getUnzippedInfectionData() throws IOException, InterruptedException {
         String[] dates = getInfectionDates();
-        Map<Integer, List<byte[]>> keyMap = new HashMap<>();
+        ConcurrentHashMap<Integer, List<byte[]>> keyMap = new ConcurrentHashMap<>();
 
         for (String date : dates) {
             Map<Integer, List<byte[]>> data = getInfectionData(date);

@@ -157,7 +157,7 @@ exposure_status checkForInfections()
                     String message = http.getString();
                     http.end();
 
-                    if (message.equals("Failed to retreive key"))
+                    if (message.equals("Failed to retrieve key")) // retreive
                     {
                         Serial.println("Failed to retrieve key");
                         continue;

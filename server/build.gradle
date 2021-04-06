@@ -37,7 +37,7 @@ dependencies {
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     implementation 'com.vaadin:vaadin-avatar-flow:1.0.1'
 
-    // Spring Boot
+    implementation 'com.google.code.gson:gson:2.8.6'
 }
 
 configurations {

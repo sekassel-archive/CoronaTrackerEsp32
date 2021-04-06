@@ -11,6 +11,7 @@ import java.util.*;
 import static de.uniks.CWA.CWARequests.getUnzippedInfectionData;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 
+@Deprecated
 public class SQLite {
 
     private static final String DATABASE_PATH = "jdbc:sqlite:ExposureDatabase.db";

@@ -15,7 +15,7 @@ RT = Registration Token
 
 TAN = Transaktions Access Number
 
-RSIN (?) = Rolling Start Interval Number
+RSIN = Rolling Start Interval Number
 
 
 
