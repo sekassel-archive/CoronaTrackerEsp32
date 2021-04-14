@@ -1,6 +1,6 @@
-package de.uniks.views.about;
+package de.uniks.vaadin.views.about;
 
-import de.uniks.views.main.MainView;
+import de.uniks.vaadin.views.main.MainView;
 import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.PageTitle;

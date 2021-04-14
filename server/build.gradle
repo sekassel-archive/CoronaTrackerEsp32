@@ -10,10 +10,11 @@ plugins {
 group 'de.uniks.projektcoronatracker'
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 ext {
@@ -21,8 +22,20 @@ ext {
 }
 
 dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    // Mockito Framework
+    testImplementation "org.mockito:mockito-core:3.+"
+    testImplementation 'junit:junit:4.12'
+
+    // junit-jupiter needed instead of junit 4.12
+    implementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+
+    // spark Framework for rest request (to esp32 devices only)
     compile "com.sparkjava:spark-core:2.8.0"
+
+    // https://mvnrepository.com/artifact/org.postgresql/postgresql
+    implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.1'
+
+    // utils stuff for parsing, logging usw.
     compile 'org.slf4j:slf4j-simple:1.7.21'
     compile 'org.json:json:20200518'
     compileOnly 'org.projectlombok:lombok:1.18.12'
@@ -33,10 +46,11 @@ dependencies {
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
 
-    // Vaadin
+    // Vaadin / Springboot
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     implementation 'com.vaadin:vaadin-avatar-flow:1.0.1'
 
+    // google de/serialisation tool
     implementation 'com.google.code.gson:gson:2.8.6'
 }
 

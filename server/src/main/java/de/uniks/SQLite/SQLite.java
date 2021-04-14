@@ -1,6 +1,6 @@
 package de.uniks.SQLite;
 
-import de.uniks.CWA.CWACryptography;
+import de.uniks.cwa.utils.CWACryptography;
 import org.sqlite.SQLiteException;
 import org.sqlite.core.Codes;
 
@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.*;
 
-import static de.uniks.CWA.CWARequests.getUnzippedInfectionData;
+import static de.uniks.cwa.utils.CWARequests.getUnzippedInfectionData;
 import static org.sqlite.SQLiteErrorCode.SQLITE_NOTFOUND;
 
 @Deprecated

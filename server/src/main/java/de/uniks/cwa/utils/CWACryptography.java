@@ -1,4 +1,4 @@
-package de.uniks.CWA;
+package de.uniks.cwa.utils;
 
 import at.favre.lib.crypto.HKDF;
 
@@ -30,6 +30,7 @@ public class CWACryptography {
     public static final String RPI_CIPHER_TRANSFORMATION = "AES/ECB/NoPadding";
 
     public static final int TWO_WEEKS_IN_10_MINUTES_INTERVAL = 6 * 24 * 14;
+    public static final Integer EKROLLING_PERIOD = 144;
 
     private static byte[] getENIntervalNumber(int timestamp) {
         return ByteBuffer.allocate(ENIN_SIZE).order(ByteOrder.LITTLE_ENDIAN).putInt(timestamp).array();
@@ -44,10 +45,10 @@ public class CWACryptography {
         return hkdf.expand(tek_i, RPIK_INFO, RPIK_LENGTH);
     }
 
-    private static byte[] getPaddedData(int j) {
+    private static byte[] getPaddedData(int timestamp) {
         byte[] paddedData = new byte[PADDED_DATA_LENGTH];
         System.arraycopy(PADDED_DATA_INFO, 0, paddedData, PADDED_DATA_INFO_START, PADDED_DATA_INFO.length);
-        byte[] ENIN = getENIntervalNumber(j);
+        byte[] ENIN = getENIntervalNumber(timestamp);
         System.arraycopy(ENIN, 0, paddedData, PADDED_DATA_ENIN_START, ENIN.length);
         return paddedData;
     }
@@ -60,8 +61,8 @@ public class CWACryptography {
         return c.doFinal(paddedData);
     }
 
-    public static byte[] getRollingProximityIdentifier(byte[] tek, int j) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
-        return getRollingProximityIdentifier(getRollingProximityIdentifierKey(tek), getPaddedData(j));
+    public static byte[] getRollingProximityIdentifier(byte[] tek, int timestamp) throws IllegalBlockSizeException, InvalidKeyException, BadPaddingException, NoSuchAlgorithmException, NoSuchPaddingException {
+        return getRollingProximityIdentifier(getRollingProximityIdentifierKey(tek), getPaddedData(timestamp));
     }
 
     public static int getRollingStartIntervalNumber(long timestamp) {

@@ -1,4 +1,4 @@
-package de.uniks.views.rsinoverview;
+package de.uniks.vaadin.views.rsinoverview;
 
 import de.uniks.SQLite.SQLite;
 import org.json.JSONArray;
@@ -40,8 +40,7 @@ public class RsinEntrys {
     }
 
     public String getImage() {
-        return "https://randomuser.me/api/portraits/men/" + getTekEntrys()
-                + ".jpg";
+        return "https://randomuser.me/api/portraits/men/3.jpg";
     }
 
     public String getTekListAsBlock(){

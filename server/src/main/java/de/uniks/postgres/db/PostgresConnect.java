@@ -1,4 +1,4 @@
-package de.uniks.db;
+package de.uniks.postgres.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -12,7 +12,8 @@ public class PostgresConnect {
     private static final Logger LOG = Logger.getLogger(PostgresConnect.class.getName());
     private static Optional<Connection> connection = Optional.empty();
 
-    private static final String DB_URL = "jdbc:postgresql://database:5432/tracker";
+    // DB_URL is not final, because it will be changed in LocalDbConnectionTest through reflections (will not work if field is final)
+    private static String DB_URL = "jdbc:postgresql://database:5432/tracker";
     private static final String USER = "tracker";
     private static final String PASS = "mk2G4FsO8wah1tp4TqqT";
 

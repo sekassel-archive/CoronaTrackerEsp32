@@ -1,6 +1,6 @@
-package de.uniks.CWA;
+package de.uniks.cwa.utils;
 
-import de.uniks.CWA.proto.Exportkey;
+import de.uniks.cwa.protobuf.Exportkey;
 import org.json.JSONArray;
 import spark.utils.IOUtils;
 

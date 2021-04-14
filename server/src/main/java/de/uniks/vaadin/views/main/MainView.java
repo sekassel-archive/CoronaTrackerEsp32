@@ -1,7 +1,5 @@
-package de.uniks.views.main;
+package de.uniks.vaadin.views.main;
 
-import de.uniks.views.about.AboutView;
-import de.uniks.views.rsinoverview.RsinOverviewView;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.ComponentUtil;
 import com.vaadin.flow.component.applayout.AppLayout;
@@ -10,7 +8,6 @@ import com.vaadin.flow.component.avatar.Avatar;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.html.H1;
-import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -22,6 +19,8 @@ import com.vaadin.flow.router.RouterLink;
 import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
+import de.uniks.vaadin.views.about.AboutView;
+import de.uniks.vaadin.views.rsinoverview.RsinOverviewView;
 
 import java.util.Optional;
 
