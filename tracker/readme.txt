@@ -1,8 +1,8 @@
-RPI = Rolling Proximity Idetifiers
--> werden alle ~10 min gewechselt 
+RPI = Rolling Proximity Identifiers
+-> werden alle ~10 min gewechselt (also 144 mal ab 0 Uhr an)
 -> RPI = f(TEK, #)
 
-TEK = Teporary Exposure Key
+TEK = Temporary Exposure Key
 -> 1 Tag gültig
 -> wird nicht rausgegeben (außer nach Zustimmung zum teilen bei positivem Test)
 -> wird veröffentlicht von Infizierten (14 TEKs, 1 TEK pro Tag)
@@ -17,6 +17,7 @@ TAN = Transaktions Access Number
 
 RSIN = Rolling Start Interval Number
 
+ENIN = Exposure Notification Interval Number
 
 
 CWA Backend Server Communication:

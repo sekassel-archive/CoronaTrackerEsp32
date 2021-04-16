@@ -154,23 +154,16 @@ void goIntoDeepSleep(bool requestInfections)
 
 void setup()
 {
-    //Deletes stored Wifi Credentials if uncommented
-    // WiFiManager manager;
-    // manager.resetSettings();
-
-    //Setting up Serial
+    // Setting up Serial
     Serial.begin(115200);
-    Serial.println("Serial initialized");
 
     float start = micros();
     float end;
 
     //Setting up pinModes
-    Serial.println("Setting up pinModes");
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, PULLUP);
-
-    digitalWrite(LED_PIN, HIGH); //HIGH means LED is off
+    digitalWrite(LED_PIN, HIGH); // LED off
 
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
@@ -191,10 +184,10 @@ void setup()
     esp_sleep_wakeup_cause_t wakeup_reason;
     wakeup_reason = esp_sleep_get_wakeup_cause();
 
-    #ifdef ESP32DEVOTA_COMMON
+#ifdef ESP32DEVOTA_COMMON
     buttonState = digitalRead(BUTTON_PIN);
-    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized)
-    { //LOW means clicked
+    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized) // LOW means clicked
+    { 
         Serial.println("Wakeup caused by external signal using RTC_IO");
         if (!isDisplayActive)
         {
@@ -207,15 +200,16 @@ void setup()
             isDisplayActive = false;
         }
     }
-    #endif
+#endif
 
-    #if defined(LILYGO_WATCH_2020_V1) || defined(LILYGO_WRISTBAND)
-    if (wifiInitialized) {
+#if defined(LILYGO_WATCH_2020_V1) || defined(LILYGO_WRISTBAND)
+    if (wifiInitialized)
+    {
         Serial.println("Update display every time for lilygo devices");
         defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
         isDisplayActive = true;
     }
-    #endif
+#endif
 
     //Wifi not initialized
     if (!wifiInitialized)
@@ -236,25 +230,9 @@ void setup()
                 restartAfterErrorWithDelay("SPIFFS initialize failed");
             }
 
-            std::map<uint32_t, uint16_t> progressMap = getCurrentProgress();
-
-            //Setting up CWA (Corona Warn App) Progress and getting time
             if (!connectToStoredWifi())
             {
                 restartAfterErrorWithDelay("Could not connect to Wifi!");
-            }
-
-            if (progressMap.empty())
-            {
-                Serial.println("Initializing CWA Progress");
-                if (!insertCWAProgress(getRSINAsMap(false)))
-                {
-                    restartAfterErrorWithDelay("Failed to initialize CWA Progress");
-                }
-            }
-            else
-            {
-                Serial.println("Progress already initialized");
             }
 
             Serial.println("Initializing Time");
@@ -270,7 +248,8 @@ void setup()
             {
                 Serial.println("Already exists");
                 Serial.print("TEK: ");
-                for (int i=0 ; i < (sizeof(tek)/sizeof(tek[0])) ; i++) {
+                for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
+                {
                     Serial.print(tek[i]);
                 }
                 Serial.println(" ");
@@ -283,7 +262,8 @@ void setup()
                 }
                 Serial.println("Generated");
                 Serial.print("TEK: ");
-                for (int i=0 ; i < (sizeof(tek)/sizeof(tek[0])) ; i++) {
+                for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
+                {
                     Serial.print(tek[i]);
                 }
                 Serial.println(" ");
@@ -320,7 +300,6 @@ void setup()
         }
     }
 
-    
     if (nextAction == ACTION_SCAN)
     {
         Serial.println("Starting Scan...");
