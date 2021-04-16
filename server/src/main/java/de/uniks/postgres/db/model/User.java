@@ -40,12 +40,12 @@ public class User {
 
     @Override
     public String toString() {
-        return CLASS + "["
+        return CLASS + "{"
                 + UUID + "=" + uuid
                 + ", " + STATUS + "=" + status.toString()
                 + ", " + ENIN + "=" + enin.toString()
-                + ", " + RPILIST + "=" + rpiList
-                + ']';
+                + ", " + RPILIST + "=" + this.getRpiListAsJSONArray()
+                + "}";
     }
 
     public String getUuid() {

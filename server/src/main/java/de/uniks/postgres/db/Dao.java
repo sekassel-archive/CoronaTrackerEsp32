@@ -1,4 +1,4 @@
-package de.uniks.postgres.db.model;
+package de.uniks.postgres.db;
 
 import java.util.Collection;
 import java.util.Optional;

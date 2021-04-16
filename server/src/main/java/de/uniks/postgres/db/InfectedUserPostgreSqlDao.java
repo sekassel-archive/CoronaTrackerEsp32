@@ -1,6 +1,5 @@
 package de.uniks.postgres.db;
 
-import de.uniks.postgres.db.model.Dao;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 

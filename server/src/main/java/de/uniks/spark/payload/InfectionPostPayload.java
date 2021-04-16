@@ -2,6 +2,7 @@ package de.uniks.spark.payload;
 
 import lombok.Data;
 
+@Deprecated
 @Data
 public class InfectionPostPayload {
     private static final int AUTH_DATA = 1234;
