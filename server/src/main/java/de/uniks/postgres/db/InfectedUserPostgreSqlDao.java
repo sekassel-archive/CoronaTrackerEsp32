@@ -4,10 +4,7 @@ import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,30 +59,29 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
     }
 
     @Override
-    public Optional<InfectedUser> get(String uuid) {
-        return connection.flatMap(conn -> {
-            Optional<InfectedUser> infUser = Optional.empty();
-            String sql = "SELECT * FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = \'" + uuid + "\'";
-
+    public List<InfectedUser> get(String uuid) {
+        List<InfectedUser> infUsers = new ArrayList<>();
+        String sql = "SELECT * FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = \'" + uuid + "\'";
+        connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
                  ResultSet resultSet = statement.executeQuery(sql)) {
 
-                if (resultSet.next()) {
+                while (resultSet.next()) {
                     String tek = resultSet.getString(InfectedUser.TEK);
                     Integer rsin = resultSet.getInt(InfectedUser.RSIN);
 
-                    infUser = Optional.of(new InfectedUser(uuid, tek, rsin));
+                    infUsers.add(new InfectedUser(uuid, tek, rsin));
                 }
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
-            return infUser;
         });
+        return infUsers;
     }
 
     @Override
-    public Collection<InfectedUser> getAll() {
-        Collection<InfectedUser> infUserCollection = new ArrayList<>();
+    public List<InfectedUser> getAll() {
+        List<InfectedUser> infUserCollection = new ArrayList<>();
         String sql = "SELECT * FROM " + User.CLASS;
 
         connection.ifPresent(conn -> {

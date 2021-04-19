@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +56,7 @@ public class LocalDbConnectionTest {
         byte[] testRpi = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
         User user = new User("3ee56edf-1e91-438f-b75e-50df9a30e515", 0, 2692512, List.of(testRpi));
 
-        Optional<User> userBack;
+        List<User> userBack;
         UserPostgreSqlDao userInterface = new UserPostgreSqlDao();
 
         Optional<Integer> returnOpt = userInterface.save(user);
@@ -63,20 +64,18 @@ public class LocalDbConnectionTest {
         Assert.assertFalse(returnOpt.isEmpty());
         Assert.assertEquals((Integer) 1, returnOpt.get());
         userBack = userInterface.get(user.getUuid());
-        Assert.assertTrue(userBack.isPresent());
         Assert.assertFalse(userBack.isEmpty());
 
-        Assert.assertEquals(user.getUuid(), userBack.get().getUuid());
-        Assert.assertEquals(user.getStatus(), userBack.get().getStatus());
-        Assert.assertEquals(user.getEnin(), userBack.get().getEnin());
-        Assert.assertTrue(user.getRpiListAsJSONArray().equals(userBack.get().getRpiListAsJSONArray()));
+        Assert.assertEquals(user.getUuid(), userBack.get(0).getUuid());
+        Assert.assertEquals(user.getStatus(), userBack.get(0).getStatus());
+        Assert.assertEquals(user.getEnin(), userBack.get(0).getEnin());
+        Assert.assertTrue(user.getRpiListAsJSONArray().equals(userBack.get(0).getRpiListAsJSONArray()));
         Assert.assertEquals(1, user.getRpiList().size());
-        Assert.assertEquals(1, userBack.get().getRpiList().size());
-        Assert.assertTrue(Arrays.equals(user.getRpiList().get(0), (userBack.get().getRpiList().get(0))));
+        Assert.assertEquals(1, userBack.get(0).getRpiList().size());
+        Assert.assertTrue(Arrays.equals(user.getRpiList().get(0), (userBack.get(0).getRpiList().get(0))));
 
         userInterface.delete(user);
         userBack = userInterface.get(user.getUuid());
-        Assert.assertFalse(userBack.isPresent());
         Assert.assertTrue(userBack.isEmpty());
     }
 }

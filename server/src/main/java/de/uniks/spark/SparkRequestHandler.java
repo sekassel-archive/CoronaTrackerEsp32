@@ -10,6 +10,7 @@ import de.uniks.spark.payload.InfectedUserPostPayload;
 import de.uniks.spark.payload.UserPostPayload;
 import org.json.JSONArray;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -89,13 +90,13 @@ public class SparkRequestHandler {
             }
 
             // TODO: change if get is refactored
-            Optional<User> u = userDb.get(uuid);
+            Collection<User> u = userDb.get(uuid);
             if (u.isEmpty()) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request couldn't be processed!";
             }
 
-            return new JSONArray(u.get().getStatus());
+            return new JSONArray("u.getStatus()");
         });
     }
 }

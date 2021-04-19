@@ -1,12 +1,10 @@
 package de.uniks.postgres.db;
 
 import de.uniks.postgres.db.model.User;
+import org.eclipse.jetty.util.ajax.JSON;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,9 +41,7 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
 
         return connection.flatMap(conn -> {
             Optional<Integer> optionalOfInsertedRows = Optional.empty();
-
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
-
                 statement.setString(1, nonNullUser.getUuid());
                 statement.setInt(2, nonNullUser.getStatus());
                 statement.setInt(3, nonNullUser.getEnin());
@@ -62,33 +58,46 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
     }
 
     @Override
-    public Optional<User> get(String uuid) {
-        return connection.flatMap(conn -> {
-            Optional<User> user = Optional.empty();
-            String sql = "SELECT * FROM " + User.CLASS + " WHERE " + User.UUID + " = \'" + uuid + "\'";
-            // TODO: check what to do for more than one column to get with one uuid
-            try (Statement statement = conn.createStatement();
-                 ResultSet resultSet = statement.executeQuery(sql)) {
-
-                    if (resultSet.next()) {
-                        Integer status = resultSet.getInt(User.STATUS);
-                        Integer rsin = resultSet.getInt(User.ENIN);
-                        String tekListAsJSONArray = resultSet.getString(User.RPILIST);
-
-                        user = Optional.of(new User(uuid, status, rsin, tekListAsJSONArray));
-                    }
-                } catch (SQLException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
-                }
-            return user;
-        });
+    public List<User> get(String uuid) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT * FROM " + User.CLASS + " WHERE " + User.UUID + " = \'" + uuid + "\'";
+        return getWithPrimitiveSql(sql);
     }
 
     @Override
-    public Collection<User> getAll() {
-        Collection<User> users = new ArrayList<>();
+    public List<User> getAll() {
         String sql = "SELECT * FROM " + User.CLASS;
+        return getWithPrimitiveSql(sql);
+    }
 
+    public List<User> get(Integer enin, List<byte[]> rpiList) {
+        StringBuilder sql = new StringBuilder();
+        // build query to watch out for infected rpis in user db
+        // example with shorted rpis: search for infected rpi [1,2,3] in [[1,1,1],[1,2,3],[2,2,2]]
+        // SELECT * FROM trackerUser WHERE (enin = 1234567) AND (status = 0) AND
+        //  ((rpiList CONTAINS %[1,2,3]%) OR (rpiList CONTAINS %[2,3,4]%))
+        // [2,3,4] is just an example for more rpis in one query
+        sql.append("SELECT * FROM "
+                + User.CLASS + " WHERE ("
+                + User.ENIN + " = " + enin + ") AND ("
+                + User.STATUS + " = 0) AND (");
+
+        for (byte[] rpi: rpiList) {
+            sql.append("(" + User.RPILIST + " LIKE %"
+                    + JSON.toString(rpi) + "%) ");
+            rpiList.remove(rpi);
+            if(rpiList.isEmpty()){
+                sql.append(")");
+            } else {
+                sql.append("OR ");
+            }
+        }
+
+        return getWithPrimitiveSql(sql.toString());
+    }
+
+    private List<User> getWithPrimitiveSql(String sql) {
+        List<User> users = new ArrayList<>();
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
                  ResultSet resultSet = statement.executeQuery(sql)) {

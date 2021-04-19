@@ -2,7 +2,9 @@ package de.uniks.cwa;
 
 import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.cwa.utils.CWARequests;
+import de.uniks.postgres.db.InfectedUserPostgreSqlDao;
 import de.uniks.postgres.db.UserPostgreSqlDao;
+import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 
 import javax.crypto.BadPaddingException;
@@ -10,12 +12,16 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,18 +29,33 @@ import java.util.logging.Logger;
 public class CwaDataInterpreter {
 
     private static final Logger LOG = Logger.getLogger(CwaDataInterpreter.class.getName());
-    private static ConcurrentHashMap<Integer, List<byte[]>> cwaData = new ConcurrentHashMap<>();
 
-    public static void ckeckForInfectionsHourlyTask() {
+    /**
+     * subsequently, we compare contact information from cwa DB with our postgres DB
+     */
+    public static void checkForInfectionsHourlyTask() {
         try {
-            // CWA DB get every 1h a new data set. So we'll get a hourly update of cwaData in memory
-            cwaData = CWARequests.getUnzippedInfectionData();
+            InfectedUserPostgreSqlDao infectedUserDb = new InfectedUserPostgreSqlDao();
+            UserPostgreSqlDao userDb = new UserPostgreSqlDao();
 
-            // subsequently, we compare contact information from cwa DB with our postgres DB
-            UserPostgreSqlDao dbData = new UserPostgreSqlDao();
-            processInfectionCheck(dbData.getAll()); // get the whole postgres db entry's
+            // cwa db get every 1h a new data set. So we'll get a hourly update of cwaData in memory
+            ConcurrentHashMap<Integer, List<byte[]>> cwaData = CWARequests.getUnzippedInfectionData();
 
-            LOG.log(Level.INFO, "Hourly CWA data update and check successfully processed at " +
+            // our own infectedUser from infectedUser TABLE
+            Collection<InfectedUser> infectedUserList = infectedUserDb.getAll();
+
+            // we need to get our own infected user into the data set of the cwa and put it in a map like:
+            // [enin: rpi(from cwa inf. user tek) .... rpi2 (from our inf. user db)],[enin2: ...] usw.
+            ConcurrentHashMap<Integer, List<byte[]>> infectedUser = buildInfectedUserEninRpisMap(cwaData, infectedUserList);
+
+            // build sql statements to be queried on our db to check for users with matching rpi from inf. user map
+            Optional<List<User>> infectedUserActionRequired = buildAndQueryInfectionCheckOnDb(userDb, infectedUser);
+
+            if (infectedUserActionRequired.isPresent()) {
+                processInfectedUserIntoDb(infectedUserActionRequired.get());
+            }
+
+            LOG.log(Level.INFO, "Hourly cwa data update and check successfully processed at " +
                     DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
                             .replaceAll("[TZ]", " ") + " UTC");
         } catch (Exception ex) {
@@ -42,42 +63,52 @@ public class CwaDataInterpreter {
         }
     }
 
-    /**
-     * This part should compare the data set of the cwa data set and the collected data from our user db.
-     *
-     */
-    private static void processInfectionCheck(Collection<User> userCollection) {
-        //TODO: check Infections update / status
-        List<User> infectedUser = new ArrayList();
-        // gotta check for each user if cwa impacts our user db entry's
-        userCollection.parallelStream()
-                .filter(user -> !user.getRpiList().isEmpty())
-                .filter(user -> cwaData.containsKey(user.getEnin()))
-                .filter(user -> user.getStatus().equals(0))
-                .forEach(user -> {
-                    Integer rsin = user.getEnin();
-                    List<byte[]> cwaTekList = cwaData.get(rsin);
-                    cwaTekList.parallelStream().forEach(infectedTek -> {
-                        for (int rollingTimeOffset = 0; rollingTimeOffset < CWACryptography.EKROLLING_PERIOD; rollingTimeOffset++) {
-                            try {
-                                byte[] infectedRPI = CWACryptography.getRollingProximityIdentifier(infectedTek, (rsin + rollingTimeOffset));
-                                if (user.getRpiList().contains(infectedRPI)) {
-                                    // user had contact with infected person, so he needs to be alerted
+    private static ConcurrentHashMap<Integer, List<byte[]>> buildInfectedUserEninRpisMap(ConcurrentHashMap<Integer, List<byte[]>> cwaData, Collection<InfectedUser> infectedUserList) {
+        ConcurrentHashMap<Integer, List<byte[]>> infectedUserEninRpisMap = new ConcurrentHashMap<>();
 
-                                }
+        cwaData.forEach((rsin, tekList) -> {
+            tekList.forEach(tek -> {
+                calculateRpisAndMergeIntoList(infectedUserEninRpisMap, rsin, tek);
+            });
+        });
 
+        infectedUserList.forEach(infectedUser -> {
+            calculateRpisAndMergeIntoList(infectedUserEninRpisMap, infectedUser.getRsin(), infectedUser.getTek());
+        });
 
-                            } catch (IllegalBlockSizeException | InvalidKeyException |
-                                    BadPaddingException | NoSuchAlgorithmException |
-                                    NoSuchPaddingException e) {
-                                LOG.log(Level.WARNING, null, e);
-                            }
-                        }
-                    });
-                });
+        return infectedUserEninRpisMap;
     }
 
-    public static ConcurrentHashMap<Integer, List<byte[]>> getCwaData() {
-        return cwaData;
+    private static void calculateRpisAndMergeIntoList(ConcurrentHashMap<Integer, List<byte[]>> infectedUserEninRpisMap, int rsin, byte[] tek) {
+        //TODO: < or <=
+        for (int rollingTimeOffset = 0; rollingTimeOffset < CWACryptography.EKROLLING_PERIOD; rollingTimeOffset++) {
+            try {
+                int enin = (rsin + rollingTimeOffset);
+                byte[] infectedRPI = CWACryptography.getRollingProximityIdentifier(tek, enin);
+                if (infectedUserEninRpisMap.containsKey(enin)) {
+                    infectedUserEninRpisMap.get(enin).add(infectedRPI);
+                } else {
+                    List<byte[]> rpiList = new ArrayList<>();
+                    rpiList.add(infectedRPI);
+                    infectedUserEninRpisMap.put(enin, rpiList);
+                }
+            } catch (IllegalBlockSizeException | InvalidKeyException |
+                    BadPaddingException | NoSuchAlgorithmException |
+                    NoSuchPaddingException e) {
+                LOG.log(Level.WARNING, null, e);
+            }
+        }
+    }
+
+    private static Optional<List<User>> buildAndQueryInfectionCheckOnDb(UserPostgreSqlDao userDb, ConcurrentHashMap<Integer, List<byte[]>> infectedUser) {
+        List<User> infUserCollection = new ArrayList<>();
+        infectedUser.forEach((enin, rpiList) -> {
+            infUserCollection.addAll(userDb.get(enin, rpiList));
+        });
+        return infUserCollection.isEmpty() ? Optional.empty() : Optional.of(infUserCollection);
+    }
+
+    private static void processInfectedUserIntoDb(List<User> infectedUserActionRequired) {
+        //TODO: do something with new infected User
     }
 }

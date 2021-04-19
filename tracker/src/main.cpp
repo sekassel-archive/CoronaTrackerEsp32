@@ -62,95 +62,13 @@ const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
-void blinkLED()
-{
-    int state = digitalRead(LED_PIN);
-    digitalWrite(LED_PIN, !state);
-}
-
-bool initializeTime()
-{
-    struct tm timeinfo;
-    int start = millis();
-    const int WAITTIME = 180000; //3 Minutes
-
-    do
-    {
-        if ((millis() - start) >= WAITTIME)
-        {
-            return false;
-        }
-        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-        delay(500);
-
-    } while (!getLocalTime(&timeinfo));
-    Serial.print("Local Time: ");
-    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-    delay(5000);
-    return true;
-}
-
-void restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
-{
-    digitalWrite(LED_PIN, LOW);
-    Serial.println(errorMessage);
-    delay(delayMS);
-    ESP.restart();
-}
-
-void setNextAction(int action)
-{
-    switch (action)
-    {
-    case ACTION_SCAN:
-        Serial.println("Next: Scanning");
-        nextAction = ACTION_SCAN;
-        break;
-    case ACTION_WIFI_CONFIG:
-        Serial.println("Next: Wifi-Config");
-        nextAction = ACTION_WIFI_CONFIG;
-        break;
-    case ACTION_INFECTION_REQUEST:
-        Serial.println("Next: Infection-Request");
-        nextAction = ACTION_INFECTION_REQUEST;
-        break;
-    case ACTION_ADVERTISE:
-        Serial.println("Next: Advertising");
-        nextAction = ACTION_ADVERTISE;
-        break;
-    default:
-        nextAction = ACTION_NOTHING;
-        break;
-    }
-}
-
-void goIntoDeepSleep(bool requestInfections)
-{
-    time_t nextBootTime = time(NULL) + (SLEEP_INTERVAL / (1000 * 1000)) - 1; //Next Boot with Offset
-
-    if (requestInfections) //Request Infection on First boot after initialize
-    {
-        setNextAction(ACTION_INFECTION_REQUEST);
-    }
-    else if (nextBootTime >= updateTime)
-    {
-        updateTime += (60 * 60);
-        setNextAction(ACTION_INFECTION_REQUEST);
-    }
-    else if (nextBootTime >= scanTime)
-    {
-        scanTime += (60);
-        setNextAction(ACTION_SCAN);
-    }
-    else
-    {
-        setNextAction(ACTION_ADVERTISE);
-    }
-
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, LOW);
-    esp_sleep_enable_timer_wakeup(SLEEP_INTERVAL);
-    esp_deep_sleep_start();
-}
+void blinkLED();
+bool initializeTime();
+size_t restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000);
+void setNextAction(int action);
+void goIntoDeepSleep(bool requestInfections);
+bool initializeTek();
+bool initializeDeviceSpecificDisplay(tm timeinfo);
 
 void setup()
 {
@@ -171,47 +89,8 @@ void setup()
         Serial.println("Get local time error");
     }
 
-    if (!isDisplayActive)
-    {
-        Serial.println("Initialize display");
-        initDisplay();
-    }
-    else
-    {
-        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
-    }
+    initializeDeviceSpecificDisplay(timeinfo);
 
-    esp_sleep_wakeup_cause_t wakeup_reason;
-    wakeup_reason = esp_sleep_get_wakeup_cause();
-
-#ifdef ESP32DEVOTA_COMMON
-    buttonState = digitalRead(BUTTON_PIN);
-    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized) // LOW means clicked
-    { 
-        Serial.println("Wakeup caused by external signal using RTC_IO");
-        if (!isDisplayActive)
-        {
-            defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
-            isDisplayActive = true;
-        }
-        else
-        {
-            initDisplay();
-            isDisplayActive = false;
-        }
-    }
-#endif
-
-#if defined(LILYGO_WATCH_2020_V1) || defined(LILYGO_WRISTBAND)
-    if (wifiInitialized)
-    {
-        Serial.println("Update display every time for lilygo devices");
-        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
-        isDisplayActive = true;
-    }
-#endif
-
-    //Wifi not initialized
     if (!wifiInitialized)
     {
         Serial.println("Wifi-Configuration");
@@ -224,58 +103,12 @@ void setup()
         {
             firstBoot = false;
 
-            Serial.println("Initializing SPIFFS");
-            if (!initSPIFFS(true))
-            {
-                restartAfterErrorWithDelay("SPIFFS initialize failed");
-            }
-
-            if (!connectToStoredWifi())
-            {
-                restartAfterErrorWithDelay("Could not connect to Wifi!");
-            }
-
-            Serial.println("Initializing Time");
-            if (!initializeTime())
-            {
-                restartAfterErrorWithDelay("Time initialize failed");
-            }
-
-            Serial.print("Generating TEK - ");
-            signed char tek[16];
-            int enin;
-            if (getCurrentTek(tek, &enin))
-            {
-                Serial.println("Already exists");
-                Serial.print("TEK: ");
-                for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
-                {
-                    Serial.print(tek[i]);
-                }
-                Serial.println(" ");
-            }
-            else
-            {
-                if (!generateNewTemporaryExposureKey(calculateENIntervalNumber(time(NULL))))
-                {
-                    restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key");
-                }
-                Serial.println("Generated");
-                Serial.print("TEK: ");
-                for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
-                {
-                    Serial.print(tek[i]);
-                }
-                Serial.println(" ");
-            }
-
-            checkUUID();
-
-            Serial.println("Disconnecting Wifi");
-            if (!disconnectWifi())
-            {
-                Serial.println("Disconnect Failed");
-            }
+            !initSPIFFS(true) ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
+            !connectToStoredWifi() ? restartAfterErrorWithDelay("Couldn't connect to Wifi!") : Serial.println("Connected to WiFi.");
+            !initializeTime() ? restartAfterErrorWithDelay("Time initialize failed") : Serial.println("Initialized Time.");
+            !initializeTek() ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key") : Serial.println("Initialized Tek.");
+            !initializeUUID() ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
+            !disconnectWifi() ? Serial.println("Disconnect Failed") : Serial.println("Disconnecting Wifi");
 
             time_t now = time(NULL);
             scanTime = now + (60);
@@ -284,18 +117,14 @@ void setup()
             goIntoDeepSleep(requestOnStartUp);
         }
 
-        Serial.println("Initializing SPIFFS");
-        if (!initSPIFFS(false))
-        {
-            restartAfterErrorWithDelay("SPIFFS initialize failed");
-        }
+        !initSPIFFS(false) ? restartAfterErrorWithDelay("SPIFFS initialize failed") : Serial.println("Initializing SPIFFS");
 
         if (nextAction == ACTION_ADVERTISE || nextAction == ACTION_SCAN)
         {
             Serial.println("Initializing BLE");
             if (!initBLE(nextAction == ACTION_SCAN, nextAction == ACTION_ADVERTISE))
             {
-                restartAfterErrorWithDelay("BLE initialize failed");
+                restartAfterErrorWithDelay("BLE initialize failed!");
             }
         }
     }
@@ -368,4 +197,168 @@ void setup()
 void loop()
 {
     //Never called
+}
+
+void blinkLED()
+{
+    int state = digitalRead(LED_PIN);
+    digitalWrite(LED_PIN, !state);
+}
+
+bool initializeTime()
+{
+    struct tm timeinfo;
+    int start = millis();
+    const int WAITTIME = 180000; //3 Minutes
+
+    do
+    {
+        if ((millis() - start) >= WAITTIME)
+        {
+            return false;
+        }
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        delay(500);
+
+    } while (!getLocalTime(&timeinfo));
+    Serial.print("Local Time: ");
+    Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
+    delay(5000);
+    return true;
+}
+
+size_t restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
+{
+    digitalWrite(LED_PIN, LOW);
+    Serial.println(errorMessage);
+    delay(delayMS);
+    ESP.restart();
+    return 0;
+}
+
+void setNextAction(int action)
+{
+    switch (action)
+    {
+    case ACTION_SCAN:
+        Serial.println("Next: Scanning");
+        nextAction = ACTION_SCAN;
+        break;
+    case ACTION_WIFI_CONFIG:
+        Serial.println("Next: Wifi-Config");
+        nextAction = ACTION_WIFI_CONFIG;
+        break;
+    case ACTION_INFECTION_REQUEST:
+        Serial.println("Next: Infection-Request");
+        nextAction = ACTION_INFECTION_REQUEST;
+        break;
+    case ACTION_ADVERTISE:
+        Serial.println("Next: Advertising");
+        nextAction = ACTION_ADVERTISE;
+        break;
+    default:
+        nextAction = ACTION_NOTHING;
+        break;
+    }
+}
+
+void goIntoDeepSleep(bool requestInfections)
+{
+    time_t nextBootTime = time(NULL) + (SLEEP_INTERVAL / (1000 * 1000)) - 1; //Next Boot with Offset
+
+    if (requestInfections) //Request Infection on First boot after initialize
+    {
+        setNextAction(ACTION_INFECTION_REQUEST);
+    }
+    else if (nextBootTime >= updateTime)
+    {
+        updateTime += (60 * 60);
+        setNextAction(ACTION_INFECTION_REQUEST);
+    }
+    else if (nextBootTime >= scanTime)
+    {
+        scanTime += (60);
+        setNextAction(ACTION_SCAN);
+    }
+    else
+    {
+        setNextAction(ACTION_ADVERTISE);
+    }
+
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_0, LOW);
+    esp_sleep_enable_timer_wakeup(SLEEP_INTERVAL);
+    esp_deep_sleep_start();
+}
+
+bool initializeTek()
+{
+    Serial.print("Generating TEK - ");
+    signed char tek[16];
+    int enin;
+    if (getCurrentTek(tek, &enin))
+    {
+        Serial.print("TEK already exists: ");
+        for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
+        {
+            Serial.print(tek[i]);
+        }
+        Serial.println(" ");
+    }
+    else
+    {
+        if (!generateNewTemporaryExposureKey(calculateENIntervalNumber(time(NULL))))
+        {
+            return false;
+        }
+        Serial.print("Generated TEK:");
+        for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
+        {
+            Serial.print(tek[i]);
+        }
+        Serial.println(" ");
+    }
+    return true;
+}
+
+bool initializeDeviceSpecificDisplay(tm timeinfo)
+{
+    if (!isDisplayActive)
+    {
+        Serial.println("Initialize display");
+        initDisplay();
+    }
+    else
+    {
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+    }
+
+    esp_sleep_wakeup_cause_t wakeup_reason;
+    wakeup_reason = esp_sleep_get_wakeup_cause();
+
+#ifdef ESP32DEVOTA_COMMON
+    buttonState = digitalRead(BUTTON_PIN);
+    if ((wakeup_reason == ESP_SLEEP_WAKEUP_EXT0 || buttonState == LOW) && wifiInitialized) // LOW means clicked
+    {
+        Serial.println("Wakeup caused by external signal using RTC_IO");
+        if (!isDisplayActive)
+        {
+            defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+            isDisplayActive = true;
+        }
+        else
+        {
+            initDisplay();
+            isDisplayActive = false;
+        }
+    }
+#endif
+
+#if defined(LILYGO_WATCH_2020_V1) || defined(LILYGO_WRISTBAND)
+    if (wifiInitialized)
+    {
+        Serial.println("Update display every time for lilygo devices");
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices);
+        isDisplayActive = true;
+    }
+#endif
 }

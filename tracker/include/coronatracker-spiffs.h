@@ -16,7 +16,7 @@
 #define UUID_FILE_PATH "/uuid.txt"
 
 bool createFile(const char *path);
-bool getUUID(const char *path);
+const char * getUUID();
 bool initSPIFFS(bool createDataBases);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);
 bool getCurrentTek(signed char *tek, int *enin);

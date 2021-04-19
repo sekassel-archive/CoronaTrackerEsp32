@@ -60,7 +60,7 @@ std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi)
     return rsinMap;
 }
 
-bool checkUUID() {
+bool initializeUUID() {
     if (!WiFi.isConnected() && !connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
@@ -68,6 +68,8 @@ bool checkUUID() {
     }
     else
     {
+            createFile(UUID_FILE_PATH);
+            const char * uuid = getUUID();
         HTTPClient http;
 
         http.begin(String(SERVER_URL) + String(RSIN_UUID));
