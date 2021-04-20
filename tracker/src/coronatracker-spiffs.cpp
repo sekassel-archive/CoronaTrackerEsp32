@@ -1,4 +1,5 @@
 #include "coronatracker-spiffs.h"
+#include "coronatracker-wifi.h"
 
 const char *dataf = "Callback function called";
 static int callback(void *data, int argc, char **argv, char **azColName)
@@ -148,29 +149,58 @@ bool createFile(const char *path)
     return true;
 }
 
-const char *getUUID()
+bool initializeUuid(char *uuidstr)
 {
+    // if no uuid file exists it will be generated and it will be readable
+    if (!SPIFFS.begin(true) && createFile(UUID_FILE_PATH))
+    {
+        Serial.println("SPIFFS initialize for UUID failed!");
+        return false;
+    }
+
     File file = SPIFFS.open(UUID_FILE_PATH, FILE_READ);
     if (!file)
     {
-        Serial.println("There was an error opening the file for reading");
-        return NULL;
+        Serial.println("There was an error opening the UUID file for reading!");
+        return false;
     }
 
+    // read content from uuid file
+    // string should only be empty if there where never an uuid assigned to this chip
+    // uuid should be assigned only once to the same physical chip
     std::stringstream uuid_ss;
-    const char *uuidstr;
-
     for (int i = 0; file.available(); i++)
     {
         uuid_ss << file.read();
     }
-    uuidstr = uuid_ss.str().c_str();
-
     file.close();
 
-    Serial.print("Read uuid file: ");
-    Serial.println(uuidstr);
-    return uuidstr;
+    // uuid have to be 36 character long, server only accept 36 character long uuids
+    if (uuid_ss.str().size() == 36)
+    {
+        strcpy(uuidstr, uuid_ss.str().c_str());
+        return true;
+    }
+
+    // get new uuid from server
+    // if uuid is valid it will be set in function
+    if (getNewUuid(uuidstr))
+    {
+        // save new uuid to file
+        file = SPIFFS.open(UUID_FILE_PATH, FILE_WRITE);
+        if (!file)
+        {
+            Serial.println("There was an error opening the UUID file to write new UUID into file!");
+            return false;
+        }
+        file.write((byte *)&uuidstr, sizeof(uuidstr));
+        file.close();
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 bool insertRPI(time_t time, signed char *data, int data_size, bool intoMain, sqlite3 *main_db)

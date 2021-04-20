@@ -21,9 +21,9 @@ public class CwaDataInterpreterTest {
 
     @Test
     public void cwaDataAndUserDataCompareTest() throws Exception {
-        cwaData = cwaDataInterpreter.getCwaData();
+        //cwaData = cwaDataInterpreter.getCwaData();
         cwaData.clear();
-
+        //TODO: refactor
         Integer rsinProd1 = 2692512;
         List<byte[]> rsinProd1TestRpiList = new ArrayList<>();
         rsinProd1TestRpiList.add(new byte[]{0, 10, 41, -77, 24, -50, 91, -59, -73, 77, 58, 16, -125, -123, -51, 25});

@@ -8,10 +8,9 @@ import de.uniks.postgres.db.UserPostgreSqlDao;
 import de.uniks.postgres.db.model.User;
 import de.uniks.spark.payload.InfectedUserPostPayload;
 import de.uniks.spark.payload.UserPostPayload;
-import org.json.JSONArray;
+import de.uniks.spark.payload.UuidPostPayload;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -28,9 +27,17 @@ public class SparkRequestHandler {
         // http://sparkjava.com/documentation#examples-and-faq
         // https://github.com/tipsy/spark-ssl
 
-        get(ROUTING_PREFIX + "/hello", (request, response) -> "Hello World");
+        get(ROUTING_PREFIX + "/ping", (request, response) -> {
+            return "pong";
+        });
 
-        get(ROUTING_PREFIX + "/uuid", (request, response) -> UUID.randomUUID().toString());
+        get(ROUTING_PREFIX + "/uuid", (request, response) -> {
+            String newUuid;
+            do {
+                newUuid = UUID.randomUUID().toString();
+            } while (!userDb.get(newUuid).isEmpty());
+            return newUuid;
+        });
 
         /**
          * example body:
@@ -71,32 +78,33 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            if (!input.isValid()) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request values invalid!";
+            if (input.isValid() && hasContactWithInfectedByStatus(input.getUuid())) {
+                infectedUserDb.save(input.getInfectedUserForDB());
+                return "Success!";
             }
-
-            infectedUserDb.save(input.getInfectedUserForDB());
-
-            return "Success!";
+            response.status(HTTP_BAD_REQUEST);
+            return "Request values invalid!";
         }));
 
-        get(ROUTING_PREFIX + "/infection/status/:uuid", (request, response) -> {
-            String uuid;
-            uuid = request.params(":uuid");
-            if ((uuid == null) || (uuid.length() != 36)) {
+        post(ROUTING_PREFIX + "/infection/status", (request, response) -> {
+            ObjectMapper mapper = new ObjectMapper();
+            UuidPostPayload input;
+            try {
+                input = mapper.readValue(request.body(), UuidPostPayload.class);
+            } catch (JsonParseException | JsonMappingException e) {
                 response.status(HTTP_BAD_REQUEST);
-                return "Request values invalid!";
+                return "Request body invalid!";
             }
 
-            // TODO: change if get is refactored
-            Collection<User> u = userDb.get(uuid);
-            if (u.isEmpty()) {
-                response.status(HTTP_BAD_REQUEST);
-                return "Request couldn't be processed!";
-            }
-
-            return new JSONArray("u.getStatus()");
+            return hasContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
         });
+    }
+
+    private static Boolean hasContactWithInfectedByStatus(String uuid) {
+        List<User> foundUser = userDb.get(uuid);
+        if (!foundUser.isEmpty() && foundUser.stream().filter(user -> !user.getStatus().equals(0)).findAny().isPresent()) {
+            return true;
+        }
+        return false;
     }
 }

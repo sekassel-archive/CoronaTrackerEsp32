@@ -4,7 +4,10 @@ import de.uniks.postgres.db.model.User;
 import org.eclipse.jetty.util.ajax.JSON;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,7 +54,7 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
                 optionalOfInsertedRows = Optional.of(numberOfInsertedRows);
 
             } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, "Failed " + User.CLASS + " save statement on DB execute Update.", ex);
             }
             return optionalOfInsertedRows;
         });
@@ -82,11 +85,11 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
                 + User.ENIN + " = " + enin + ") AND ("
                 + User.STATUS + " = 0) AND (");
 
-        for (byte[] rpi: rpiList) {
+        for (byte[] rpi : rpiList) {
             sql.append("(" + User.RPILIST + " LIKE %"
                     + JSON.toString(rpi) + "%) ");
             rpiList.remove(rpi);
-            if(rpiList.isEmpty()){
+            if (rpiList.isEmpty()) {
                 sql.append(")");
             } else {
                 sql.append("OR ");

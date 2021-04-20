@@ -24,5 +24,5 @@ bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
 std::map<uint32_t, uint16_t> getRSINAsMap(bool connectToWifi);
-bool initializeUUID();
+bool getNewUuid(char *uuidstr);
 exposure_status checkForInfections();

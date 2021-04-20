@@ -14,6 +14,7 @@
 #endif
 
 #include <Ticker.h>
+
 #include "coronatracker-ble.h"
 #include "coronatracker-spiffs.h"
 
@@ -47,6 +48,8 @@ RTC_DATA_ATTR bool isDisplayActive = false;
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
+
+RTC_DATA_ATTR char uuidString[36];
 
 //Wifi Variables
 const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
@@ -86,7 +89,7 @@ void setup()
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo))
     {
-        Serial.println("Get local time error");
+        Serial.println("Warning: can't get local time");
     }
 
     initializeDeviceSpecificDisplay(timeinfo);
@@ -105,49 +108,51 @@ void setup()
 
             !initSPIFFS(true) ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
             !connectToStoredWifi() ? restartAfterErrorWithDelay("Couldn't connect to Wifi!") : Serial.println("Connected to WiFi.");
-            !initializeTime() ? restartAfterErrorWithDelay("Time initialize failed") : Serial.println("Initialized Time.");
-            !initializeTek() ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key") : Serial.println("Initialized Tek.");
-            !initializeUUID() ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
-            !disconnectWifi() ? Serial.println("Disconnect Failed") : Serial.println("Disconnecting Wifi");
+            !initializeTime() ? restartAfterErrorWithDelay("Time initialize failed!") : Serial.println("Initialized Time.");
+            !initializeTek() ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key!") : Serial.println("Initialized Tek.");
+            !initializeUuid(uuidString) ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
+            !disconnectWifi() ? Serial.println("Disconnect Failed!") : Serial.println("Disconnecting Wifi.");
 
             time_t now = time(NULL);
-            scanTime = now + (60);
-            updateTime = now + (60 * 60);
+            scanTime = now + (60); // 60 seconds
+            updateTime = now + (18 * 60); // 18 minutes
 
             goIntoDeepSleep(requestOnStartUp);
         }
 
-        !initSPIFFS(false) ? restartAfterErrorWithDelay("SPIFFS initialize failed") : Serial.println("Initializing SPIFFS");
-
-        if (nextAction == ACTION_ADVERTISE || nextAction == ACTION_SCAN)
-        {
-            Serial.println("Initializing BLE");
-            if (!initBLE(nextAction == ACTION_SCAN, nextAction == ACTION_ADVERTISE))
-            {
-                restartAfterErrorWithDelay("BLE initialize failed!");
-            }
-        }
+        !initSPIFFS(false) ? restartAfterErrorWithDelay("SPIFFS initialize failed") : Serial.println("Initialized SPIFFS.");
     }
 
-    if (nextAction == ACTION_SCAN)
+    switch (nextAction)
     {
-        Serial.println("Starting Scan...");
+    case ACTION_SCAN:
+    {
+        initializeBluetoothForScan();
 
+        Serial.println("Start: ACTION_SCAN");
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
         deinitBLE(true); //free memory for database interaction
         scanedDevices = rpis.size();
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
+        break;
     }
-    else if (nextAction == ACTION_ADVERTISE)
+    case ACTION_ADVERTISE:
     {
+        Serial.println("Start: ACTION_ADVERTISE");
+        if (initializeBluetoothForAdvertisment() == false)
+        {
+            restartAfterErrorWithDelay("Initialize Bluetooth for Advertisment failed!");
+        }
+
         digitalWrite(LED_PIN, LOW);
         delay(ADVERTISE_TIME);
         digitalWrite(LED_PIN, HIGH);
+        break;
     }
-    else if (nextAction == ACTION_WIFI_CONFIG)
+    case ACTION_WIFI_CONFIG:
     {
-        Serial.println("Starting WifiManger-Config");
+        Serial.println("Start: ACTION_WIFI_CONFIG");
         buttonTicker.attach_ms(500, blinkLED);
 
         configureWifiMessageOnDisplay();
@@ -156,14 +161,14 @@ void setup()
         buttonTicker.detach();
         if (res)
         {
-            Serial.println("We connected to Wifi...");
+            Serial.println("Successfully connected to Wifi!");
             wifiInitialized = true;
             digitalWrite(LED_PIN, HIGH);
             wifiConfiguredOnDisplay(true);
         }
         else
         {
-            Serial.println("Could not connect to Wifi");
+            Serial.println("Couldn't connect to Wifi!");
             digitalWrite(LED_PIN, LOW);
             wifiConfiguredOnDisplay(false);
             //Delay so feedback can be seen on LED
@@ -172,14 +177,18 @@ void setup()
         }
         delay(5000);
         disconnectWifi();
+        break;
     }
-    else if (nextAction == ACTION_INFECTION_REQUEST)
+    case ACTION_INFECTION_REQUEST:
     {
+        Serial.println("Start: ACTION_INFECTION_REQUEST");
         defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices); //while infection request the display is always on
         exposureStatus = checkForInfections();
         afterInfectionRequestOnDisplay(exposureStatus);
         delay(10000);
+        break;
     }
+    } // switch case end
 
     if (isDisplayActive)
     {
@@ -188,7 +197,7 @@ void setup()
 
     end = micros();
     float result = end - start;
-    result /= 1000; //convert to milliseconds
+    result /= 1000; // convert to milliseconds
     Serial.printf("Time(milliseconds): %g\n", result);
 
     goIntoDeepSleep(false);
@@ -196,7 +205,7 @@ void setup()
 
 void loop()
 {
-    //Never called
+    // Never called
 }
 
 void blinkLED()
@@ -209,7 +218,7 @@ bool initializeTime()
 {
     struct tm timeinfo;
     int start = millis();
-    const int WAITTIME = 180000; //3 Minutes
+    const int WAITTIME = 180000; // 3 Minutes
 
     do
     {

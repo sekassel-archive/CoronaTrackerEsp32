@@ -1,7 +1,9 @@
 package de.uniks.postgres.db;
 
+import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -9,11 +11,10 @@ import org.junit.jupiter.api.TestInstance;
 
 import java.lang.reflect.Field;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.logging.Level;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LocalDbConnectionTest {
@@ -51,7 +52,7 @@ public class LocalDbConnectionTest {
     }
 
     @Test
-    public void localDbConnectionTest() {
+    public void localDbAddAndDeleteUserTest() {
         // User test data set
         byte[] testRpi = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
         User user = new User("3ee56edf-1e91-438f-b75e-50df9a30e515", 0, 2692512, List.of(testRpi));
@@ -77,5 +78,31 @@ public class LocalDbConnectionTest {
         userInterface.delete(user);
         userBack = userInterface.get(user.getUuid());
         Assert.assertTrue(userBack.isEmpty());
+    }
+
+    @Test
+    @Ignore
+    public void wipeLocalUserDB() {
+        String sql = "TRUNCATE TABLE " + User.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                Assert.fail();
+            }
+        });
+    }
+
+    @Test
+    @Ignore
+    public void wipeLocalInfectedUserDB() {
+        String sql = "TRUNCATE TABLE " + InfectedUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                Assert.fail();
+            }
+        });
     }
 }
