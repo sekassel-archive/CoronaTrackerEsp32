@@ -1,4 +1,5 @@
 #include "coronatracker-ble.h"
+#include "coronatracker-crypto.h"
 
 static BLEUUID serviceUUID((uint16_t)0xFD6F); //UUID taken from App
 signed char tek[TEK_LENGTH];                  //Temporary Exposure Key

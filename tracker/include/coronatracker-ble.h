@@ -1,8 +1,8 @@
-#include <BLEDevice.h>
-#include <Arduino.h>
-
+#pragma once
 #include "coronatracker-crypto.h"
 #include "coronatracker-spiffs.h"
+#include <Arduino.h>
+#include <BLEDevice.h>
 
 void initializeBluetoothForScan();
 bool initializeBluetoothForAdvertisment();

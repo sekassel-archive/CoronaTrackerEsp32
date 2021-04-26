@@ -15,11 +15,11 @@ public class Main {
 
     public static void main(String[] args) {
         SparkRequestHandler.handleRequests();
-        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 5, 60, TimeUnit.MINUTES);
+        //scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 5, 60, TimeUnit.MINUTES);
 
         try {
-            Thread springThread = new Thread(SpringBoot::startSpring);
-            springThread.start();
+            //Thread springThread = new Thread(SpringBoot::startSpring);
+            //springThread.start();
         } catch (Exception e) {
             LOG.log(Level.WARNING, "UI Vaadin Spring Boot Thread crashed!", e);
         }
