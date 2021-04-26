@@ -1,4 +1,7 @@
 #include <Arduino.h>
+#include <Ticker.h>
+
+#pragma region DISPLAY_INCLUDES
 
 #ifdef LILYGO_WATCH_2020_V1
 #include "LilyGoWatch.h"
@@ -12,11 +15,9 @@
 #ifdef LILYGO_WRISTBAND
 #include "coronatracker-display-wristband.h"
 #endif
+#pragma endregion DISPLAY_INCLUDES
 
-#include <Ticker.h>
-
-#include "coronatracker-ble.h"
-#include "coronatracker-spiffs.h"
+#include "coronatracker-utils.h"
 
 #define BUTTON_PIN 0
 #ifndef LED_PIN
@@ -28,21 +29,21 @@
 #define ACTION_SCAN 2
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
-#define ACTION_SLEEP 5 //Just for display
+#define ACTION_SLEEP 5 // just for display
 
-#define SLEEP_INTERVAL 3000000 //In microseconds
+#define SLEEP_INTERVAL 3000000 // microseconds
 
 #define BOOTS_UNTIL_DISPLAY_TURNS_OFF 4
-#define SCAN_TIME 10       //in seconds
-#define ADVERTISE_TIME 500 //in milliseconds
+#define SCAN_TIME 10       // seconds
+#define ADVERTISE_TIME 500 // milliseconds
 
-//Saved during deep sleep mode
+// saved during deep sleep mode
 RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scanedDevices = -1;
 RTC_DATA_ATTR bool firstBoot = true;
-RTC_DATA_ATTR bool requestOnStartUp = false; //For disabling startup request
+RTC_DATA_ATTR bool requestOnStartUp = false; // for disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
 RTC_DATA_ATTR bool isDisplayActive = false;
 
@@ -51,8 +52,8 @@ RTC_DATA_ATTR time_t updateTime;
 
 RTC_DATA_ATTR char uuidString[36];
 
-//Wifi Variables
-const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000; //4 Seconds
+// wifi variables
+const static int BUTTON_PRESS_DURATION_MILLISECONDS = 4000;
 
 int buttonState = 0;
 int lastButtonState = 0;
@@ -60,14 +61,14 @@ int startPressed = 0;
 
 Ticker buttonTicker;
 
-//Time Variables
+// time variables
 const char *ntpServer = "pool.ntp.org";
 const long gmtOffset_sec = 3600;
 const int daylightOffset_sec = 3600;
 
 void blinkLED();
 bool initializeTime();
-size_t restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000);
+size_t restartAfterErrorWithDelay(String errorMessage);
 void setNextAction(int action);
 void goIntoDeepSleep(bool requestInfections);
 bool initializeTek();
@@ -75,13 +76,13 @@ bool initializeDeviceSpecificDisplay(tm timeinfo);
 
 void setup()
 {
-    // Setting up Serial
+    // setting up serial
     Serial.begin(115200);
 
     float start = micros();
     float end;
 
-    //Setting up pinModes
+    // setting up pinModes
     pinMode(LED_PIN, OUTPUT);
     pinMode(BUTTON_PIN, PULLUP);
     digitalWrite(LED_PIN, HIGH); // LED off
@@ -96,7 +97,6 @@ void setup()
 
     if (!wifiInitialized)
     {
-        Serial.println("Wifi-Configuration");
         digitalWrite(LED_PIN, LOW);
         setNextAction(ACTION_WIFI_CONFIG);
     }
@@ -114,24 +114,23 @@ void setup()
             !disconnectWifi() ? Serial.println("Disconnect Failed!") : Serial.println("Disconnecting Wifi.");
 
             time_t now = time(NULL);
-            scanTime = now + (60); // 60 seconds
+            scanTime = now + (60);        // 60 seconds
             updateTime = now + (18 * 60); // 18 minutes
 
             goIntoDeepSleep(requestOnStartUp);
         }
 
-        !initSPIFFS(false) ? restartAfterErrorWithDelay("SPIFFS initialize failed") : Serial.println("Initialized SPIFFS.");
+        !initSPIFFS(false) ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
     }
 
     switch (nextAction)
     {
     case ACTION_SCAN:
     {
-        initializeBluetoothForScan();
-
         Serial.println("Start: ACTION_SCAN");
+        initializeBluetoothForScan();
         std::vector<std::__cxx11::string> rpis = scanForCovidDevices((uint32_t)SCAN_TIME);
-        deinitBLE(true); //free memory for database interaction
+        deinitBLE(true); // free memory for database interaction
         scanedDevices = rpis.size();
         insertTemporaryRollingProximityIdentifiers(time(NULL), rpis);
         cleanUpTempDatabase();
@@ -171,7 +170,7 @@ void setup()
             Serial.println("Couldn't connect to Wifi!");
             digitalWrite(LED_PIN, LOW);
             wifiConfiguredOnDisplay(false);
-            //Delay so feedback can be seen on LED
+            // delay so feedback can be seen on LED
             delay(5000);
             ESP.restart();
         }
@@ -182,7 +181,7 @@ void setup()
     case ACTION_INFECTION_REQUEST:
     {
         Serial.println("Start: ACTION_INFECTION_REQUEST");
-        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices); //while infection request the display is always on
+        defaultDisplay(timeinfo, nextAction, exposureStatus, scanedDevices); // while infection request the display is always on
         exposureStatus = checkForInfections();
         afterInfectionRequestOnDisplay(exposureStatus);
         delay(10000);
@@ -205,7 +204,7 @@ void setup()
 
 void loop()
 {
-    // Never called
+    // never called
 }
 
 void blinkLED()
@@ -236,11 +235,12 @@ bool initializeTime()
     return true;
 }
 
-size_t restartAfterErrorWithDelay(String errorMessage, uint32_t delayMS = 10000)
+size_t restartAfterErrorWithDelay(String errorMessage)
 {
     digitalWrite(LED_PIN, LOW);
+    Serial.print("Restart after Error: ");
     Serial.println(errorMessage);
-    delay(delayMS);
+    delay(10000);
     ESP.restart();
     return 0;
 }

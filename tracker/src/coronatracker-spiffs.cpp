@@ -108,7 +108,7 @@ bool initSPIFFS(bool createDataBases)
             return false;
         }
 
-        //UNIQUE Keyword does not work currently (https://github.com/siara-cc/esp32_arduino_sqlite3_lib/issues/18)
+        // UNIQUE Keyword does not work currently (https://github.com/siara-cc/esp32_arduino_sqlite3_lib/issues/18)
         if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS main (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
         {
             Serial.printf("Failed to create table main in datbase: %s\n", errMsg);
@@ -540,4 +540,70 @@ int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, 
 
     sqlite3_finalize(res);
     return occ;
+}
+
+ContactInformation *checkForCollectedContactInformationsInDatabase()
+{
+        // get actual enin to compare if we have not matching enins in our clected contact informations
+    int currentENIN = calculateENIntervalNumber(time(NULL));
+    sqlite3 *main_db;
+    const char *sql;
+    sqlite3_stmt *res;
+
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening main database: %s\n", sqlite3_errmsg(main_db));
+        return NULL;
+    }
+
+    //Serial.println("____________Saved Rolling Proximity Identifiers____________");
+    //printSQLResult(main_db, "SELECT * FROM main");
+    //time = 1610031333
+    //bl_data = B4 89 B1 13 4A 74 32 8C 1C 3E 9B 32 DE 2F C7 3D
+
+
+    sql = "SELECT * FROM main WHERE time CONTAINS \"?%\";";
+
+        std::stringstream sql_ss;
+        sql_ss << "SELECT COUNT(bl_data) FROM main WHERE bl_data IN (";
+        for (int i = 0; i < key_amount; i++)
+        {
+            if (i == key_amount - 1)
+            {
+                sql_ss << " ?";
+                break;
+            }
+            sql_ss << " ?,";
+        }
+        sql_ss << ");";
+        sql = sql_ss.str().c_str();
+    
+
+    if (sqlite3_prepare_v2(db, sql, strlen(sql), &res, nullptr) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(res);
+        return NULL;
+    }
+
+    for (int i = 1; i <= key_amount; i++)
+    {
+        if (sqlite3_bind_blob(res, i, (signed char *)keys[i], key_length, SQLITE_STATIC) != SQLITE_OK)
+        {
+            Serial.printf("ERROR binding blob: %s\n", sqlite3_errmsg(db));
+            sqlite3_finalize(res);
+            return NULL;
+        }
+    }
+
+    if (sqlite3_step(res) != SQLITE_ROW)
+    {
+        Serial.printf("ERROR stepping: %s\n", sqlite3_errmsg(db));
+        sqlite3_finalize(res);
+        return NULL;
+    }
+    int occ = sqlite3_column_int(res, 0);
+
+    sqlite3_finalize(res);
+    return NULL;
 }

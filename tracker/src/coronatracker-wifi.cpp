@@ -101,6 +101,20 @@ bool getNewUuid(char *uuidstr)
 
 exposure_status checkForInfections()
 {
+    // get actual enin to compare if we have not matching enins in our clected contact informations
+    int currentENIN = calculateENIntervalNumber(time(NULL));
+
+    Serial.println("Prepare to send contact information.");
+
+    ContactInformation cI = checkForCollectedContactInformationsInDatabase(currentENIN);
+
+    sqlite3 *db;
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
+        return EXPOSURE_UPDATE_FAILED;
+    }
+
     if (!connectToStoredWifi())
     {
         Serial.println("EXPOSURE_UPDATE_FAILED: Couldn't connect to Wifi!");
@@ -109,17 +123,27 @@ exposure_status checkForInfections()
 
     // TODO: add logic to send contact informations and get infection status
 
+      HTTPClient http;
+      
+      // Your Domain name with URL path or IP address with path
+      http.begin(String(SERVER_URL) + String(RSIN_UUID));
 
+      // Specify content-type header
+      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      // Data to send with HTTP POST
+      String httpRequestData = "api_key=tPmAT5Ab3j7F9&sensor=BME280&value1=24.25&value2=49.54&value3=1005.14";           
+      // Send HTTP POST request
+      int httpResponseCode = http.POST(httpRequestData);
+      
+      // If you need an HTTP request with a content type: application/json, use the following:
+      //http.addHeader("Content-Type", "application/json");
+      //int httpResponseCode = http.POST("{\"api_key\":\"tPmAT5Ab3j7F9\",\"sensor\":\"BME280\",\"value1\":\"24.25\",\"value2\":\"49.54\",\"value3\":\"1005.14\"}");
+
+      // If you need an HTTP request with a content type: text/plain
+      //http.addHeader("Content-Type", "text/plain");
+      //int httpResponseCode = http.POST("Hello, World!");
 /*
-    Serial.println("Prepare to send contact information.");
-    auto rsinMap = getRSINAsMap(false);
 
-    sqlite3 *db;
-    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &db) != SQLITE_OK)
-    {
-        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(db));
-        return EXPOSURE_UPDATE_FAILED;
-    }
 */
 
     disconnectWifi();

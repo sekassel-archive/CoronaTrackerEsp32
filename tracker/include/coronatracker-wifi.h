@@ -20,6 +20,7 @@ typedef enum
     EXPOSURE_NO_UPDATE = 3, //No update happened yet
 } exposure_status;
 
+
 bool disconnectWifi();
 bool connectToStoredWifi();
 bool configureWifi();
