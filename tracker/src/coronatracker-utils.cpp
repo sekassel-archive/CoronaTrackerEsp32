@@ -83,16 +83,31 @@ void setupWifiConnection(bool *wifiInitialized)
     disconnectWifi();
 }
 
-void sendCollectedDataToServer(void)
+void sendCollectedDataToServer(char *uuidstr)
 {
-    //checkForCollectedContactInformationsInDatabase();
-    //sendContactInformation(char *uuidstr, int enin, char *rpiData[][16]);
+    // there may be problems with flash size, so maybe do this in smaller steps in future if needed
+    std::map<int, std::vector<char *>> collectedContactInformation;
+    checkForCollectedContactInformationsInDatabase(&collectedContactInformation);
+    std::map<int, std::vector<char *>>::iterator it = collectedContactInformation.begin();
+    while (it != collectedContactInformation.end())
+    {
+        if (!sendContactInformation(uuidstr, (int)it->first, (std::vector<char *>)it->second))
+        {
+            // couldn't send data to server, so we need to keep it and try again later
+            std::vector<char *> rpisTmp = collectedContactInformation[it->first];
+            do
+            {
+                delete rpisTmp.front();
+            } while (rpisTmp.front() != NULL); // TODO: clean destroy
+        }
+        it++;
+    }
+    // TODO delete sended collectedContactInformation from db
 }
 
-exposure_status getInfectionStatusFromServer(void)
+exposure_status getInfectionStatusFromServer(char *uuidstr)
 {
-    //return getInfectionStatus(char *uuidstr);
-    return EXPOSURE_NO_DETECT;
+    return getInfectionStatus(uuidstr);
 }
 
 bool initializeTek(void)

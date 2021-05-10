@@ -169,22 +169,23 @@ bool readUuid(char *uuidstr)
     // read content from uuid file
     // string should only be empty if there where never an uuid assigned to this chip
     // uuid should be assigned only once to the same physical chip
-    std::stringstream uuid_ss;
-    for (int i = 0; file.available(); i++)
-    {
-        uuid_ss << file.read();
-    }
+    String uuid_ss;
+    uuid_ss = file.readString();
     file.close();
 
     // uuid have to be 36 character long, server only accept 36 character long uuids
-    if (uuid_ss.str().size() == 36)
+    if (uuid_ss.length() == 36)
     {
-        strcpy(uuidstr, uuid_ss.str().c_str());
+        strcpy(uuidstr, uuid_ss.c_str());
         return true;
     }
     else
     {
-        Serial.println("UUID string size != 36 character! Failed to load UUID.");
+        Serial.print("UUID string size != 36 character, instead it is ");
+        Serial.print(uuid_ss.length());
+        Serial.println(" character long! Failed to load UUID.");
+        Serial.print("Read UUID: ");
+        Serial.println(uuid_ss.c_str());
         return false;
     }
 }
@@ -205,7 +206,10 @@ bool writeUuid(char *uuidstr)
         Serial.println("There was an error opening the UUID file to write new UUID into file!");
         return false;
     }
-    file.write((byte *)&uuidstr, sizeof(uuidstr));
+    if (!file.print(uuidstr))
+    {
+        Serial.println("Writting UUID failed!");
+    }
     file.close();
     return true;
 }
@@ -226,7 +230,8 @@ bool insertRPI(time_t time, signed char *data, int data_size, bool intoMain, sql
         sql_ss << "temp";
     }
     sql_ss << " VALUES (";
-    sql_ss << time;
+    // sql_ss << time; if you want to save the exact unix timestamp, but we need enin, so do risc calculation beforehand
+    sql_ss << calculateENIntervalNumber(time);
     sql_ss << ",?);";
 
     const char *sql = sql_ss.str().c_str();
@@ -549,28 +554,110 @@ int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, 
     return occ;
 }
 
-ContactInformation *checkForCollectedContactInformationsInDatabase()
+bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<char *>> *contactInformationMap)
 {
-    // get actual enin to compare if we have not matching enins in our clected contact informations
-    int currentENIN = calculateENIntervalNumber(time(NULL));
     sqlite3 *main_db;
-    const char *sql;
-    sqlite3_stmt *res;
-
     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
     {
         Serial.printf("ERROR opening main database: %s\n", sqlite3_errmsg(main_db));
-        return NULL;
+        return false;
     }
 
-    //Serial.println("____________Saved Rolling Proximity Identifiers____________");
-    //printSQLResult(main_db, "SELECT * FROM main");
-    //time = 1610031333
-    //bl_data = B4 89 B1 13 4A 74 32 8C 1C 3E 9B 32 DE 2F C7 3D
+    // get actual enin to compare if we have not matching enins in our collected contact informations
+    std::stringstream ss;
+    ss << "SELECT time, bl_data FROM main WHERE time NOT LIKE \"" << calculateENIntervalNumber(time(NULL)) << "\";";
+    const char *sql = ss.str().c_str();
 
-    sql = "SELECT * FROM main WHERE time CONTAINS \"?%\";";
+    // Saved Rolling Proximity Identifiers - RPI char[16] array (contact information)
+    // time = epoch timestamp / (60*10) , time converter: https://www.epochconverter.com/
+    // SELECT * FROM main_db; you will get column like this:
+    // time = 2696328   (in unix = 1617796800, exact unix = 1610031333, date was: 7. April 2021 12:07:37)
+    // bl_data = B4 89 B1 13 4A 74 32 8C 1C 3E 9B 32 DE 2F C7 3D
 
-    // TODO
+    sqlite3_stmt *stmt = NULL;
+    if (sqlite3_prepare_v2(main_db, sql, strlen(sql), &stmt, nullptr) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(main_db));
+        return false;
+    }
 
-    return NULL;
+    while (true)
+    {
+        int status = sqlite3_step(stmt);
+        if (status == SQLITE_DONE)
+        {
+            break;
+        }
+        if (status != SQLITE_ROW)
+        {
+            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(main_db));
+            break;
+        }
+
+        int foundEnin = sqlite3_column_int(stmt, 0);
+        const signed char *rawBlData = (const signed char *)sqlite3_column_blob(stmt, 1);
+        char *rpiArray = new char[16];
+
+        for (int i = 0; (i < sqlite3_column_bytes(stmt, 1)) && (i < 16); i++)
+        {
+            rpiArray[i] = rawBlData[i];
+        }
+
+        (*contactInformationMap)[foundEnin].push_back(rpiArray);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(main_db);
+
+    return true;
+}
+
+void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<char *>> *contactInformationMap)
+{
+    sqlite3 *main_db;
+    if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening main database: %s\n", sqlite3_errmsg(main_db));
+        return;
+    }
+
+    // get actual enin to compare if we have not matching enins in our collected contact informations
+    std::stringstream ss;
+    ss << "DELETE FROM main WHERE enin LIKE \"" << 1 << "\";";
+    const char *sql = ss.str().c_str();
+
+    sqlite3_stmt *stmt = NULL;
+    if (sqlite3_prepare_v2(main_db, sql, strlen(sql), &stmt, nullptr) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(main_db));
+        return;
+    }
+
+    while (true)
+    {
+        int status = sqlite3_step(stmt);
+        if (status == SQLITE_DONE)
+        {
+            break;
+        }
+        if (status != SQLITE_ROW)
+        {
+            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(main_db));
+            break;
+        }
+
+        int foundEnin = sqlite3_column_int(stmt, 0);
+        const signed char *rawBlData = (const signed char *)sqlite3_column_blob(stmt, 1);
+        char *rpiArray = new char[16];
+
+        for (int i = 0; (i < sqlite3_column_bytes(stmt, 1)) && (i < 16); i++)
+        {
+            rpiArray[i] = rawBlData[i];
+        }
+
+        (*contactInformationMap)[foundEnin].push_back(rpiArray);
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(main_db);
 }

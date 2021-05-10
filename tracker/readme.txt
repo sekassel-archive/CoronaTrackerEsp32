@@ -34,6 +34,11 @@ CWA Backend Server Communication:
 
 -> Aus Keys und Rolling Update Periode können die TEKs für den Tag errechnet werden
 
+Risikoberechnung:
+https://www.coronawarn.app/de/blog/2020-12-17-risk-calculation-exposure-notification-framework-2-0/
+https://github.com/corona-warn-app/cwa-documentation/tree/master/images/risk_calculation
+
+
 Quellen:
 
 Funktionsweise:

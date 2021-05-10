@@ -5,6 +5,7 @@
 #include <HTTPClient.h>
 
 #define SERVER_URL "https://tracing.uniks.de/api"
+//#define SERVER_URL "http://192.168.2.2:4567/api"
 #define GET_TEST_URL "/ping"
 #define GET_NEW_UUID "/uuid"
 #define POST_DATA_INPUT_RPIS "/data/input"
@@ -16,4 +17,4 @@ bool connectToStoredWifi();
 bool configureWifi();
 bool getNewUuid(char *uuidstr);
 exposure_status getInfectionStatus(char *uuidstr);
-bool sendContactInformation(char *uuidstr, int enin, char *rpiData[][16]);
+bool sendContactInformation(char *uuidstr, int enin, std::vector<char*> rpiData);

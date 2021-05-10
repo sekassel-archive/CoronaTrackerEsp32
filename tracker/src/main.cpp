@@ -88,9 +88,9 @@ void setup()
     {
         if (firstBoot)
         {
-            firstBoot = false;
+            firstStartInitializeSteps(&uuidString[0]);
 
-            firstStartInitializeSteps(uuidString);
+            firstBoot = false;
 
             time_t now = time(NULL);
             scanTime = now + (60);        // 60 seconds
@@ -124,8 +124,8 @@ void setup()
     case ACTION_INFECTION_REQUEST:
     {
         Serial.println("Start: ACTION_INFECTION_REQUEST");
-        sendCollectedDataToServer();
-        exposureStatus = getInfectionStatusFromServer();
+        sendCollectedDataToServer(uuidString);
+        exposureStatus = getInfectionStatusFromServer(uuidString);
         // TODO: show infection status on display or do it in function
         break;
     }

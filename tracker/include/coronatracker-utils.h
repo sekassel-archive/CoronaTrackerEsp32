@@ -19,8 +19,8 @@ void actionScanForBluetoothDevices(int* scannedDevices);
 void advertiseBluetoothDevice(int* scannedDevices);
 
 void setupWifiConnection(bool* wifiInitialized);
-void sendCollectedDataToServer(void);
-exposure_status getInfectionStatusFromServer(void);
+void sendCollectedDataToServer(char *uuidstr);
+exposure_status getInfectionStatusFromServer(char *uuidstr);
 
 // used to be used in coronatracker-utils only
 bool initializeTek(void);

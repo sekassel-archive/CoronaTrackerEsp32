@@ -69,12 +69,12 @@ bool getNewUuid(char *uuidstr)
             if (uuid.length() == 36)
             {
                 strcpy(uuidstr, uuid.c_str());
-                Serial.print("Got UUID: ");
-                Serial.println(*uuidstr);
             }
             else
             {
                 Serial.println("UUID from Server != 36 character! Invalid UUID length.");
+                Serial.print("Recieved string: ");
+                Serial.println(uuid);
                 return false;
             }
         }
@@ -129,7 +129,7 @@ exposure_status getInfectionStatus(char *uuidstr)
     return EXPOSURE_NO_DETECT;
 }
 
-bool sendContactInformation(char *uuidstr, int enin, char *rpiData[][16])
+bool sendContactInformation(char *uuidstr, int enin, std::vector<char *> rpiData)
 {
     if (!connectToStoredWifi())
     {
@@ -149,9 +149,7 @@ bool sendContactInformation(char *uuidstr, int enin, char *rpiData[][16])
     std::stringstream stringStream;
     stringStream << "{\"uuid\":\"" << uuidstr << "\",\"status\":\"0\",\"enin\":\"" << enin << "\",}";
 
-
     // TODO: rpiData to JSON Array into String
-
 
     // Send HTTP POST request
     int httpResponseCode = http.POST(stringStream.str().c_str());
