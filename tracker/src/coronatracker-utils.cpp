@@ -95,8 +95,6 @@ void sendCollectedDataToServer()
         return;
     }
 
-    Serial.printf("collectedContactInformation.size() = %i \n", collectedContactInformation.size());
-
     std::string uuid = readUuid();
     if (strcmp(uuid.c_str(), "NULL") == 0)
     {
@@ -119,10 +117,6 @@ void sendCollectedDataToServer()
             // couldn't send data to server, so we need to keep it in db and try again later
             Serial.printf("Error in sendContactInformation for enin: %i\n", eninTmp);
             collectedContactInformation.erase(eninTmp);
-        }
-        else
-        {
-            Serial.printf("Successfully sendContactInformation for enin: %i to DB!\n", eninTmp);
         }
         it++;
     }

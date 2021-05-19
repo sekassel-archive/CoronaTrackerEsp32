@@ -572,18 +572,16 @@ bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<st
         return false;
     }
 
-    // get actual enin to compare if we have older enins in our collected contact informations
+    // get collected contact informations with enin / time older than actual time
     std::stringstream ss;
     ss << "SELECT DISTINCT * FROM main WHERE time < " << calculateENIntervalNumber(time(NULL)) << ";";
-
-    Serial.printf("SQL: %s \n", ss.str().c_str());
-    printDatabases();
 
     // Saved Rolling Proximity Identifiers - RPI char[16] array (contact information)
     // time = epoch timestamp / (60*10) , time converter: https://www.epochconverter.com/
     // SELECT * FROM main_db; you will get column like this:
     // time = 2696328   (in unix = 1617796800, exact unix = 1610031333, date was: 7. April 2021 12:07:37)
-    // bl_data = B4 89 B1 13 4A 74 32 8C 1C 3E 9B 32 DE 2F C7 3D
+    // bl_data = 90 01 70 48 32 CE 6B 96 A8 F1 8B C4 05 D3 AB 68 (hex values)
+    // equal to  144,1,112,72,50,206,107,150,168,241,139,196,5,211,171,104
 
     sqlite3_stmt *stmt = NULL;
     if (sqlite3_prepare_v2(main_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
@@ -596,11 +594,13 @@ bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<st
     while (true)
     {
         int status = sqlite3_step(stmt);
+
         if (status == SQLITE_DONE)
         {
-            Serial.println("SQLITE_DONE: We read all rows and escape the sql data collection loop.");
+            // SQLITE_DONE: We read all rows and escape the sql data collection loop
             break;
         }
+
         if (status != SQLITE_ROW)
         {
             Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(main_db));
@@ -609,24 +609,18 @@ bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<st
         }
 
         int foundEnin = sqlite3_column_int(stmt, 0);
-        Serial.printf("foundEnin: %i\tcopy rawBlData: ", foundEnin);
+        const char *rawBlData = (const char *)sqlite3_column_blob(stmt, 1);
 
         std::stringstream ss;
-        const char *rawBlData = (const char *)sqlite3_column_blob(stmt, 1);
         ss << "[";
 
         for (int i = 0; i < 16; i++)
         {
-            Serial.printf("%02hhX ", rawBlData[i]);
             ss << (int)rawBlData[i];
             i == 15 ? ss << "]" : ss << ",";
         }
 
-        Serial.printf("\tto string: %s", ss.str().c_str());
-        Serial.printf("\tbytes: %i\n", sqlite3_column_bytes(stmt, 1));
-
         (*contactInformationMap)[foundEnin].push_back(ss.str().c_str());
-        Serial.printf("Pushback Enin: %i into contactInformationMap\n", foundEnin);
     }
 
     sqlite3_finalize(stmt);
@@ -650,7 +644,6 @@ void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::v
         int eninTmp = (int)it->first;
         std::stringstream ss;
         ss << "DELETE FROM main WHERE time = " << eninTmp << ";";
-        Serial.println(ss.str().c_str());
         char *zErrMsg;
         if (sqlite3_exec(main_db, ss.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
         {
@@ -660,6 +653,4 @@ void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::v
         it++;
     }
     sqlite3_close(main_db);
-
-    printDatabases();
 }

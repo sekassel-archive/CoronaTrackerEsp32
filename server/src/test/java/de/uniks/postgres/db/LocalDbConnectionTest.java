@@ -10,9 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -78,6 +76,28 @@ public class LocalDbConnectionTest {
         userInterface.delete(user);
         userBack = userInterface.get(user.getUuid());
         Assert.assertTrue(userBack.isEmpty());
+    }
+
+    @Test
+    public void printUserDB() {
+        String sql = "SELECT * FROM " + User.CLASS + ";";
+        List<User> users = new ArrayList<>();
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String uuid = resultSet.getString(User.UUID);
+                    Integer status = resultSet.getInt(User.STATUS);
+                    Integer rsin = resultSet.getInt(User.ENIN);
+                    String tekListAsJSONArray = resultSet.getString(User.RPILIST);
+                    System.out.println("UUID:" + uuid + "\nstatus:" + status + "\nrsin:" + rsin + "\nrpiList:" + tekListAsJSONArray + "\n\n");
+                    users.add(new User(uuid, status, rsin, tekListAsJSONArray));
+                }
+            } catch (SQLException ex) {
+                Assert.fail();
+            }
+        });
     }
 
     @Test
