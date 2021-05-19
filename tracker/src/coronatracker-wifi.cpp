@@ -100,7 +100,7 @@ exposure_status getInfectionStatus(std::string *uuidstr)
 
     // Data to send with HTTP POST
     std::stringstream stringStream;
-    stringStream << "{\"uuid\":\"" << uuidstr << "\"}";
+    stringStream << "{\"uuid\":\"" << uuidstr->c_str() << "\"}";
 
     // Send HTTP POST request
     int httpResponseCode = http.POST(stringStream.str().c_str());
