@@ -41,7 +41,7 @@ bool configureWifi()
     return result;
 }
 
-bool getNewUuid(char *uuidstr)
+bool getNewUuid(std::string *uuidstr)
 {
     if (!WiFi.isConnected() && !connectToStoredWifi())
     {
@@ -68,7 +68,7 @@ bool getNewUuid(char *uuidstr)
 
             if (uuid.length() == 36)
             {
-                strcpy(uuidstr, uuid.c_str());
+                (*uuidstr) = (std::string)uuid.c_str();
             }
             else
             {
@@ -82,7 +82,7 @@ bool getNewUuid(char *uuidstr)
     return true;
 }
 
-exposure_status getInfectionStatus(char *uuidstr)
+exposure_status getInfectionStatus(std::string *uuidstr)
 {
     if (!connectToStoredWifi())
     {
@@ -129,11 +129,23 @@ exposure_status getInfectionStatus(char *uuidstr)
     return EXPOSURE_NO_DETECT;
 }
 
-bool sendContactInformation(char *uuidstr, int enin, std::vector<char *> rpiData)
+bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::string> *rpiData)
 {
+    Serial.print("sendContactInformation(uuidstr: ");
+    Serial.print(uuidstr->c_str());
+    Serial.printf(", enin: %i, rpiData: ", enin);
+    std::vector<std::string>::iterator it2 = rpiData->begin();
+    while (it2 != rpiData->end())
+    {
+        Serial.printf(it2->c_str());
+        it2++;
+        if (it2 != rpiData->end())
+            Serial.printf(",");
+    }
+
     if (!connectToStoredWifi())
     {
-        Serial.println("Get infection status failed: couldn't connect to Wifi!");
+        Serial.println("Get infection status failed: Couldn't connect to Wifi!");
         return false;
     }
 
@@ -146,19 +158,32 @@ bool sendContactInformation(char *uuidstr, int enin, std::vector<char *> rpiData
     http.addHeader("Content-Type", "application/json");
 
     // Data to send with HTTP POST
-    std::stringstream stringStream;
-    stringStream << "{\"uuid\":\"" << uuidstr << "\",\"status\":\"0\",\"enin\":\"" << enin << "\",}";
+    std::stringstream ss;
+    std::vector<std::string>::iterator rpiListIter = rpiData->begin();
+
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"status\":\"0\",\"enin\":\"" << enin << "\",\"rpiList\":\"[";
+    while (rpiListIter != rpiData->end())
+    {
+        ss << rpiListIter->c_str();
+        rpiListIter++;
+        if (rpiListIter != rpiData->end())
+        {
+            ss << ",";
+        }
+    }
+    ss << "]\"}";
 
     // TODO: rpiData to JSON Array into String
+    Serial.printf("http Post Payload: %s \n", ss.str().c_str());
 
     // Send HTTP POST request
-    int httpResponseCode = http.POST(stringStream.str().c_str());
+    int httpResponseCode = http.POST(ss.str().c_str());
     String body = http.getString();
     disconnectWifi();
 
     if (httpResponseCode != HTTP_CODE_OK)
     {
-        Serial.print("HTTP Response Code not 200! Body: ");
+        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
         Serial.println(body);
         return false;
     }
@@ -168,6 +193,10 @@ bool sendContactInformation(char *uuidstr, int enin, std::vector<char *> rpiData
         {
             Serial.print("HTTP Response Code 200: ");
             Serial.println(body);
+        }
+        else
+        {
+            Serial.printf("HTTP Response Code 200, but Body not Success! Body instead: %s\n", body);
         }
         // body should be "Success!" if not changed in server
         // TODO: remove body check later for better performance

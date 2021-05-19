@@ -12,18 +12,18 @@
 #define NTP_SERVER (const char*) "pool.ntp.org"
 
 // used to be for main
-void firstStartInitializeSteps(char *uuidstr);
+void firstStartInitializeSteps();
 void startInitializeSteps(void);
 
 void actionScanForBluetoothDevices(int* scannedDevices);
 void advertiseBluetoothDevice(int* scannedDevices);
 
 void setupWifiConnection(bool* wifiInitialized);
-void sendCollectedDataToServer(char *uuidstr);
-exposure_status getInfectionStatusFromServer(char *uuidstr);
+void sendCollectedDataToServer(void);
+exposure_status getInfectionStatusFromServer(void);
 
 // used to be used in coronatracker-utils only
 bool initializeTek(void);
 bool initializeTime(void);
-bool initializeUuid(char *uuidstr);
+bool initializeUuid(void);
 size_t restartAfterErrorWithDelay(String errorMessage);

@@ -18,4 +18,8 @@ public class EasyRsinTimeTest {
         System.out.println("Time: " + new Date(new Long( Integer.parseInt("2697611")) * 600 * 1000).toLocaleString());
         System.out.println("Time: " + new Date(new Long( Integer.parseInt("2694155")) * 600 * 1000).toLocaleString());
     }
+    @Test
+    public void showTimeTest() {
+        System.out.println("Time: " + new Date(new Long( Integer.parseInt("2702075")) * 600 * 1000).toLocaleString());
+    }
 }

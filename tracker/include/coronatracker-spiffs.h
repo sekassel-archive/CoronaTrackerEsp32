@@ -15,8 +15,8 @@
 #define UUID_FILE_PATH "/uuid.txt"
 
 bool createFile(const char *path);
-bool readUuid(char *uuidstr);
-bool writeUuid(char *uuidstr);
+std::string readUuid();
+bool writeUuid(std::string *uuidstr);
 bool initSPIFFS(void);
 bool initSpiffsCreateDataBases(void);
 bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length, int enin);
@@ -25,5 +25,5 @@ bool cleanUpTempDatabase();
 bool insertTemporaryRollingProximityIdentifiers(time_t time, std::vector<std::__cxx11::string> rpis);
 int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length);
 bool printDatabases();
-bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<char*>> *contactInformationMap);
+bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<std::string>> *contactInformationMap);
 void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<char*>> *contactInformationMap);

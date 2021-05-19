@@ -21,13 +21,13 @@
 #endif
 #pragma endregion DISPLAY_INCLUDES
 
-void firstStartInitializeSteps(char *uuidstr)
+void firstStartInitializeSteps()
 {
     !initSpiffsCreateDataBases() ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
     !connectToStoredWifi() ? restartAfterErrorWithDelay("Couldn't connect to Wifi!") : Serial.println("Connected to WiFi.");
     !initializeTime() ? restartAfterErrorWithDelay("Time initialize failed!") : Serial.println("Initialized Time.");
     !initializeTek() ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key!") : Serial.println("Initialized Tek.");
-    !initializeUuid(uuidstr) ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
+    !initializeUuid() ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
     !disconnectWifi() ? Serial.println("Disconnect Failed!") : Serial.println("Disconnecting Wifi.");
 }
 
@@ -83,31 +83,65 @@ void setupWifiConnection(bool *wifiInitialized)
     disconnectWifi();
 }
 
-void sendCollectedDataToServer(char *uuidstr)
+void sendCollectedDataToServer()
 {
     // there may be problems with flash size, so maybe do this in smaller steps in future if needed
-    std::map<int, std::vector<char *>> collectedContactInformation;
-    checkForCollectedContactInformationsInDatabase(&collectedContactInformation);
-    std::map<int, std::vector<char *>>::iterator it = collectedContactInformation.begin();
+    std::map<int, std::vector<std::string>> collectedContactInformation;
+    if (!checkForCollectedContactInformationsInDatabase(&collectedContactInformation))
+    {
+        Serial.printf("checkForCollectedContactInformationsInDatabase returned false!\n");
+        return;
+    }
+
+    Serial.printf("collectedContactInformation.size() = %i \n", collectedContactInformation.size());
+
+    // maybe move to main
+    std::string uuid = readUuid();
+    if (strcmp(uuid.c_str(), "NULL") == 0)
+    {
+        Serial.printf("Failed to read UUID from file!\n");
+        return;
+    }
+    else
+    {
+        Serial.printf("Read UUID from file: %s \n", uuid.c_str());
+    }
+
+    std::map<int, std::vector<std::string>>::iterator it = collectedContactInformation.begin();
     while (it != collectedContactInformation.end())
     {
-        if (!sendContactInformation(uuidstr, (int)it->first, (std::vector<char *>)it->second))
+        Serial.printf("Start to send collectedContactInformation with key: %i\n", (int)it->first);
+        if (!sendContactInformation(&uuid, (int)it->first, &it->second))
         {
-            // couldn't send data to server, so we need to keep it and try again later
-            std::vector<char *> rpisTmp = collectedContactInformation[it->first];
-            do
-            {
-                delete rpisTmp.front();
-            } while (rpisTmp.front() != NULL); // TODO: clean destroy
+            // couldn't send data to server, so we need to keep it in db and try again later
+            int eninTmp = (int)it->first;
+            Serial.printf("Error in sendContactInformation for enin: %i\n", eninTmp);
+            // TODO: clean destroy
+        }
+        else
+        {
+            Serial.printf("Successfully sendContactInformation for enin: %i to DB!\n", (int)it->first);
+            Serial.printf("TODO: remove entry from DB\n");
         }
         it++;
     }
     // TODO delete sended collectedContactInformation from db
 }
 
-exposure_status getInfectionStatusFromServer(char *uuidstr)
+exposure_status getInfectionStatusFromServer()
 {
-    return getInfectionStatus(uuidstr);
+    // maybe move to main
+    std::string uuid = readUuid();
+    if (strcmp(uuid.c_str(), "NULL") == 0)
+    {
+        Serial.printf("Failed to read UUID from file!\n");
+        return EXPOSURE_UPDATE_FAILED;
+    }
+    else
+    {
+        Serial.printf("Read UUID from file: %s \n", uuid.c_str());
+    }
+    return getInfectionStatus(&uuid);
 }
 
 bool initializeTek(void)
@@ -162,20 +196,21 @@ bool initializeTime(void)
     return true;
 }
 
-bool initializeUuid(char *uuidstr)
+bool initializeUuid()
 {
     // 1) try to read uuid from spiff
-    // 2) if not readable / valid uuid, try to get a new one from server
+    // 2) if not readable / valid uuid, try to get a new one from server (this should only happen once)
     // 3) try to write new uuid to spiff
-    if (readUuid(uuidstr))
+    if (strcmp(readUuid().c_str(), "NULL") != 0)
     {
         return true;
     }
     else
     {
-        if (getNewUuid(uuidstr))
+        std::string newUuid;
+        if (getNewUuid(&newUuid))
         {
-            return writeUuid(uuidstr);
+            return writeUuid(&newUuid);
         }
         else
         {

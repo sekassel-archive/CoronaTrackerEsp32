@@ -96,6 +96,11 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
+            if(!input.isValid()){
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid!";
+            }
+
             return hasContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
         });
     }

@@ -7,10 +7,11 @@
 #define ACTION_SCAN 2
 #define ACTION_WIFI_CONFIG 3
 #define ACTION_INFECTION_REQUEST 4
-#define ACTION_SLEEP 5 // just for display
+#define ACTION_SLEEP 5         // just for display
 #define SLEEP_INTERVAL 3000000 // microseconds
 #define BOOTS_UNTIL_DISPLAY_TURNS_OFF 4
-#define ADVERTISE_TIME 500 // milliseconds
+#define ADVERTISE_TIME 500                      // milliseconds
+#define INFECTION_REQUEST_INTERVALL int(2 * 60) // auf 18 min setzen!
 #pragma endregion CUSTOM_DEFINITIONS
 
 #include "coronatracker-utils.h"
@@ -43,8 +44,6 @@ RTC_DATA_ATTR bool isDisplayActive = false;
 
 RTC_DATA_ATTR time_t scanTime;
 RTC_DATA_ATTR time_t updateTime;
-
-RTC_DATA_ATTR char uuidString[36];
 
 int buttonState = 0;
 int lastButtonState = 0;
@@ -88,13 +87,13 @@ void setup()
     {
         if (firstBoot)
         {
-            firstStartInitializeSteps(&uuidString[0]);
+            firstStartInitializeSteps();
 
             firstBoot = false;
 
             time_t now = time(NULL);
-            scanTime = now + (60);        // 60 seconds
-            updateTime = now + (18 * 60); // 18 minutes
+            scanTime = now + (60); // 60 seconds
+            updateTime = now + INFECTION_REQUEST_INTERVALL;
 
             goIntoDeepSleep(requestOnStartUp);
         }
@@ -124,8 +123,8 @@ void setup()
     case ACTION_INFECTION_REQUEST:
     {
         Serial.println("Start: ACTION_INFECTION_REQUEST");
-        sendCollectedDataToServer(uuidString);
-        exposureStatus = getInfectionStatusFromServer(uuidString);
+        sendCollectedDataToServer();
+        exposureStatus = getInfectionStatusFromServer();
         // TODO: show infection status on display or do it in function
         break;
     }
@@ -185,7 +184,7 @@ void goIntoDeepSleep(bool requestInfections)
     }
     else if (nextBootTime >= updateTime)
     {
-        updateTime += (60 * 60);
+        updateTime += INFECTION_REQUEST_INTERVALL;
         setNextAction(ACTION_INFECTION_REQUEST);
     }
     else if (nextBootTime >= scanTime)
