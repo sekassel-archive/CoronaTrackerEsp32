@@ -26,4 +26,4 @@ bool insertTemporaryRollingProximityIdentifiers(time_t time, std::vector<std::__
 int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length);
 bool printDatabases();
 bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<std::string>> *contactInformationMap);
-void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<char*>> *contactInformationMap);
+void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<std::string>> *contactInformationMap);

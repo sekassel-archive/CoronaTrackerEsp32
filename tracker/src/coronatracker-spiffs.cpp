@@ -115,7 +115,8 @@ bool initSpiffsCreateDataBases()
     {
         Serial.printf("Failed to create table main in datbase: %s\n", errMsg);
         sqlite3_close(db);
-        if(strcmp(errMsg,"file is not a database") == 0){
+        if (strcmp(errMsg, "file is not a database") == 0)
+        {
             SPIFFS.remove(MAIN_DATABASE_PATH);
             Serial.printf("Removed file: %s\n", MAIN_DATABASE_PATH);
         }
@@ -126,7 +127,8 @@ bool initSpiffsCreateDataBases()
     {
         Serial.printf("Failed to create table temp in datbase: %s\n", errMsg);
         sqlite3_close(db);
-        if(strcmp(errMsg,"file is not a database") == 0){
+        if (strcmp(errMsg, "file is not a database") == 0)
+        {
             SPIFFS.remove(MAIN_DATABASE_PATH);
             Serial.printf("Removed file: %s\n", MAIN_DATABASE_PATH);
         }
@@ -184,7 +186,7 @@ std::string readUuid()
     // uuid have to be 36 character long, server only accept 36 character long uuids
     if (uuid_ss.length() == 36)
     {
-        return (std::string) uuid_ss.c_str();
+        return (std::string)uuid_ss.c_str();
     }
     else
     {
@@ -616,7 +618,7 @@ bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<st
         for (int i = 0; i < 16; i++)
         {
             Serial.printf("%02hhX ", rawBlData[i]);
-            ss << (int) rawBlData[i];
+            ss << (int)rawBlData[i];
             i == 15 ? ss << "]" : ss << ",";
         }
 
@@ -633,7 +635,7 @@ bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<st
     return true;
 }
 
-void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<char *>> *contactInformationMap)
+void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::vector<std::string>> *contactInformationMap)
 {
     sqlite3 *main_db;
     if (sqlite3_open(MAIN_DATABASE_SQLITE_PATH, &main_db) != SQLITE_OK)
@@ -642,43 +644,22 @@ void deleteCollectedContactInformationsSendedToServerFromDb(std::map<int, std::v
         return;
     }
 
-    // get actual enin to compare if we have not matching enins in our collected contact informations
-    std::stringstream ss;
-    ss << "DELETE FROM main WHERE enin LIKE \"" << 1 << "\";";
-    const char *sql = ss.str().c_str();
-
-    sqlite3_stmt *stmt = NULL;
-    if (sqlite3_prepare_v2(main_db, sql, strlen(sql), &stmt, nullptr) != SQLITE_OK)
+    std::map<int, std::vector<std::string>>::iterator it = contactInformationMap->begin();
+    while (it != contactInformationMap->end())
     {
-        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(main_db));
-        return;
+        int eninTmp = (int)it->first;
+        std::stringstream ss;
+        ss << "DELETE FROM main WHERE time = " << eninTmp << ";";
+        Serial.println(ss.str().c_str());
+        char *zErrMsg;
+        if (sqlite3_exec(main_db, ss.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+        {
+            Serial.printf("SQL error on delete: %s\n", zErrMsg);
+            sqlite3_free(zErrMsg);
+        }
+        it++;
     }
-
-    while (true)
-    {
-        int status = sqlite3_step(stmt);
-        if (status == SQLITE_DONE)
-        {
-            break;
-        }
-        if (status != SQLITE_ROW)
-        {
-            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(main_db));
-            break;
-        }
-
-        int foundEnin = sqlite3_column_int(stmt, 0);
-        const signed char *rawBlData = (const signed char *)sqlite3_column_blob(stmt, 1);
-        char *rpiArray = new char[16];
-
-        for (int i = 0; (i < sqlite3_column_bytes(stmt, 1)) && (i < 16); i++)
-        {
-            rpiArray[i] = rawBlData[i];
-        }
-
-        (*contactInformationMap)[foundEnin].push_back(rpiArray);
-    }
-
-    sqlite3_finalize(stmt);
     sqlite3_close(main_db);
+
+    printDatabases();
 }

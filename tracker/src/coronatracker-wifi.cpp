@@ -129,26 +129,9 @@ exposure_status getInfectionStatus(std::string *uuidstr)
     return EXPOSURE_NO_DETECT;
 }
 
+// wifi need to be activated beforehand
 bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::string> *rpiData)
 {
-    Serial.print("sendContactInformation(uuidstr: ");
-    Serial.print(uuidstr->c_str());
-    Serial.printf(", enin: %i, rpiData: ", enin);
-    std::vector<std::string>::iterator it2 = rpiData->begin();
-    while (it2 != rpiData->end())
-    {
-        Serial.printf(it2->c_str());
-        it2++;
-        if (it2 != rpiData->end())
-            Serial.printf(",");
-    }
-
-    if (!connectToStoredWifi())
-    {
-        Serial.println("Get infection status failed: Couldn't connect to Wifi!");
-        return false;
-    }
-
     HTTPClient http;
 
     // Your Domain name with URL path or IP address with path
@@ -179,7 +162,6 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
     // Send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     String body = http.getString();
-    disconnectWifi();
 
     if (httpResponseCode != HTTP_CODE_OK)
     {

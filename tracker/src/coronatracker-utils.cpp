@@ -85,47 +85,52 @@ void setupWifiConnection(bool *wifiInitialized)
 
 void sendCollectedDataToServer()
 {
-    // there may be problems with flash size, so maybe do this in smaller steps in future if needed
+    // there may be problems with flash size, so maybe do this in smaller steps in future IF needed
     std::map<int, std::vector<std::string>> collectedContactInformation;
-    if (!checkForCollectedContactInformationsInDatabase(&collectedContactInformation))
+
+    if (!checkForCollectedContactInformationsInDatabase(&collectedContactInformation) ||
+        collectedContactInformation.size() == 0)
     {
-        Serial.printf("checkForCollectedContactInformationsInDatabase returned false!\n");
+        Serial.println("checkForCollectedContactInformationsInDatabase has nothing to send to server!");
         return;
     }
 
     Serial.printf("collectedContactInformation.size() = %i \n", collectedContactInformation.size());
 
-    // maybe move to main
     std::string uuid = readUuid();
     if (strcmp(uuid.c_str(), "NULL") == 0)
     {
         Serial.printf("Failed to read UUID from file!\n");
         return;
     }
-    else
+
+    if (!connectToStoredWifi())
     {
-        Serial.printf("Read UUID from file: %s \n", uuid.c_str());
+        Serial.println("Couldn't connect to Wifi!");
+        return;
     }
 
     std::map<int, std::vector<std::string>>::iterator it = collectedContactInformation.begin();
     while (it != collectedContactInformation.end())
     {
-        Serial.printf("Start to send collectedContactInformation with key: %i\n", (int)it->first);
-        if (!sendContactInformation(&uuid, (int)it->first, &it->second))
+        int eninTmp = (int)it->first;
+        if (!sendContactInformation(&uuid, eninTmp, &it->second))
         {
             // couldn't send data to server, so we need to keep it in db and try again later
-            int eninTmp = (int)it->first;
             Serial.printf("Error in sendContactInformation for enin: %i\n", eninTmp);
-            // TODO: clean destroy
+            collectedContactInformation.erase(eninTmp);
         }
         else
         {
-            Serial.printf("Successfully sendContactInformation for enin: %i to DB!\n", (int)it->first);
-            Serial.printf("TODO: remove entry from DB\n");
+            Serial.printf("Successfully sendContactInformation for enin: %i to DB!\n", eninTmp);
         }
         it++;
     }
-    // TODO delete sended collectedContactInformation from db
+
+    disconnectWifi();
+
+    // remove remaining (sended) collectedContactInformation from db, so it won't be send twice
+    deleteCollectedContactInformationsSendedToServerFromDb(&collectedContactInformation);
 }
 
 exposure_status getInfectionStatusFromServer()
@@ -136,10 +141,6 @@ exposure_status getInfectionStatusFromServer()
     {
         Serial.printf("Failed to read UUID from file!\n");
         return EXPOSURE_UPDATE_FAILED;
-    }
-    else
-    {
-        Serial.printf("Read UUID from file: %s \n", uuid.c_str());
     }
     return getInfectionStatus(&uuid);
 }
