@@ -8,7 +8,7 @@ import lombok.Data;
 public class InfectedUserPostPayload implements Validable {
     private String uuid;
     private String tek;
-    private Integer rsin;
+    private Integer rsin; // TODO: change to enin and calculate rsin
 
     public boolean isValid() {
         boolean validUuid = ((uuid != null) && (uuid.length() == 36));

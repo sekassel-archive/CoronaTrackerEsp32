@@ -125,6 +125,12 @@ void setup()
         Serial.println("Start: ACTION_INFECTION_REQUEST");
         sendCollectedDataToServer();
         exposureStatus = getInfectionStatusFromServer();
+
+        if (exposureStatus == EXPOSURE_DETECT)
+        {
+            // remember if Tek was send to server to prevent to send it twice
+            sendTekInfoToServerAfterInfection();
+        }
         // TODO: show infection status on display or do it in function
         break;
     }

@@ -156,12 +156,58 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
     }
     ss << "]\"}";
 
-    // TODO: rpiData to JSON Array into String
-    Serial.printf("http Post Payload: %s \n", ss.str().c_str());
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(ss.str().c_str());
+    String body = http.getString();
+
+    if (httpResponseCode != HTTP_CODE_OK)
+    {
+        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
+        Serial.println(body);
+        return false;
+    }
+    else
+    {
+        if (body.equals("Success!"))
+        {
+            Serial.print("HTTP Response Code 200: ");
+            Serial.println(body);
+        }
+        else
+        {
+            Serial.printf("HTTP Response Code 200, but Body not Success! Body instead: %s\n", body);
+        }
+        // body should be "Success!" if not changed in server
+        // TODO: remove body check later for better performance
+        return true;
+    }
+}
+
+bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
+{
+    if (!connectToStoredWifi())
+    {
+        Serial.println("Couldn't connect to Wifi!");
+        return false;
+    }
+
+    HTTPClient http;
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(String(SERVER_URL) + String(POST_DATA_INPUT_TEK));
+
+    // Specify content-type header: application/json
+    http.addHeader("Content-Type", "application/json");
+
+    // Data to send with HTTP POST
+    std::stringstream ss;
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"enin\":\"" << enin << "\",\"tek\":\"" << tekData->c_str() << "\"}";
 
     // Send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     String body = http.getString();
+
+    disconnectWifi();
 
     if (httpResponseCode != HTTP_CODE_OK)
     {

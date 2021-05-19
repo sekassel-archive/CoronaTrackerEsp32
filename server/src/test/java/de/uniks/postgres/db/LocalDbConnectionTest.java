@@ -91,7 +91,7 @@ public class LocalDbConnectionTest {
                     Integer status = resultSet.getInt(User.STATUS);
                     Integer rsin = resultSet.getInt(User.ENIN);
                     String tekListAsJSONArray = resultSet.getString(User.RPILIST);
-                    System.out.println("UUID:" + uuid + "\nstatus:" + status + "\nrsin:" + rsin + "\nrpiList:" + tekListAsJSONArray + "\n\n");
+                    System.out.println("UUID:" + uuid + "\nstatus:" + status + "\nenin:" + rsin + "\nrpiList:" + tekListAsJSONArray + "\n\n");
                     users.add(new User(uuid, status, rsin, tekListAsJSONArray));
                 }
             } catch (SQLException ex) {

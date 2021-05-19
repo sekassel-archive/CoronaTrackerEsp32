@@ -18,3 +18,4 @@ bool configureWifi();
 bool getNewUuid(std::string *uuidstr);
 exposure_status getInfectionStatus(std::string *uuidstr);
 bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::string> *rpiData);
+bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData);

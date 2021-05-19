@@ -139,6 +139,17 @@ exposure_status getInfectionStatusFromServer()
     return getInfectionStatus(&uuid);
 }
 
+bool sendTekInfoToServerAfterInfection(void)
+{
+    int enin;
+    std::string uuidstr;
+    std::string tekData;
+
+    // TODO: gather the data to be sent to server without duplicates
+
+    return sendTekInformation(&uuidstr, enin, &tekData);
+}
+
 bool initializeTek(void)
 {
     Serial.print("Generating TEK - ");
