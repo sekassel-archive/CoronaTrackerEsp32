@@ -438,24 +438,21 @@ async function connect() {
   secReader = port.readable.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
 
   await syncAndRead(secReader);
+  
 }
-var readingPromise = null;
+
 async function syncAndRead(secReader){
   await sync();
   try {
-    if(readingPromise == null){
-      readingPromise = secReader.read();
-    }
-    await read(readingPromise);
+    await read(secReader);
   } catch(e){
     await syncAndRead(secReader);
     return;
   }
   var notFailed = true;
   while (notFailed){
-    readingPromise = secReader.read();
     try {
-      await read(readingPromise);
+      await read(secReader);
     } catch(e) {
       notFailed = false;
     }
@@ -573,21 +570,24 @@ async function readLoop2(reader) {
   console.log('readloop end');*/
 
 }
-
-async function read(promise) {
+var readingPromise = null;
+async function read(reader) {
   //try {
     let timeoutHandle;
     const timeoutPromise = new Promise((resolve, reject) => {
       timeoutHandle = setTimeout(() => reject(), 2000);
     });
-
+    if(readingPromise == null){
+      readingPromise = reader.read();
+    }
     const { value, done } = await Promise.race([
-      promise,
+      readingPromise,
       timeoutPromise,
     ]).then((result) => {
       clearTimeout(timeoutHandle);
       return result;
     });
+    readingPromise = null;
     if (value) {
       console.log(JSON.stringify(value, null, 2) + '\n');
       return value;
