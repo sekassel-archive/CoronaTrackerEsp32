@@ -180,14 +180,14 @@ if ('serial' in navigator) {
 
 
 document.getElementById('syncButton').addEventListener('click', () => {
-  click2();
+  sync();
 });
-async function click2() {
+async function sync() {
   // writeToStream(outputStream.getWriter(), '\x01');
 
   //var result = null;
   //while (result == null) {
-  writeToStream(writer, 0xc0, 0x00, 0x08, 0x07, 0x07, 0x12, 0x20, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xc0);
+  await writeToStream(writer, 0xc0, 0x00, 0x08, 0x07, 0x07, 0x12, 0x20, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xc0);
   /*result = await Promise.race([
     (async () => {
       for(var i = 0; i < 8; i++){
@@ -333,6 +333,7 @@ async function flashBootloader(file) {
     //console.log(checkSum);
 
     //fill filecontent with ff to fit x*1024
+    //if != 0
     const nOfFF = 1024 - fileContent.length % 1024;
     var arrFF = new Uint8Array(nOfFF);
     for (var i = 0; i < nOfFF; i++) {
@@ -347,23 +348,29 @@ async function flashBootloader(file) {
       for (var j = 0; j < subArr.length; j++) {
         checkSum = checkSum ^ subArr[j];
       }
-      const lengthHexString = (subArr.length + 16).toString(16);
+      var indexHexString = (i).toString(16);
+      //fill zeros
+      while (indexHexString.length < 8) {
+        indexHexString = `0${indexHexString}`;
+      }
+
       console.log(`len: ${subArr.length}`);
-      
+
       subArr = escapeArray(subArr);
       console.log(`checksum: ${checkSum}`);
 
-      console.log(`Hex: ${lengthHexString}`);
-      
-      writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, /*checkSum*/ 0xcc, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
+      console.log(`Hex: ${indexHexString}`);
+
+      writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 10), parseInt(indexHexString.substring(4, 6), 10), parseInt(indexHexString.substring(2, 4), 10), parseInt(indexHexString.substring(0, 2), 10), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
       /*for (var j = 0; j < subArr.length; j++) {
         writeToStream(writer, subArr[j]);
       }*/
       //writeToStream(writer, 0xc0);
-      await new Promise(resolve => setTimeout(resolve, 3200));
+      //await new Promise(resolve => setTimeout(resolve, 3200));
 
-      //read(secReader);
+      read(secReader);
     }
+    console.log('sended');
   }
   fileReader.readAsArrayBuffer(file)
   //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
@@ -399,36 +406,55 @@ function escapeArray(arr) {
 
 
 document.getElementById('connectButton').addEventListener('click', () => {
-  click();
+  connect();
 });
 
-let secReader = null;
-async function click() {
+let inputStream = null;
+let abortController = null;
+async function connect() {
   port = await navigator.serial.requestPort();
   // - Wait for the port to open.
   await port.open({ baudRate: 115200 });
   let img = document.getElementById('statusPic').setAttribute("src", '../images/upload.gif');
 
+  /*abortController = new AbortController();
+
   const decoder = new TextDecoderStream();
-  const [stream1, stream2] = port.readable.tee();
-  const inputDone = stream2.pipeTo(decoder.writable);
-  const inputStream = decoder.readable.pipeThrough(new TransformStream(new LineBreakTransformer()));
+  inputStream = port.readable;
+  const inputDone = inputStream.pipeTo(decoder.writable, { signal: abortController.signal });
+  const inputStreamAsText = decoder.readable.pipeThrough(new TransformStream(new LineBreakTransformer()));
 
-  secReader = stream1.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
+  //secReader = stream1.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
 
-  const reader = inputStream.getReader();
+  secReader = inputStreamAsText.getReader();*/
 
   writer = port.writable.getWriter();
 
-  readLoop(reader);
+  //readLoop(secReader);
+
+  await new Promise(resolve => setTimeout(resolve, 100));
+  await enterBootloader();
+
+  secReader = port.readable.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
+
+  await syncAndRead(secReader);
+}
+async function syncAndRead(secReader){
+  await sync();
+  try {
+    for (var i = 0; i < 8; i++){
+      await read(secReader);
+    }
+  } catch(e){
+    syncAndRead(secReader);
+  }
 }
 
-
+let secReader = null;
 document.getElementById('bootloaderButton').addEventListener('click', () => {
   enterBootloader();
 });
 async function enterBootloader() {
-
   await port.setSignals({ dataTerminalReady: false });
   await port.setSignals({ requestToSend: true });
   await new Promise(resolve => setTimeout(resolve, 100));
@@ -440,8 +466,6 @@ async function enterBootloader() {
   await port.setSignals({ dataTerminalReady: false });
 
   await new Promise(resolve => setTimeout(resolve, 3200));
-
-  readLoop2(secReader);
 }
 
 async function reset() {
@@ -451,14 +475,14 @@ async function reset() {
   await port.setSignals({ requestToSend: false });
 }
 
-function writeToStream(writer, ...lines) {
+async function writeToStream(writer, ...lines) {
   var size = 0;
   lines.forEach((line) => {
     if (typeof line == "number") {
       size++;
     } else if (Array.isArray(line)) {
       size += line.length;
-    } else if (ArrayBuffer.isView(line)){
+    } else if (ArrayBuffer.isView(line)) {
       size += line.buffer.byteLength
     }
   });
@@ -473,9 +497,9 @@ function writeToStream(writer, ...lines) {
       }
       return;
     }
-    if (ArrayBuffer.isView(line)){
+    if (ArrayBuffer.isView(line)) {
       const tmp = new Uint8Array(line.buffer, line.byteOffset, line.byteLength);
-      for(var val of tmp){
+      for (var val of tmp) {
         console.log('[SEND]', val);
         arr[i++] = val;
       }
@@ -487,13 +511,14 @@ function writeToStream(writer, ...lines) {
     arr[i] = line;
     ++i;
   });
-  writer.write(arr);
+  await writer.write(arr);
   //writer.releaseLock();
 }
 
+let readLoopRuns = true;
 async function readLoop(reader) {
   console.log('readloop begin');
-  while (true) {
+  while (readLoopRuns) {
     try {
       const { value, done } = await reader.read();
       if (value) {
@@ -516,7 +541,7 @@ async function readLoop(reader) {
 
 async function readLoop2(reader) {
   console.log('readloop begin');
-  while (true) {
+  /*while (true) {
     try {
       const { value, done } = await reader.read();
       if (value) {
@@ -533,13 +558,24 @@ async function readLoop2(reader) {
     }
 
   }
-  console.log('readloop end');
+  console.log('readloop end');*/
 
 }
 
-/*async function read(reader) {
-  try {
-    const { value, done } = await reader.read();
+async function read(reader) {
+  //try {
+    let timeoutHandle;
+    const timeoutPromise = new Promise((resolve, reject) => {
+      timeoutHandle = setTimeout(() => reject(), 2000);
+    });
+
+    const { value, done } = await Promise.race([
+      reader.read(),
+      timeoutPromise,
+    ]).then((result) => {
+      clearTimeout(timeoutHandle);
+      return result;
+    });
     if (value) {
       console.log(JSON.stringify(value, null, 2) + '\n');
       return value;
@@ -549,9 +585,24 @@ async function readLoop2(reader) {
       reader.releaseLock();
       return;
     }
-  } catch (e) {
+  /*} catch (e) {
     console.log(e);
     return;
-  }
+  }*/
 
-}*/
+}
+
+async function promiseWithTimeout(timeoutMs, promise) {
+  let timeoutHandle;
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeoutHandle = setTimeout(() => reject(), timeoutMs);
+  });
+
+  return Promise.race([
+    promise(),
+    timeoutPromise,
+  ]).then((result) => {
+    clearTimeout(timeoutHandle);
+    return result;
+  });
+}
