@@ -439,14 +439,26 @@ async function connect() {
 
   await syncAndRead(secReader);
 }
+var readingPromise = null;
 async function syncAndRead(secReader){
   await sync();
   try {
-    for (var i = 0; i < 8; i++){
-      await read(secReader);
+    if(readingPromise == null){
+      readingPromise = secReader.read();
     }
+    await read(readingPromise);
   } catch(e){
-    syncAndRead(secReader);
+    await syncAndRead(secReader);
+    return;
+  }
+  var notFailed = true;
+  while (notFailed){
+    readingPromise = secReader.read();
+    try {
+      await read(readingPromise);
+    } catch(e) {
+      notFailed = false;
+    }
   }
 }
 
@@ -562,7 +574,7 @@ async function readLoop2(reader) {
 
 }
 
-async function read(reader) {
+async function read(promise) {
   //try {
     let timeoutHandle;
     const timeoutPromise = new Promise((resolve, reject) => {
@@ -570,7 +582,7 @@ async function read(reader) {
     });
 
     const { value, done } = await Promise.race([
-      reader.read(),
+      promise,
       timeoutPromise,
     ]).then((result) => {
       clearTimeout(timeoutHandle);
