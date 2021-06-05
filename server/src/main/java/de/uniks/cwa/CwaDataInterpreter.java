@@ -7,11 +7,6 @@ import de.uniks.postgres.db.UserPostgreSqlDao;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -30,11 +25,14 @@ public class CwaDataInterpreter {
     private static ConcurrentHashMap<Integer, List<byte[]>> cwaData = new ConcurrentHashMap<>();
     private static Collection<InfectedUser> infectedUserList = new ArrayList<>();
 
+    public static String lastCheckTimeString = "No infection check by now.";
+
     /**
      * subsequently, we compare contact information from cwa DB with our postgres DB
      */
     public static void checkForInfectionsHourlyTask() {
         try {
+            lastCheckTimeString = "Infection check in progress...";
             InfectedUserPostgreSqlDao infectedUserDb = new InfectedUserPostgreSqlDao();
             UserPostgreSqlDao userDb = new UserPostgreSqlDao();
 
@@ -43,7 +41,7 @@ public class CwaDataInterpreter {
 
             // our own infectedUser from infectedUser TABLE
             infectedUserList = infectedUserDb.getAll();
-
+/*
             // we need to get our own infected user into the data set of the cwa and put it in a map like:
             // [enin: rpi(from cwa inf. user tek) .... rpi2 (from our inf. user db)],[enin2: ...] usw.
             ConcurrentHashMap<Integer, List<byte[]>> eninRpisMap = buildInfectedUserEninRpisMap(cwaData, infectedUserList);
@@ -54,11 +52,13 @@ public class CwaDataInterpreter {
             if (infectedUserActionRequired.isPresent()) {
                 processInfectedUserIntoDb(infectedUserActionRequired.get());
             }
+ */
+            lastCheckTimeString = DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
+                    .replaceAll("[TZ]", " ") + " UTC";
 
-            LOG.log(Level.INFO, "Hourly cwa data update and check successfully processed at " +
-                    DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
-                            .replaceAll("[TZ]", " ") + " UTC");
+            LOG.log(Level.INFO, "Hourly cwa data update and check successfully processed at " + lastCheckTimeString);
         } catch (Exception ex) {
+            lastCheckTimeString = "Ups, something went wrong. Waiting for next scheduled infection check.";
             LOG.log(Level.SEVERE, "CWA Data couldn't process hourly update during getData from CWA Database!", ex);
         }
     }
@@ -119,5 +119,9 @@ public class CwaDataInterpreter {
 
     public static ConcurrentHashMap<Integer, List<byte[]>> getCwaData() {
         return cwaData;
+    }
+
+    public static Collection<InfectedUser> getInfectedUserList() {
+        return infectedUserList;
     }
 }

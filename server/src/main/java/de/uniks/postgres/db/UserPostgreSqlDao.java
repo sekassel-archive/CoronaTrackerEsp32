@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,6 +72,22 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
     public List<User> getAll() {
         String sql = "SELECT * FROM " + User.CLASS;
         return getWithPrimitiveSql(sql);
+    }
+
+    public Integer getUserCount() {
+        String sql = "SELECT COUNT(DISTINCT(" + User.UUID + ")) FROM " + User.CLASS;
+        AtomicReference<Integer> userCount = new AtomicReference<>(0);
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+                if(resultSet.next()){
+                    userCount.set(resultSet.getInt("count"));
+                }
+            } catch (SQLException ex) {
+                LOG.log(Level.WARNING, "SQL Exception happened in getUserCount", ex);
+            }
+        });
+        return userCount.get();
     }
 
     public List<User> get(Integer enin, List<byte[]> rpiList) throws Exception {

@@ -12,7 +12,6 @@ public class MyDeviceView extends HorizontalLayout {
 
     public MyDeviceView() {
         setId("my-device-view");
-
-        //add();
+        //TODO
     }
 }

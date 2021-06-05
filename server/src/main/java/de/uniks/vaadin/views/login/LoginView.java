@@ -1,17 +1,11 @@
 package de.uniks.vaadin.views.login;
 
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.server.VaadinRequest;
-import com.vaadin.flow.server.VaadinServlet;
-import com.vaadin.flow.server.VaadinServletConfiguration;
 import de.uniks.vaadin.views.main.MainView;
-
-import javax.servlet.annotation.WebServlet;
 
 @Route(value = "verificationProcess", layout = MainView.class)
 @PageTitle("Login")

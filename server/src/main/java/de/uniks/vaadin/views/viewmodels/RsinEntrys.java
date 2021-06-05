@@ -1,6 +1,5 @@
 package de.uniks.vaadin.views.viewmodels;
 
-import de.uniks.SQLite.SQLite;
 import org.json.JSONArray;
 
 import java.util.Date;
@@ -34,18 +33,18 @@ public class RsinEntrys {
     }
 
     public String getRsinDate() {
-        return new Date(new Long( Integer.parseInt(rsin)) * 600 * 1000).toLocaleString().split(",")[0];
+        return new Date(new Long(Integer.parseInt(rsin)) * 600 * 1000).toLocaleString().split(",")[0];
     }
 
     public void setRsin(String rsin) {
         this.rsin = rsin;
     }
 
-    public String getTekListAsBlock(){
+    public String getTekListAsBlock() {
         String tekList = "Empty";
-        try{
+        try {
             tekList = new JSONArray(tekEntries).toString();
-        } catch(Exception e) {
+        } catch (Exception e) {
             tekList = "Error.";
         }
         return tekList;
