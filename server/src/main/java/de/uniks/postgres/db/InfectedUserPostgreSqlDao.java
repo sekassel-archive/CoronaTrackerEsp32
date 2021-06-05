@@ -85,7 +85,7 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
     @Override
     public List<InfectedUser> getAll() {
         List<InfectedUser> infUserCollection = new ArrayList<>();
-        String sql = "SELECT * FROM " + User.CLASS;
+        String sql = "SELECT * FROM " + InfectedUser.CLASS;
 
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();

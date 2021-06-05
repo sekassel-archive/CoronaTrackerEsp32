@@ -20,7 +20,9 @@ import com.vaadin.flow.server.PWA;
 import com.vaadin.flow.theme.Theme;
 import com.vaadin.flow.theme.lumo.Lumo;
 import de.uniks.vaadin.views.about.AboutView;
-import de.uniks.vaadin.views.rsinoverview.RsinOverviewView;
+import de.uniks.vaadin.views.mydevice.MyDeviceView;
+import de.uniks.vaadin.views.rsinoverview.CwaDataView;
+import de.uniks.vaadin.views.serverdevices.ServerDevicesView;
 
 import java.util.Optional;
 
@@ -28,7 +30,7 @@ import java.util.Optional;
  * The main view is a top-level placeholder for other views.
  */
 @CssImport("./styles/views/main/main-view.css")
-@PWA(name = "My Project", shortName = "My Project", enableInstallPrompt = false)
+@PWA(name = "ESP32 Corona Tracker", shortName = "Corona Tracker", enableInstallPrompt = false)
 @JsModule("./styles/shared-styles.js")
 @Theme(value = Lumo.class, variant = Lumo.DARK)
 public class MainView extends AppLayout {
@@ -82,7 +84,12 @@ public class MainView extends AppLayout {
     }
 
     private Component[] createMenuItems() {
-        return new Tab[]{createTab("RSIN Overview", RsinOverviewView.class), createTab("About", AboutView.class)};
+        return new Tab[]{
+                createTab("My Device", MyDeviceView.class),
+                createTab("Uni Tracker Overview", ServerDevicesView.class),
+                createTab("CWA Data Overview", CwaDataView.class),
+                createTab("About", AboutView.class)
+        };
     }
 
     private static Tab createTab(String text, Class<? extends Component> navigationTarget) {

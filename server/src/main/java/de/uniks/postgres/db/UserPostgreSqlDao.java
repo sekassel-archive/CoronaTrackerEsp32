@@ -73,29 +73,25 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
         return getWithPrimitiveSql(sql);
     }
 
-    public List<User> get(Integer enin, List<byte[]> rpiList) {
+    public List<User> get(Integer enin, List<byte[]> rpiList) throws Exception {
         StringBuilder sql = new StringBuilder();
         // build query to watch out for infected rpis in user db
         // example with shorted rpis: search for infected rpi [1,2,3] in [[1,1,1],[1,2,3],[2,2,2]]
         // SELECT * FROM trackerUser WHERE (enin = 1234567) AND (status = 0) AND
-        //  ((rpiList CONTAINS %[1,2,3]%) OR (rpiList CONTAINS %[2,3,4]%))
+        //  ((rpiList LIKE %[1,2,3]%) OR (rpiList LIKE %[2,3,4]%))
         // [2,3,4] is just an example for more rpis in one query
         sql.append("SELECT * FROM "
                 + User.CLASS + " WHERE ("
                 + User.ENIN + " = " + enin + ") AND ("
                 + User.STATUS + " = 0) AND (");
 
-        for (byte[] rpi : rpiList) {
-            sql.append("(" + User.RPILIST + " LIKE %"
-                    + JSON.toString(rpi) + "%) ");
-            rpiList.remove(rpi);
-            if (rpiList.isEmpty()) {
-                sql.append(")");
-            } else {
-                sql.append("OR ");
-            }
+        for (byte[] rpiArray : rpiList) {
+            sql.append("(" + User.RPILIST + " LIKE \'%"
+                    + JSON.toString(rpiArray) + "%\') ");
+            sql.append("OR ");
         }
-
+        sql.setLength(Math.max(sql.length() - 3, 0)); // length of const string "OR " = 3
+        sql.append(")");
         return getWithPrimitiveSql(sql.toString());
     }
 
@@ -114,7 +110,7 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
                     users.add(new User(uuid, status, rsin, tekListAsJSONArray));
                 }
             } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, "SQL Exception happened in getWithPrimitiveSql", ex);
             }
         });
         return users;

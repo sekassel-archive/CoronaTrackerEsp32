@@ -1,4 +1,4 @@
-package de.uniks.vaadin.views.rsinoverview;
+package de.uniks.vaadin.views.viewmodels;
 
 import de.uniks.SQLite.SQLite;
 import org.json.JSONArray;
@@ -9,14 +9,16 @@ import java.util.List;
 public class RsinEntrys {
     private int tekEntrys;
     private String rsin;
+    private List<byte[]> tekEntries;
 
     public RsinEntrys() {
     }
 
-    public RsinEntrys(int tekEntrys, String rsin) {
+    public RsinEntrys(String rsin, List<byte[]> tekEntries) {
         super();
-        this.tekEntrys = tekEntrys;
+        this.tekEntrys = tekEntries.size();
         this.rsin = rsin;
+        this.tekEntries = tekEntries;
     }
 
     public int getTekEntrys() {
@@ -39,15 +41,10 @@ public class RsinEntrys {
         this.rsin = rsin;
     }
 
-    public String getImage() {
-        return "https://randomuser.me/api/portraits/men/3.jpg";
-    }
-
     public String getTekListAsBlock(){
         String tekList = "Empty";
         try{
-            List<byte[]> table = SQLite.getRSINTable(Integer.parseInt(rsin));
-            tekList = new JSONArray(table).toString();
+            tekList = new JSONArray(tekEntries).toString();
         } catch(Exception e) {
             tekList = "Error.";
         }
