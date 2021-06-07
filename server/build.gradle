@@ -46,9 +46,13 @@ dependencies {
     compile 'at.favre.lib:hkdf:1.1.0'
     compile group: 'org.xerial', name: 'sqlite-jdbc', version: '3.32.3.2'
 
-    // Vaadin / Springboot
+    // Vaadin
     implementation 'com.vaadin:vaadin-spring-boot-starter'
     implementation 'com.vaadin:vaadin-avatar-flow:1.0.1'
+
+    // Springboot Security
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.security:spring-security-test'
 
     // google de/serialisation tool
     implementation 'com.google.code.gson:gson:2.8.6'

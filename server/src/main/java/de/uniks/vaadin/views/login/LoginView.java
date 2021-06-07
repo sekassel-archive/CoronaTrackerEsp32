@@ -3,20 +3,25 @@ package de.uniks.vaadin.views.login;
 import com.vaadin.flow.component.login.LoginForm;
 import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.router.BeforeEnterEvent;
+import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.uniks.vaadin.views.main.MainView;
 
 @Route(value = "verificationProcess", layout = MainView.class)
-@PageTitle("Login")
-public class LoginView extends HorizontalLayout {
+@PageTitle("Login | Vaadin CRM")
+public class LoginView extends HorizontalLayout implements BeforeEnterObserver {
+
+    private LoginForm login = new LoginForm();
 
     public LoginView() {
         setId("login-view");
-
-        LoginForm login = new LoginForm();
+        setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
         login.setI18n(createCustomLoginI18n());
-
+        login.setAction("verificationProcess");
         add(login);
     }
 
@@ -35,5 +40,16 @@ public class LoginView extends HorizontalLayout {
         i18n.getErrorMessage().setMessage("Something went wrong.");
         i18n.setAdditionalInformation("The UUID have to be 32 digits long and PIN shouldn't be older than 15 minutes!");
         return i18n;
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent beforeEnterEvent) {
+        // inform the user about an authentication error
+        if(beforeEnterEvent.getLocation()
+                .getQueryParameters()
+                .getParameters()
+                .containsKey("error")) {
+            login.setError(true);
+        }
     }
 }
