@@ -443,19 +443,19 @@ async function connect() {
   await read(secReader);
 }
 
-async function syncAndRead(secReader){
+async function syncAndRead(secReader) {
   await sync();
   try {
     await read(secReader);
-  } catch(e){
+  } catch (e) {
     await syncAndRead(secReader);
     return;
   }
   var notFailed = true;
-  while (notFailed){
+  while (notFailed) {
     try {
       await read(secReader);
-    } catch(e) {
+    } catch (e) {
       notFailed = false;
     }
   }
@@ -487,7 +487,7 @@ async function reset() {
 }
 
 async function writeToStream(writer, ...lines) {
-  for (const line of lines){
+  for (const line of lines) {
     //console.log('vor IS Array');
     if (Array.isArray(line)) {
       await writer.write(line)
@@ -496,16 +496,22 @@ async function writeToStream(writer, ...lines) {
     //console.log('nach IS Array');
     if (ArrayBuffer.isView(line)) {
       console.log('vor new Array');
-      const tmp = new Uint8Array(line.buffer, line.byteOffset, line.byteLength);
+      const tmp = new Uint8Array(line);
       console.log('nach new Array');
-      await writer.write(tmp)
-      return;
-    }
-    //console.log('nach isview');
+      console.log(tmp);
+      for (const tmpp of tmp) {
+        console.log(Uint8Array.of(tmpp));
+        await writer.write(Uint8Array.of(tmpp));
+      }
+      //await writer.write(tmp);
+    } else {
+      //console.log('nach isview');
 
-    console.log('[SEND]', line);
-    //writer.write(line); // + '\n'
-    await writer.write(Uint8Array.of(line));
+      console.log('[SEND]', line);
+      //writer.write(line); // + '\n'
+      await writer.write(Uint8Array.of(line));
+    }
+
   }
   /*lines.forEach(async (line) => {
     
@@ -563,30 +569,30 @@ async function readLoop2(reader) {
 var readingPromise = null;
 async function read(reader) {
   //try {
-    let timeoutHandle;
-    const timeoutPromise = new Promise((resolve, reject) => {
-      timeoutHandle = setTimeout(() => reject(), 5000);
-    });
-    if(readingPromise == null){
-      readingPromise = reader.read();
-    }
-    const { value, done } = await Promise.race([
-      readingPromise,
-      timeoutPromise,
-    ]).then((result) => {
-      clearTimeout(timeoutHandle);
-      return result;
-    });
-    readingPromise = null;
-    if (value) {
-      console.log(JSON.stringify(value, null, 2) + '\n');
-      return value;
-    }
-    if (done) {
-      console.log('[read] DONE', done);
-      reader.releaseLock();
-      return;
-    }
+  let timeoutHandle;
+  const timeoutPromise = new Promise((resolve, reject) => {
+    timeoutHandle = setTimeout(() => reject(), 5000);
+  });
+  if (readingPromise == null) {
+    readingPromise = reader.read();
+  }
+  const { value, done } = await Promise.race([
+    readingPromise,
+    timeoutPromise,
+  ]).then((result) => {
+    clearTimeout(timeoutHandle);
+    return result;
+  });
+  readingPromise = null;
+  if (value) {
+    console.log(JSON.stringify(value, null, 2) + '\n');
+    return value;
+  }
+  if (done) {
+    console.log('[read] DONE', done);
+    reader.releaseLock();
+    return;
+  }
   /*} catch (e) {
     console.log(e);
     return;
