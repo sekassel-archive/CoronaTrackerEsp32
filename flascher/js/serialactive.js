@@ -341,6 +341,7 @@ async function flashBootloader(file) {
     fileContent = concatTypedArrays(fileContent, arrFF);
 
     const nOfDataPackets = Math.floor(fileContent.length / 1024);
+    console.log(nOfDataPackets);
     for (var i = 0; i < nOfDataPackets; i++) {
       var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
       var checkSum = 0xef;
@@ -360,7 +361,7 @@ async function flashBootloader(file) {
 
       console.log(`Hex: ${indexHexString}`);
 
-      await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 10), parseInt(indexHexString.substring(4, 6), 10), parseInt(indexHexString.substring(2, 4), 10), parseInt(indexHexString.substring(0, 2), 10), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
+      await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
       /*for (var j = 0; j < subArr.length; j++) {
         writeToStream(writer, subArr[j]);
       }*/
