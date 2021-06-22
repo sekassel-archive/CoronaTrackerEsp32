@@ -41,7 +41,7 @@ public class CwaDataInterpreter {
 
             // our own infectedUser from infectedUser TABLE
             infectedUserList = infectedUserDb.getAll();
-/*
+
             // we need to get our own infected user into the data set of the cwa and put it in a map like:
             // [enin: rpi(from cwa inf. user tek) .... rpi2 (from our inf. user db)],[enin2: ...] usw.
             ConcurrentHashMap<Integer, List<byte[]>> eninRpisMap = buildInfectedUserEninRpisMap(cwaData, infectedUserList);
@@ -52,7 +52,7 @@ public class CwaDataInterpreter {
             if (infectedUserActionRequired.isPresent()) {
                 processInfectedUserIntoDb(infectedUserActionRequired.get());
             }
- */
+
             lastCheckTimeString = DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
                     .replaceAll("[TZ]", " ") + " UTC";
 

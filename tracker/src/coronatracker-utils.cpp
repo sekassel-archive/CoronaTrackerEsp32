@@ -36,6 +36,57 @@ void startInitializeSteps(void)
     !initSPIFFS() ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
 }
 
+void processVerificationForUserInput(void)
+{
+    int count = 3;
+    // button should at least be pressed a amount of time
+    do
+    {
+        displayVerificationCountdown(count++);
+        sleep(1000);
+        if (digitalRead(0) != 0)
+        {
+            return;
+        }
+    } while (count != 0);
+
+    // wait for release button
+    displayReleaseButton();
+    do
+    {
+        sleep(100);
+    } while (digitalRead(0) != 0);
+
+    // generate PIN and get UUID to display
+    srand((unsigned)time(NULL));
+    int randomPinNumber = rand() % 10000; // random numbers from 0000 to 9999
+
+    std::stringstream ss;
+    for (int i = 4 - String(randomPinNumber).length(); i != 0; i--)
+    {
+        ss << "0";
+    }
+    ss << randomPinNumber;
+
+    std::string pin = ss.str();
+    std::string uuid = readUuid();
+
+    displayUuidAndTekForVerification(uuid, pin);
+
+    // frequently ask server for verification
+    if (getVerification(&uuid, &pin) == false)
+    {
+        displayVerificationFailed();
+        sleep(5000);
+    }
+    else
+    {
+        displayVerificationSuccess();
+        sleep(5000);
+        // TODO
+    }
+}
+
 void actionScanForBluetoothDevices(int *scannedDevices)
 {
     initializeBluetoothForScan();

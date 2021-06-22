@@ -231,3 +231,59 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
         return true;
     }
 }
+
+bool getVerification(std::string *uuidstr, std::string *pin)
+{
+    if (!WiFi.isConnected() && !connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return false;
+    }
+
+    HTTPClient http;
+
+    // Your Domain name with URL path or IP address with path
+    http.begin(String(SERVER_URL) + String(POST_VERIFICATION));
+
+    // Specify content-type header: application/json
+    http.addHeader("Content-Type", "application/json");
+
+    // Data to send with HTTP POST
+    std::stringstream ss;
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\"}";
+
+    std::string bodyResponse = "No Entry for UUID.";
+    int maxTries = 60; // 10 min
+
+    while (bodyResponse.compare("No Entry for UUID.") == 0 && maxTries > 0)
+    {
+        // Send HTTP POST request
+        int httpResponseCode = http.POST(ss.str().c_str());
+        bodyResponse = http.getString().c_str();
+
+
+        if (httpResponseCode != HTTP_CODE_OK)
+        {
+            Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
+            Serial.println(bodyResponse.c_str());
+            disconnectWifi();
+            return false;
+        }
+        else
+        {
+            if (bodyResponse.compare(pin->c_str()) == 0)
+            {
+                Serial.print("HTTP Response Code 200: ");
+                Serial.println(bodyResponse.c_str());
+            }
+            else
+            {
+                Serial.printf("HTTP Response Code 200, but %s\nWait and try again...", bodyResponse.c_str());
+            }
+        }
+        sleep(10000);
+        maxTries--;
+    }
+    disconnectWifi();
+    return true;
+}

@@ -100,6 +100,12 @@ void setup()
         startInitializeSteps();
     }
 
+    // button still pressed
+    if (digitalRead(0) == 0)
+    {
+        processVerificationForUserInput();
+    }
+
     switch (nextAction)
     {
     case ACTION_SCAN:
