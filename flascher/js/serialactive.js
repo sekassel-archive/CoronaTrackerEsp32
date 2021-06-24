@@ -309,6 +309,22 @@ async function writeReg7() {
 }
 
 
+const fileSelector2 = document.getElementById('file-selector2');
+fileSelector2.addEventListener('change', (event) => {
+  const file = event.target.files[0];
+  //console.log(file);
+  md5OfFile(file)
+});
+async function md5OfFile(file){
+  var fileReader = new FileReader();
+  fileReader.onload = async function () {
+    var readerResult = fileReader.result;
+    console.log(md5(readerResult));
+  }
+  fileReader.readAsBinaryString(file);
+}
+
+
 
 const fileSelector = document.getElementById('file-selector');
 fileSelector.addEventListener('change', (event) => {
