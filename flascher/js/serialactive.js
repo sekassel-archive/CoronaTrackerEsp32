@@ -326,7 +326,14 @@ async function flashBootloader(file) {
   var fileReader = new FileReader();
   var fileContent = new Uint8Array();
   fileReader.onload = async function () {
-    fileContent = new Uint8Array(fileReader.result)
+    var readerResult = fileReader.result;
+    fileContent = new Uint8Array(readerResult)
+    if (!("TextDecoder" in window))
+      alert("Sorry, this browser does not support TextDecoder...");
+
+    var enc = new TextDecoder("utf-8");
+    console.log(fileContent.length)
+    //console.log(md5(fileContent.buffer));
     //console.log(JSON.stringify(fileContent, null, 2));
     //console.log(fileContent.length);
     //console.log(checkSum);
@@ -339,6 +346,7 @@ async function flashBootloader(file) {
       arrFF[i] = 0xff;
     }
     fileContent = concatTypedArrays(fileContent, arrFF);
+    console.log(md5(enc.decode(fileContent.buffer)));
 
     const nOfDataPackets = Math.floor(fileContent.length / 1024);
     console.log(nOfDataPackets);
@@ -371,6 +379,12 @@ async function flashBootloader(file) {
       await read(secReader);
     }
     console.log('sended');
+
+    //get md5 checksum from esp
+    //c0001310000000000000100000003e00000000000000000000c0
+    await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
+    var md5SlipFrame = await read(secReader);
+    console.log(enc.decode(md5SlipFrame.data.buffer))
   }
   fileReader.readAsArrayBuffer(file)
   //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
@@ -442,6 +456,8 @@ async function connect() {
   await read(secReader);
   await spiSetParams();
   await read(secReader);
+
+  console.log(md5("test"));
 }
 
 async function syncAndRead(secReader) {
