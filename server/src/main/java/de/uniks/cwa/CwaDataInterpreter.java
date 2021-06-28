@@ -2,8 +2,8 @@ package de.uniks.cwa;
 
 import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.cwa.utils.CWARequests;
-import de.uniks.postgres.db.InfectedUserPostgreSqlDao;
-import de.uniks.postgres.db.UserPostgreSqlDao;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 
@@ -33,8 +33,8 @@ public class CwaDataInterpreter {
     public static void checkForInfectionsHourlyTask() {
         try {
             lastCheckTimeString = "Infection check in progress...";
-            InfectedUserPostgreSqlDao infectedUserDb = new InfectedUserPostgreSqlDao();
-            UserPostgreSqlDao userDb = new UserPostgreSqlDao();
+            InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
+            UserPostgreSql userDb = new UserPostgreSql();
 
             // cwa db get every 1h a new data set. So we'll get a hourly update of cwaData in memory
             cwaData = CWARequests.getUnzippedInfectionData();
@@ -98,7 +98,7 @@ public class CwaDataInterpreter {
         }
     }
 
-    private static Optional<List<User>> buildAndQueryInfectionCheckOnDb(UserPostgreSqlDao userDb, ConcurrentHashMap<Integer, List<byte[]>> infectedUser) {
+    private static Optional<List<User>> buildAndQueryInfectionCheckOnDb(UserPostgreSql userDb, ConcurrentHashMap<Integer, List<byte[]>> infectedUser) {
         List<User> infUserCollection = new ArrayList<>();
         infectedUser.forEach((enin, rpiList) -> {
             try {

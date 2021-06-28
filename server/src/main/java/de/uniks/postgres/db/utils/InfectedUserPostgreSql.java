@@ -1,7 +1,7 @@
-package de.uniks.postgres.db;
+package de.uniks.postgres.db.utils;
 
+import de.uniks.postgres.db.PostgresConnect;
 import de.uniks.postgres.db.model.InfectedUser;
-import de.uniks.postgres.db.model.User;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,12 +11,12 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
+public class InfectedUserPostgreSql {
 
-    private static final Logger LOG = Logger.getLogger(InfectedUserPostgreSqlDao.class.getName());
+    private static final Logger LOG = Logger.getLogger(InfectedUserPostgreSql.class.getName());
     private static Optional<Connection> connection = Optional.empty();
 
-    public InfectedUserPostgreSqlDao() {
+    public InfectedUserPostgreSql() {
         if (connection.isEmpty()) {
             connection = PostgresConnect.getConnection();
 
@@ -35,8 +35,6 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
         }
     }
 
-
-    @Override
     public Optional<Integer> save(InfectedUser infUser) {
         InfectedUser nonNullUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be added should not be null");
         String sql = "INSERT INTO " + InfectedUser.CLASS + "(" + InfectedUser.UUID + ", " + InfectedUser.TEK + ", "
@@ -61,7 +59,6 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
         });
     }
 
-    @Override
     public List<InfectedUser> get(String uuid) {
         List<InfectedUser> infUsers = new ArrayList<>();
         String sql = "SELECT * FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = \'" + uuid + "\'";
@@ -82,7 +79,6 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
         return infUsers;
     }
 
-    @Override
     public List<InfectedUser> getAll() {
         List<InfectedUser> infUserCollection = new ArrayList<>();
         String sql = "SELECT * FROM " + InfectedUser.CLASS;
@@ -105,7 +101,6 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
         return infUserCollection;
     }
 
-    @Override
     public void update(InfectedUser infUser) {
         InfectedUser nonNullUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be updated should not be null");
         String sql = "UPDATE " + InfectedUser.CLASS + " "
@@ -129,7 +124,6 @@ public class InfectedUserPostgreSqlDao implements Dao<InfectedUser, Integer> {
         });
     }
 
-    @Override
     public void delete(InfectedUser infUser) {
         InfectedUser nonNullInfUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be deleted should not be null");
         String sql = "DELETE FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = ?";

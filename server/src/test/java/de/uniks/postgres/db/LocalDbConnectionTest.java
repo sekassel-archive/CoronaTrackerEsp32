@@ -2,6 +2,7 @@ package de.uniks.postgres.db;
 
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
@@ -12,7 +13,6 @@ import org.junit.jupiter.api.TestInstance;
 import java.lang.reflect.Field;
 import java.sql.*;
 import java.util.*;
-import java.util.logging.Level;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LocalDbConnectionTest {
@@ -56,7 +56,7 @@ public class LocalDbConnectionTest {
         User user = new User("3ee56edf-1e91-438f-b75e-50df9a30e515", 0, 2692512, List.of(testRpi));
 
         List<User> userBack;
-        UserPostgreSqlDao userInterface = new UserPostgreSqlDao();
+        UserPostgreSql userInterface = new UserPostgreSql();
 
         Optional<Integer> returnOpt = userInterface.save(user);
         Assert.assertTrue(returnOpt.isPresent());

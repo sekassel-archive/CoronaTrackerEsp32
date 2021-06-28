@@ -13,7 +13,7 @@ import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import de.uniks.cwa.CwaDataInterpreter;
-import de.uniks.postgres.db.UserPostgreSqlDao;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.vaadin.views.main.MainView;
 import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 
@@ -24,13 +24,13 @@ import java.util.List;
 @PageTitle("Server Devices")
 @CssImport("./styles/views/serverdevices/server-devices-view.css")
 public class ServerDevicesView extends HorizontalLayout {
-    private static UserPostgreSqlDao userPostgreSqlDao = new UserPostgreSqlDao();
+    private static UserPostgreSql userPostgreSql = new UserPostgreSql();
 
     public ServerDevicesView() {
         setId("server-devices-view");
 
         TextField trackerUserField = new TextField();
-        trackerUserField.setValue(userPostgreSqlDao.getUserCount().toString());
+        trackerUserField.setValue(userPostgreSql.getUserCount().toString());
         trackerUserField.setLabel("ESP32 Tracker Users");
         trackerUserField.setReadOnly(true);
 

@@ -3,8 +3,8 @@ package de.uniks.spark;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.uniks.postgres.db.InfectedUserPostgreSqlDao;
-import de.uniks.postgres.db.UserPostgreSqlDao;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.model.User;
 import de.uniks.spark.payload.InfectedUserPostPayload;
 import de.uniks.spark.payload.UserPostPayload;
@@ -19,8 +19,8 @@ import static spark.Spark.post;
 
 public class SparkRequestHandler {
     private static final String ROUTING_PREFIX = "/api";
-    private static UserPostgreSqlDao userDb = new UserPostgreSqlDao();
-    private static InfectedUserPostgreSqlDao infectedUserDb = new InfectedUserPostgreSqlDao();
+    private static UserPostgreSql userDb = new UserPostgreSql();
+    private static InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
 
     public static void handleRequests() {
         // TODO: enable SSL/HTTPS / encrypt traffic
@@ -102,6 +102,24 @@ public class SparkRequestHandler {
             }
 
             return hasContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
+        });
+
+        post(ROUTING_PREFIX + "/verify", (request, response) -> {
+            ObjectMapper mapper = new ObjectMapper();
+            UuidPostPayload input;
+            try {
+                input = mapper.readValue(request.body(), UuidPostPayload.class);
+            } catch (JsonParseException | JsonMappingException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid!";
+            }
+
+            if(!input.isValid()){
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid!";
+            }
+
+            return "1234";
         });
     }
 

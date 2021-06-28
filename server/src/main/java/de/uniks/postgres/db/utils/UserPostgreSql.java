@@ -1,5 +1,6 @@
-package de.uniks.postgres.db;
+package de.uniks.postgres.db.utils;
 
+import de.uniks.postgres.db.PostgresConnect;
 import de.uniks.postgres.db.model.User;
 import org.eclipse.jetty.util.ajax.JSON;
 
@@ -12,12 +13,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class UserPostgreSqlDao implements Dao<User, Integer> {
+public class UserPostgreSql {
 
-    private static final Logger LOG = Logger.getLogger(UserPostgreSqlDao.class.getName());
+    private static final Logger LOG = Logger.getLogger(UserPostgreSql.class.getName());
     private static Optional<Connection> connection = Optional.empty();
 
-    public UserPostgreSqlDao() {
+    public UserPostgreSql() {
         if (connection.isEmpty()) {
             connection = PostgresConnect.getConnection();
 
@@ -37,7 +38,6 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
         }
     }
 
-    @Override
     public Optional<Integer> save(User user) {
         User nonNullUser = Objects.requireNonNull(user, "The " + User.CLASS + " to be added should not be null");
         String sql = "INSERT INTO " + User.CLASS + "(" + User.UUID + ", " + User.STATUS
@@ -61,14 +61,12 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
         });
     }
 
-    @Override
     public List<User> get(String uuid) {
         List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM " + User.CLASS + " WHERE " + User.UUID + " = \'" + uuid + "\'";
         return getWithPrimitiveSql(sql);
     }
 
-    @Override
     public List<User> getAll() {
         String sql = "SELECT * FROM " + User.CLASS;
         return getWithPrimitiveSql(sql);
@@ -133,7 +131,6 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
         return users;
     }
 
-    @Override
     public void update(User user) {
         User nonNullUser = Objects.requireNonNull(user, "The " + User.CLASS + " to be updated should not be null");
         String sql = "UPDATE " + User.CLASS + " "
@@ -159,7 +156,6 @@ public class UserPostgreSqlDao implements Dao<User, Integer> {
         });
     }
 
-    @Override
     public void delete(User user) {
         User nonNullUser = Objects.requireNonNull(user, "The " + User.CLASS + " to be deleted should not be null");
         String sql = "DELETE FROM " + User.CLASS + " WHERE " + User.UUID + " = ?";

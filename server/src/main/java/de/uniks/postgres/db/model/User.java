@@ -38,7 +38,7 @@ public class User {
         this.rpiList = new Gson().fromJson(rpiListAsJSONArray, collectionType);
     }
 
-    @Override
+    // TODO: remove if not needed
     public String toString() {
         return CLASS + "{"
                 + UUID + "=" + uuid

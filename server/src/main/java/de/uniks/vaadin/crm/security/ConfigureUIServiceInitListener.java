@@ -22,8 +22,9 @@ public class ConfigureUIServiceInitListener implements VaadinServiceInitListener
 
     // in authenticateNavigation, reroute all requests to the login, if the user is not logged in
     private void authenticateNavigation(BeforeEnterEvent event) {
-        if(!MyDeviceView.class.equals(event.getNavigationTarget())){
-            //TODO: maybe change to better solution
+        if (!MyDeviceView.class.equals(event.getNavigationTarget())) {
+            // so login should only for verification form be forced
+            // TODO: maybe change to better solution
             return;
         }
         if (!LoginView.class.equals(event.getNavigationTarget())

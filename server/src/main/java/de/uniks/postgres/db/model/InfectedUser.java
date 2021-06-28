@@ -28,7 +28,7 @@ public class InfectedUser {
         this.tek = new Gson().fromJson(tekAsString, collectionType);
     }
 
-    @Override
+    // TODO: remove if not needed
     public String toString() {
         return CLASS + "["
                 + UUID + "=" + uuid
