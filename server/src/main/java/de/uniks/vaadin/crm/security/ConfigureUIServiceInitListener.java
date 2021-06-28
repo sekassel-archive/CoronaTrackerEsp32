@@ -6,7 +6,6 @@ import com.vaadin.flow.server.ServiceInitEvent;
 import com.vaadin.flow.server.VaadinServiceInitListener;
 import de.uniks.vaadin.views.login.LoginView;
 import de.uniks.vaadin.views.mydevice.MyDeviceView;
-import de.uniks.vaadin.views.rsinoverview.CwaDataView;
 import org.springframework.stereotype.Component;
 
 @Component
