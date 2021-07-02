@@ -256,6 +256,13 @@ fileSelector.addEventListener('change', (event) => {
   //console.log(file);
   flashBootloader(file)
 });
+
+var filesFlashed = 0;
+const adress1 = Uint8Array.of(0x00, 0x10, 0x00, 0x00);
+const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
+const adress3 = Uint8Array.of(0x00, 0xe0, 0x00, 0x00);
+const adress4 = Uint8Array.of(0x00, 0x00, 0x01, 0x00);
+const adresses = Array.of(adress1, adress2, adress3, adress4);
 async function flashBootloader(file) {
   //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
@@ -296,7 +303,7 @@ async function flashBootloader(file) {
     console.log(nOfDataPackets);
     const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
-    await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ 0x00, 0x10, 0x00, 0x00, 0xc0);
+    await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
     await read(secReader);
 
     for (var i = 0; i < nOfDataPackets; i++) {
