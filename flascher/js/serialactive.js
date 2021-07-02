@@ -257,11 +257,12 @@ fileSelector.addEventListener('change', (event) => {
   flashBootloader(file)
 });
 async function flashBootloader(file) {
+  //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
   //c0 00 02 10 00 00 00 00 00 00 3e 00 00 10 00 00 00 00 04 00 00 00 10 00 00 c0
-  await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
+  //await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
   //const res = await read(secReader);
-  await read(secReader);
+  //await read(secReader);
 
   var fileReader = new FileReader();
   var fileContent = new Uint8Array();
@@ -273,6 +274,9 @@ async function flashBootloader(file) {
 
     var enc = new TextDecoder("utf-8");
     console.log(fileContent.length)
+    const sizeHexString = toHexString(fileContent.length);
+    console.log(sizeHexString);
+    
     //console.log(md5(fileContent.buffer));
     //console.log(JSON.stringify(fileContent, null, 2));
     //console.log(fileContent.length);
@@ -290,17 +294,18 @@ async function flashBootloader(file) {
 
     const nOfDataPackets = Math.floor(fileContent.length / 1024);
     console.log(nOfDataPackets);
+    const nOfDataPacketsHexString = toHexString(nOfDataPackets);
+
+    await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ 0x00, 0x10, 0x00, 0x00, 0xc0);
+    await read(secReader);
+
     for (var i = 0; i < nOfDataPackets; i++) {
       var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
       var checkSum = 0xef;
       for (var j = 0; j < subArr.length; j++) {
         checkSum = checkSum ^ subArr[j];
       }
-      var indexHexString = (i).toString(16);
-      //fill zeros
-      while (indexHexString.length < 8) {
-        indexHexString = `0${indexHexString}`;
-      }
+      var indexHexString = toHexString(i);
 
       console.log(`len: ${subArr.length}`);
 
@@ -356,6 +361,14 @@ function escapeArray(arr) {
     }
   }
   return resultArray;
+}
+
+function toHexString(num){
+  var numHexString = num.toString(16);
+  while (numHexString.length < 8) {
+    numHexString = `0${numHexString}`;
+  }
+  return numHexString;
 }
 
 
