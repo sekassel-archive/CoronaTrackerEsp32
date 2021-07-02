@@ -11,7 +11,6 @@ import de.uniks.vaadin.views.main.MainView;
 @Route(value = "about", layout = MainView.class)
 @CssImport("./styles/views/about/about-view.css")
 @PageTitle("About")
-@RouteAlias(value = "", layout = MainView.class)
 public class AboutView extends Div {
 
     public AboutView() {

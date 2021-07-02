@@ -15,7 +15,7 @@ public class Main {
 
     public static void main(String[] args) {
         SparkRequestHandler.handleRequests();
-        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 1, 60, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 100, 60, TimeUnit.MINUTES);
 
         try {
             Thread springThread = new Thread(SpringBoot::startSpring);

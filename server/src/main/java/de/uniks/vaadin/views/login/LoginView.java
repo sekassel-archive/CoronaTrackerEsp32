@@ -35,7 +35,7 @@ public class LoginView extends HorizontalLayout implements BeforeEnterObserver {
         i18n.getForm().setTitle("Verification");
         i18n.getForm().setSubmit("OK");
         i18n.getForm().setPassword("PIN");
-        i18n.getForm().setForgotPassword(".");
+        i18n.getForm().setForgotPassword("");
         i18n.getErrorMessage().setTitle("Ups");
         i18n.getErrorMessage().setMessage("Something went wrong.");
         i18n.setAdditionalInformation("The UUID have to be 32 digits long and PIN shouldn't be older than 15 minutes!");

@@ -6,12 +6,14 @@ import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 import de.uniks.cwa.CwaDataInterpreter;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.vaadin.views.main.MainView;
@@ -23,7 +25,7 @@ import java.util.List;
 @Route(value = "serverDevicesInformation", layout = MainView.class)
 @PageTitle("Server Devices")
 @CssImport("./styles/views/serverdevices/server-devices-view.css")
-public class ServerDevicesView extends HorizontalLayout {
+public class ServerDevicesView extends VerticalLayout {
     private static UserPostgreSql userPostgreSql = new UserPostgreSql();
 
     public ServerDevicesView() {

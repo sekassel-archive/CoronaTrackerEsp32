@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ConfigureUIServiceInitListener implements VaadinServiceInitListener {
-    // listen for the initialization of the UI (the internal root component in Vaadin) and then add a listener before every view transition
+    // listen for the initialization of the UI (the internal root component in Vaadin) and
+    // then add a listener before every view transition
     @Override
     public void serviceInit(ServiceInitEvent event) {
         event.getSource().addUIInitListener(uiEvent -> {

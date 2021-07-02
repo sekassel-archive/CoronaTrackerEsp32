@@ -1,8 +1,8 @@
 package de.uniks.vaadin.crm.security;
 
 import com.vaadin.flow.server.HandlerHelper;
-import com.vaadin.flow.server.HandlerHelper.RequestType;
 import com.vaadin.flow.shared.ApplicationConstants;
+import de.uniks.vaadin.crm.security.model.CustomUserDetails;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +28,8 @@ public final class SecurityUtils {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication != null
                 && !(authentication instanceof AnonymousAuthenticationToken)
-                && authentication.isAuthenticated();
+                && authentication.isAuthenticated()
+                && ((CustomUserDetails)authentication.getPrincipal()).isCredentialsNonExpired()
+                && ((CustomUserDetails)authentication.getPrincipal()).isAccountNonExpired();
     }
 }
