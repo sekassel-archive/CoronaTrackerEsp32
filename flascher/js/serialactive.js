@@ -239,7 +239,7 @@ fileSelector2.addEventListener('change', (event) => {
   //console.log(file);
   md5OfFile(file)
 });
-async function md5OfFile(file){
+async function md5OfFile(file) {
   var fileReader = new FileReader();
   fileReader.onload = async function () {
     var readerResult = fileReader.result;
@@ -283,7 +283,7 @@ async function flashBootloader(file) {
     console.log(fileContent.length)
     const sizeHexString = toHexString(fileContent.length);
     console.log(sizeHexString);
-    
+
     //console.log(md5(fileContent.buffer));
     //console.log(JSON.stringify(fileContent, null, 2));
     //console.log(fileContent.length);
@@ -291,12 +291,15 @@ async function flashBootloader(file) {
 
     //fill filecontent with ff to fit x*1024
     //if != 0
-    const nOfFF = 1024 - fileContent.length % 1024;
-    var arrFF = new Uint8Array(nOfFF);
-    for (var i = 0; i < nOfFF; i++) {
-      arrFF[i] = 0xff;
+    if (fileContent.length % 1024 != 0) {
+      const nOfFF = 1024 - fileContent.length % 1024;
+      var arrFF = new Uint8Array(nOfFF);
+      for (var i = 0; i < nOfFF; i++) {
+        arrFF[i] = 0xff;
+      }
+      fileContent = concatTypedArrays(fileContent, arrFF);
     }
-    fileContent = concatTypedArrays(fileContent, arrFF);
+
     console.log(md5(enc.decode(fileContent.buffer)));
 
     const nOfDataPackets = Math.floor(fileContent.length / 1024);
@@ -310,7 +313,7 @@ async function flashBootloader(file) {
       var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
       var checkSum = 0xef;
       for (var j = 0; j < subArr.length; j++) {
-        checkSum = checkSum ^ subArr[j];
+        checkSum = checkSum ^ subArr[j]; //TODO: escape checksum
       }
       var indexHexString = toHexString(i);
 
@@ -328,15 +331,19 @@ async function flashBootloader(file) {
       //writeToStream(writer, 0xc0);
       //await new Promise(resolve => setTimeout(resolve, 3200));
 
-      await read(secReader);
+      const answer = await read(secReader);
+      if (answer.data[answer.data.length - 4] > 0) {
+        throw new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`);
+      }
     }
     console.log('sended');
 
     //get md5 checksum from esp
     //c0001310000000000000100000003e00000000000000000000c0
-    await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
-    var md5SlipFrame = await read(secReader);
-    console.log(enc.decode(md5SlipFrame.data.buffer))
+    await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
+    const md5SlipFrame = await read(secReader);
+    console.log(enc.decode(md5SlipFrame.data.buffer));
+    filesFlashed = filesFlashed + 1;
   }
   fileReader.readAsArrayBuffer(file)
   //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
@@ -370,7 +377,7 @@ function escapeArray(arr) {
   return resultArray;
 }
 
-function toHexString(num){
+function toHexString(num) {
   var numHexString = num.toString(16);
   while (numHexString.length < 8) {
     numHexString = `0${numHexString}`;
@@ -440,7 +447,7 @@ async function syncAndRead(secReader) {
 
 var secReader = null;
 document.getElementById('bootloaderButton').addEventListener('click', () => {
-  enterBootloader();
+  endFlash();
 });
 async function enterBootloader() {
   await port.setSignals({ dataTerminalReady: false });
@@ -454,6 +461,10 @@ async function enterBootloader() {
   await port.setSignals({ dataTerminalReady: false });
 
   await new Promise(resolve => setTimeout(resolve, 3200));
+}
+
+async function endFlash() {
+  await writeToStream(writer, 0xc0, 0x00, 0x04, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
 }
 
 async function reset() {
@@ -548,7 +559,7 @@ async function read(reader) {
   //try {
   let timeoutHandle;
   const timeoutPromise = new Promise((resolve, reject) => {
-    timeoutHandle = setTimeout(() => reject(), 5000);
+    timeoutHandle = setTimeout(() => reject('Timed out'), 9000);
   });
   if (readingPromise == null) {
     readingPromise = reader.read();
