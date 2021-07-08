@@ -319,7 +319,7 @@ async function flashBootloader(file) {
 
       console.log(`len: ${subArr.length}`);
 
-      subArr = escapeArray(subArr);
+      //subArr = escapeArray(subArr);
       console.log(`checksum: ${checkSum}`);
 
       console.log(`Hex: ${indexHexString}`);
@@ -475,32 +475,50 @@ async function reset() {
 }
 
 async function writeToStream(writer, ...lines) {
-  for (const line of lines) {
-    //console.log('vor IS Array');
-    if (Array.isArray(line)) {
-      await writer.write(line)
+  await writer.write(Uint8Array.of(lines[0]));
+  for (var i = 1; i < lines.length - 1; i++) {
+    /*console.log('vor IS Array');
+    if (Array.isArray(lines[i])) {
+      await writer.write(lines[i])
       return;
     }
-    //console.log('nach IS Array');
-    if (ArrayBuffer.isView(line)) {
+    //console.log('nach IS Array');*/
+    if (ArrayBuffer.isView(lines[i])) {
       console.log('vor new Array');
-      const tmp = new Uint8Array(line);
+      const tmp = new Uint8Array(lines[i]);
       console.log('nach new Array');
       console.log(tmp);
       for (const tmpp of tmp) {
         console.log(Uint8Array.of(tmpp));
-        await writer.write(Uint8Array.of(tmpp));
+        if (tmpp == 0xc0) {
+          await writer.write(Uint8Array.of(0xdb));
+          await writer.write(Uint8Array.of(0xdc));
+        } else if (tmpp == 0xdb) {
+          await writer.write(Uint8Array.of(0xdb));
+          await writer.write(Uint8Array.of(0xdd));
+        } else {
+          await writer.write(Uint8Array.of(tmpp));
+        }
       }
       //await writer.write(tmp);
     } else {
       //console.log('nach isview');
 
-      console.log('[SEND]', line);
+      console.log('[SEND]', lines[i]);
       //writer.write(line); // + '\n'
-      await writer.write(Uint8Array.of(line));
+      if (lines[i] == 0xc0) {
+        await writer.write(Uint8Array.of(0xdb));
+        await writer.write(Uint8Array.of(0xdc));
+      } else if (lines[i] == 0xdb) {
+        await writer.write(Uint8Array.of(0xdb));
+        await writer.write(Uint8Array.of(0xdd));
+      } else {
+        await writer.write(Uint8Array.of(lines[i]));
+      }
     }
 
   }
+  await writer.write(Uint8Array.of(lines[lines.length - 1]));
   /*lines.forEach(async (line) => {
     
   });*/
