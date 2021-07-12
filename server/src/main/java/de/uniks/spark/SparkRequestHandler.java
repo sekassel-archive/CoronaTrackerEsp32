@@ -3,14 +3,18 @@ package de.uniks.spark;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
-import de.uniks.postgres.db.model.User;
+import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.spark.payload.InfectedUserPostPayload;
 import de.uniks.spark.payload.UserPostPayload;
+import de.uniks.spark.payload.UuidPinPostPayload;
 import de.uniks.spark.payload.UuidPostPayload;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -21,6 +25,7 @@ public class SparkRequestHandler {
     private static final String ROUTING_PREFIX = "/api";
     private static UserPostgreSql userDb = new UserPostgreSql();
     private static InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
+    private static UserVerificationPostgreSql verificationDb = new UserVerificationPostgreSql();
 
     public static void handleRequests() {
         // TODO: enable SSL/HTTPS / encrypt traffic
@@ -96,7 +101,7 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            if(!input.isValid()){
+            if (!input.isValid()) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request body invalid!";
             }
@@ -106,20 +111,26 @@ public class SparkRequestHandler {
 
         post(ROUTING_PREFIX + "/verify", (request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
-            UuidPostPayload input;
+            UuidPinPostPayload input;
             try {
-                input = mapper.readValue(request.body(), UuidPostPayload.class);
+                input = mapper.readValue(request.body(), UuidPinPostPayload.class);
             } catch (JsonParseException | JsonMappingException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request body invalid!";
             }
 
-            if(!input.isValid()){
+            if (!input.isValid()) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request body invalid!";
             }
 
-            return "1234";
+            Optional<LocalDateTime> localDateTime = verificationDb.completeEntryIfExists(input.getUuid(), input.getPin());
+
+            if (localDateTime.isEmpty()) {
+                return "Invalid";
+            } else {
+                return localDateTime.get().toString();
+            }
         });
     }
 

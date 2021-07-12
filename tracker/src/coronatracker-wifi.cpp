@@ -261,7 +261,6 @@ bool getVerification(std::string *uuidstr, std::string *pin)
         int httpResponseCode = http.POST(ss.str().c_str());
         bodyResponse = http.getString().c_str();
 
-
         if (httpResponseCode != HTTP_CODE_OK)
         {
             Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);

@@ -1,16 +1,21 @@
 package de.uniks.postgres.db.model;
 
-import java.sql.Time;
+import lombok.Data;
 
+import java.time.LocalDateTime;
+
+@Data
 public class VerificationUser {
     public static final String CLASS = "verificationUser";
     public static final String UUID = "uuid";
-    public static final String STATUS = "status";
-    public static final String TIMESTAMP = "timestamp";
     public static final String PIN = "pin";
+    public static final String VALID = "expired";
+    public static final String INFECTED_STATUS = "infectedStatus";
+    public static final String TIMESTAMP = "timestamp";
 
     private String uuid;
-    private Boolean status;
-    private Time timestamp;
     private String pin;
+    private Boolean valid;
+    private Boolean infectedStatus;
+    private LocalDateTime timestamp;
 }

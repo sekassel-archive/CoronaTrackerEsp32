@@ -62,7 +62,6 @@ public class UserPostgreSql {
     }
 
     public List<User> get(String uuid) {
-        List<User> users = new ArrayList<>();
         String sql = "SELECT * FROM " + User.CLASS + " WHERE " + User.UUID + " = \'" + uuid + "\'";
         return getWithPrimitiveSql(sql);
     }

@@ -46,7 +46,7 @@ public class MyDeviceView extends VerticalLayout {
         Button submitButton = new Button("Submit Data", event -> {
             CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
             principal.setExpired();
-            //TODO
+            //TODO input data to db to trigger actions required for infection case
         });
         submitButton.setEnabled(false);
 

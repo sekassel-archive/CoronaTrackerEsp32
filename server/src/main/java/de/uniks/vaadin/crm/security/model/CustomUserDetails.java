@@ -16,13 +16,14 @@ public class CustomUserDetails implements UserDetails {
     private Boolean expired;
 
     public CustomUserDetails(String uuid, String pin) {
-        this.expireTimestamp = LocalDateTime.now().plus(1, ChronoUnit.MINUTES);
+        this.expireTimestamp = LocalDateTime.now().plus(10, ChronoUnit.MINUTES);
         this.uuid = uuid;
         this.pin = pin;
         this.expired = false;
     }
 
     public void setExpired() {
+        //TODO: change in db too, create task to change it
         this.expired = true;
     }
 
