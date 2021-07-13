@@ -7,10 +7,7 @@ import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
-import de.uniks.spark.payload.InfectedUserPostPayload;
-import de.uniks.spark.payload.UserPostPayload;
-import de.uniks.spark.payload.UuidPinPostPayload;
-import de.uniks.spark.payload.UuidPostPayload;
+import de.uniks.spark.payload.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -131,6 +128,26 @@ public class SparkRequestHandler {
             } else {
                 return localDateTime.get().toString();
             }
+        });
+
+        post(ROUTING_PREFIX + "/verify/updateTEK", (request, response) -> {
+            ObjectMapper mapper = new ObjectMapper();
+            UuidDateTekPostPayload input;
+            try {
+                input = mapper.readValue(request.body(), UuidDateTekPostPayload.class);
+            } catch (JsonParseException | JsonMappingException e) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid!";
+            }
+
+            if (!input.isValid()) {
+                response.status(HTTP_BAD_REQUEST);
+                return "Request body invalid!";
+            }
+
+            //TODO: validate and put TEK's in db for infection check
+
+            return "ok";
         });
     }
 
