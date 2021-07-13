@@ -250,39 +250,25 @@ bool getVerification(std::string *uuidstr, std::string *pin)
 
     // Data to send with HTTP POST
     std::stringstream ss;
-    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\"}";
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"pin\":\"" << pin->c_str() << "\"}";
 
-    std::string bodyResponse = "No Entry for UUID.";
-    int maxTries = 60; // 10 min
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(ss.str().c_str());
+    std::string bodyResponse = http.getString().c_str();
 
-    while (bodyResponse.compare("No Entry for UUID.") == 0 && maxTries > 0)
+    if (httpResponseCode != HTTP_CODE_OK)
     {
-        // Send HTTP POST request
-        int httpResponseCode = http.POST(ss.str().c_str());
-        bodyResponse = http.getString().c_str();
-
-        if (httpResponseCode != HTTP_CODE_OK)
-        {
-            Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
-            Serial.println(bodyResponse.c_str());
-            disconnectWifi();
-            return false;
-        }
-        else
-        {
-            if (bodyResponse.compare(pin->c_str()) == 0)
-            {
-                Serial.print("HTTP Response Code 200: ");
-                Serial.println(bodyResponse.c_str());
-            }
-            else
-            {
-                Serial.printf("HTTP Response Code 200, but %s\nWait and try again...", bodyResponse.c_str());
-            }
-        }
-        sleep(10000);
-        maxTries--;
+        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
+        Serial.println(bodyResponse.c_str());
+        disconnectWifi();
+        return false;
     }
-    disconnectWifi();
-    return true;
+    else
+    {
+        Serial.print("HTTP Response Code 200: ");
+        Serial.println(bodyResponse.c_str());
+        //TODO get timestamp as string to send tek to server
+        disconnectWifi();
+        return true;
+    }
 }

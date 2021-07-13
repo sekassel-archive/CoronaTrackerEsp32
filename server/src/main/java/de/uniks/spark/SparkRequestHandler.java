@@ -154,7 +154,7 @@ public class SparkRequestHandler {
 
     private static Boolean hasContactWithInfectedByStatus(String uuid) {
         List<User> foundUser = userDb.get(uuid);
-        if (!foundUser.isEmpty() && foundUser.stream().filter(user -> !user.getStatus().equals(0)).findAny().isPresent()) {
+        if (!foundUser.isEmpty() && foundUser.stream().filter(user -> user.getStatus().equals(1)).findAny().isPresent()) {
             return true;
         }
         return false;
