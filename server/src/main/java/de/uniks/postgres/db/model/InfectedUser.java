@@ -28,15 +28,6 @@ public class InfectedUser {
         this.tek = new Gson().fromJson(tekAsString, collectionType);
     }
 
-    // TODO: remove if not needed
-    public String toString() {
-        return CLASS + "["
-                + UUID + "=" + uuid
-                + TEK + "=" + tek // TODO: serialisation
-                + ", " + RSIN + "=" + rsin.toString()
-                + ']';
-    }
-
     public String getUuid() {
         return uuid;
     }

@@ -5,6 +5,7 @@ import de.uniks.postgres.db.model.InfectedUser;
 import lombok.Data;
 
 @Data
+@Deprecated
 public class InfectedUserPostPayload implements Validable {
     private String uuid;
     private String tek;

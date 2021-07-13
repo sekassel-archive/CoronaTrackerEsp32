@@ -70,6 +70,7 @@ public class SparkRequestHandler {
             return "Success!";
         }));
 
+        //TODO: remove
         post(ROUTING_PREFIX + "/data/input/tek/share", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectedUserPostPayload input;

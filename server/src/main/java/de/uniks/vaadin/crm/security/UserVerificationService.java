@@ -44,6 +44,7 @@ public class UserVerificationService implements UserDetailsService {
             if (verificationUser.isPresent()) {
                 VerificationUser user = verificationUser.get();
                 CustomUserDetails customUserDetails = new CustomUserDetails(user.getUuid(), user.getPin());
+                //TODO: check if it is required to give the login entry free for a direct re-login - insignificant
                 return customUserDetails;
             }
         }

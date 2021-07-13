@@ -38,16 +38,6 @@ public class User {
         this.rpiList = new Gson().fromJson(rpiListAsJSONArray, collectionType);
     }
 
-    // TODO: remove if not needed
-    public String toString() {
-        return CLASS + "{"
-                + UUID + "=" + uuid
-                + ", " + STATUS + "=" + status.toString()
-                + ", " + ENIN + "=" + enin.toString()
-                + ", " + RPILIST + "=" + this.getRpiListAsJSONArray()
-                + "}";
-    }
-
     public String getUuid() {
         return uuid;
     }

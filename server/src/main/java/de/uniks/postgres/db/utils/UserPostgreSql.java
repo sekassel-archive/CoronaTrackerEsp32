@@ -77,7 +77,7 @@ public class UserPostgreSql {
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
                  ResultSet resultSet = statement.executeQuery(sql)) {
-                if(resultSet.next()){
+                if (resultSet.next()) {
                     userCount.set(resultSet.getInt("count"));
                 }
             } catch (SQLException ex) {
@@ -130,27 +130,30 @@ public class UserPostgreSql {
         return users;
     }
 
-    public void update(User user) {
+    // user.getStatus() have to be the old / original one
+    public void updateStatus(User user, int newStatus) {
         User nonNullUser = Objects.requireNonNull(user, "The " + User.CLASS + " to be updated should not be null");
         String sql = "UPDATE " + User.CLASS + " "
                 + "SET "
-                + User.STATUS + " = ?, "
-                + User.ENIN + " = ?, "
-                + User.RPILIST + " = ? "
+                + User.STATUS + " = ? "
                 + "WHERE "
-                + User.UUID + " = ?";
+                + User.UUID + " = ? AND "
+                + User.STATUS + " = ? AND "
+                + User.ENIN + " = ? AND "
+                + User.RPILIST + " = ? ";
 
         connection.ifPresent(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setInt(1, nonNullUser.getStatus());
-                statement.setInt(2, nonNullUser.getEnin());
-                statement.setString(3, nonNullUser.getRpiListAsJSONArray());
-                statement.setString(4, nonNullUser.getUuid());
+                statement.setInt(1, newStatus);
+                statement.setString(2, nonNullUser.getUuid());
+                statement.setInt(3, nonNullUser.getStatus());
+                statement.setInt(4, nonNullUser.getEnin());
+                statement.setString(5, nonNullUser.getRpiListAsJSONArray());
 
                 statement.executeUpdate();
 
             } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, "updateStatus produced an error on status update", ex);
             }
         });
     }

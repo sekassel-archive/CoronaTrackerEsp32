@@ -29,6 +29,14 @@ public class CwaDataInterpreter {
 
     /**
      * subsequently, we compare contact information from cwa DB with our postgres DB
+     *
+     * status:
+     * - 0: Only entries that needs to be checked. Imply that nothing was found yet.
+     * - 1: There was a contact with an infected device. User needs to be warned.
+     * - 2: Contact resulted in a proofed infection. User that were in contact needs to be warned.
+     *      TEK needs to be send from MC to server
+     * - 3: A contact with an infected device resulted in a proofed NO infection.
+     *      Remove Warning, no infection check needed anymore
      */
     public static void checkForInfectionsHourlyTask() {
         try {
@@ -50,7 +58,7 @@ public class CwaDataInterpreter {
             Optional<List<User>> infectedUserActionRequired = buildAndQueryInfectionCheckOnDb(userDb, eninRpisMap);
 
             if (infectedUserActionRequired.isPresent()) {
-                processInfectedUserIntoDb(infectedUserActionRequired.get());
+                processInfectedUserIntoDb(userDb, infectedUserActionRequired.get());
             }
 
             lastCheckTimeString = DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
@@ -113,8 +121,13 @@ public class CwaDataInterpreter {
         return infUserCollection.isEmpty() ? Optional.empty() : Optional.of(infUserCollection);
     }
 
-    private static void processInfectedUserIntoDb(List<User> infectedUserActionRequired) {
-        //TODO: do something with new infected User
+    private static void processInfectedUserIntoDb(UserPostgreSql userDb, List<User> infectedUserActionRequired) {
+        // status 1: contact with infected device
+        // device will be notified and user needs to check himself
+        // after that he can use the vaadin UI to input his actual health status to warn other device user
+        infectedUserActionRequired.stream().forEach(user -> {
+            userDb.updateStatus(user, 1);
+        });
     }
 
     public static ConcurrentHashMap<Integer, List<byte[]>> getCwaData() {
