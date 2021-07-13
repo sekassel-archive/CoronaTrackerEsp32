@@ -2,6 +2,7 @@ package de.uniks.postgres.db;
 
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
+import de.uniks.postgres.db.model.VerificationUser;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -101,6 +102,31 @@ public class LocalDbConnectionTest {
     }
 
     @Test
+    public void printVerificationDB() {
+        String sql = "SELECT * FROM " + VerificationUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String uuid = resultSet.getString(VerificationUser.UUID);
+                    String pin = resultSet.getString(VerificationUser.PIN);
+                    Boolean tokenActive = resultSet.getBoolean(VerificationUser.TOKEN_ACTIVE);
+                    Boolean tokenValid = resultSet.getBoolean(VerificationUser.TOKEN_VALID);
+                    String timestamp = resultSet.getString(VerificationUser.TIMESTAMP);
+                    System.out.println("uuid:" + uuid + "\n" +
+                            "pin:" + pin + "\n" +
+                            "tokenActive:" + tokenActive.toString() + "\n" +
+                            "tokenValid:" + tokenValid.toString() + "\n" +
+                            "timestamp:" + timestamp + "\n\n");
+                }
+            } catch (SQLException ex) {
+                Assert.fail();
+            }
+        });
+    }
+
+    @Test
     @Ignore
     public void wipeLocalUserDB() {
         String sql = "TRUNCATE TABLE " + User.CLASS + ";";
@@ -117,6 +143,18 @@ public class LocalDbConnectionTest {
     @Ignore
     public void wipeLocalInfectedUserDB() {
         String sql = "TRUNCATE TABLE " + InfectedUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                Assert.fail();
+            }
+        });
+    }
+
+    @Test
+    public void wipeLocalUserVerificationDB() {
+        String sql = "TRUNCATE TABLE " + VerificationUser.CLASS + ";";
         connection.ifPresent(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.executeUpdate();

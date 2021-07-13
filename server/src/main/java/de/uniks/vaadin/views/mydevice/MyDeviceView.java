@@ -3,6 +3,7 @@ package de.uniks.vaadin.views.mydevice;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.radiobutton.RadioButtonGroup;
 import com.vaadin.flow.component.radiobutton.RadioGroupVariant;
@@ -23,6 +24,9 @@ import java.time.temporal.ChronoUnit;
 @RouteAlias(value = "", layout = MainView.class)
 public class MyDeviceView extends VerticalLayout {
 
+    private static final String POSITIV_INFECTED = "Proofed Infection (positiv)";
+    private static final String NEGATIV_INFECTED = "Proofed NO Infection (negativ)";
+
     public MyDeviceView() {
         setId("my-device-view");
 
@@ -33,21 +37,14 @@ public class MyDeviceView extends VerticalLayout {
         readonlyField.setLabel("UUID");
         readonlyField.setValue(currentPrincipalName);
         readonlyField.setReadOnly(true);
-        add(readonlyField);
 
         RadioButtonGroup<String> radioGroup = new RadioButtonGroup<>();
         radioGroup.setLabel("Test Result");
-        radioGroup.setItems("Proofed Infection (positiv)", "Proofed NO Infection (negativ)");
+        radioGroup.setItems(POSITIV_INFECTED, NEGATIV_INFECTED);
         radioGroup.addThemeVariants(RadioGroupVariant.LUMO_VERTICAL);
         radioGroup.setValue("Proofed Infection (positiv)");
 
-        add(radioGroup);
-
-        Button submitButton = new Button("Submit Data", event -> {
-            CustomUserDetails principal = (CustomUserDetails) authentication.getPrincipal();
-            principal.setExpired();
-            //TODO input data to db to trigger actions required for infection case
-        });
+        Button submitButton = new Button("Submit Data");
         submitButton.setEnabled(false);
 
         DatePicker datePicker = new DatePicker();
@@ -75,6 +72,21 @@ public class MyDeviceView extends VerticalLayout {
                 }
             }
         });
+
+        submitButton.addClickListener(event -> {
+            CustomUserDetails loginToken = (CustomUserDetails) authentication.getPrincipal();
+            loginToken.setExpired();
+            radioGroup.setEnabled(false);
+            datePicker.setEnabled(false);
+            submitButton.setEnabled(false);
+            Boolean infectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
+            LocalDate pickedDate = datePicker.getValue();
+            //TODO: input data to db to trigger actions required for infection case
+            Notification.show("Success! Your Data will be processed soon.");
+        });
+
+        add(readonlyField);
+        add(radioGroup);
         add(datePicker, value);
         add(submitButton);
     }

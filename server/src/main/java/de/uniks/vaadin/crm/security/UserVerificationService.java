@@ -29,7 +29,7 @@ public class UserVerificationService implements UserDetailsService {
         String timestamp = LocalDateTime.now().toString(); // TODO: maybe add a unique id to login entry
         Optional<Integer> loginVerificationEntry = verificationDb.createLoginVerificationEntry(uuid, timestamp);
 
-        if (loginVerificationEntry.isEmpty() || loginVerificationEntry.get() >= 1) {
+        if (loginVerificationEntry.isEmpty() || loginVerificationEntry.get() != 1) {
             // entries should always be able to insert in db, but not if there is already a valid entry
             LOG.log(Level.WARNING, "DBInterface wasn't able to add a validation entry to DB to validate and login with!\n" +
                     "Seems like there is someone trying to login/validate multiple times.");

@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class UserVerificationPostgreSql {
     private static final Logger LOG = Logger.getLogger(UserVerificationPostgreSql.class.getName());
@@ -25,15 +24,15 @@ public class UserVerificationPostgreSql {
             String sql = "CREATE TABLE IF NOT EXISTS public." + VerificationUser.CLASS + " ("
                     + VerificationUser.UUID + " TEXT NOT NULL,"
                     + VerificationUser.PIN + " TEXT,"
-                    + VerificationUser.VALID + " BOOLEAN NOT NULL,"
-                    + VerificationUser.INFECTED_STATUS + " BOOLEAN,"
+                    + VerificationUser.TOKEN_ACTIVE + " BOOLEAN NOT NULL,"
+                    + VerificationUser.TOKEN_VALID + " BOOLEAN DEFAULT FALSE,"
                     + VerificationUser.TIMESTAMP + " TEXT NOT NULL)";
 
             connection.ifPresent(conn -> {
                 try (PreparedStatement statement = conn.prepareStatement(sql)) {
                     statement.executeUpdate();
                 } catch (SQLException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    LOG.log(Level.SEVERE, "Something went wrong while table creation / connection to DB!", ex);
                 }
             });
         }
@@ -47,8 +46,8 @@ public class UserVerificationPostgreSql {
             return Optional.empty();
         }
 
-        String sql = "INSERT IGNORE INTO " + VerificationUser.CLASS + "(" + VerificationUser.UUID + ", " +
-                VerificationUser.VALID + ", " + VerificationUser.TIMESTAMP + ") " + "VALUES(?, ?, ?)";
+        String sql = "INSERT INTO " + VerificationUser.CLASS + "(" + VerificationUser.UUID + ", " +
+                VerificationUser.TOKEN_ACTIVE + ", " + VerificationUser.TIMESTAMP + ") " + "VALUES(?, ?, ?)";
 
         return connection.flatMap(conn -> {
             Optional<Integer> optionalOfInsertedRows = Optional.empty();
@@ -69,7 +68,7 @@ public class UserVerificationPostgreSql {
 
     private List<VerificationUser> getByUuid(String uuid) {
         String sql = "SELECT * FROM " + VerificationUser.CLASS + " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\' " +
-                "AND " + VerificationUser.VALID + " = TRUE";
+                "AND " + VerificationUser.TOKEN_ACTIVE + " = TRUE";
         List<VerificationUser> users = new ArrayList<>();
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
@@ -79,9 +78,9 @@ public class UserVerificationPostgreSql {
                     VerificationUser tmpUser = new VerificationUser();
                     tmpUser.setUuid(resultSet.getString(VerificationUser.UUID));
                     tmpUser.setPin(resultSet.getString(VerificationUser.PIN));
-                    tmpUser.setValid(resultSet.getBoolean(VerificationUser.VALID));
+                    tmpUser.setTokenActive(resultSet.getBoolean(VerificationUser.TOKEN_ACTIVE));
                     tmpUser.setTimestamp(LocalDateTime.parse(resultSet.getString(VerificationUser.TIMESTAMP)));
-                    tmpUser.setInfectedStatus(resultSet.getBoolean(VerificationUser.INFECTED_STATUS));
+                    tmpUser.setTokenValid(resultSet.getBoolean(VerificationUser.TOKEN_VALID));
 
                     if (tmpUser.getTimestamp().isAfter(LocalDateTime.now().minus(10, ChronoUnit.MINUTES))) {
                         users.add(tmpUser);
@@ -102,34 +101,36 @@ public class UserVerificationPostgreSql {
         }
 
         // prevent more than one user to be verified to login (if two sessions try to login with same data, abort)
-        if (byUuid.stream().collect(Collectors.groupingBy(VerificationUser::getPin, Collectors.toList())).size() > 1) {
+        if (byUuid.stream()
+                .filter(user -> user.getTimestamp().isAfter(LocalDateTime.now().minus(10, ChronoUnit.MINUTES)))
+                .count() > 1) {
             byUuid.stream().forEach(user -> {
                 updateVerificationStatusEntry(user, false);
             });
+            return Optional.empty();
         }
 
-        // should only be set once
-        AtomicReference<Optional<LocalDateTime>> sessionTime = new AtomicReference<>(Optional.empty());
+        // here should always only exists one valid not verified login entry in db
+        VerificationUser verificationUser = byUuid.get(0);
+        verificationUser.setPin(pin);
+        updateVerificationStatusEntry(verificationUser, true);
 
-        byUuid.stream().forEach(user -> {
-            boolean v = user.getPin().compareTo(pin) == 0;
-            updateVerificationStatusEntry(user, v);
-            if (sessionTime.get().isEmpty() && v) {
-                sessionTime.set(Optional.of(user.getTimestamp()));
-            }
-        });
-
-        return sessionTime.get();
+        return Optional.of(verificationUser.getTimestamp());
     }
 
-    private void updateVerificationStatusEntry(VerificationUser user, Boolean verified) {
-        String sql = "UPDATE " + VerificationUser.CLASS + " SET " + VerificationUser.INFECTED_STATUS + " = " + verified.toString()
-                + " WHERE " + VerificationUser.UUID + " = \'" + user.getUuid() + "\'"
-                //+ " AND " + VerificationUser.PIN + " = \'" + user.getPin() + "\'"
-                + " AND " + VerificationUser.TIMESTAMP + " = \'" + user.getTimestamp().toString() + "\'";
+    private void updateVerificationStatusEntry(VerificationUser user, Boolean valid) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("UPDATE " + VerificationUser.CLASS + " SET " + VerificationUser.TOKEN_VALID + " = " + valid.toString());
+
+        if (valid == true) {
+            sql.append(" , " + VerificationUser.PIN + " = \'" + user.getPin() + "\'");
+        }
+
+        sql.append(" WHERE " + VerificationUser.UUID + " = \'" + user.getUuid() + "\'" +
+                " AND " + VerificationUser.TIMESTAMP + " = \'" + user.getTimestamp().toString() + "\'");
 
         connection.flatMap(conn -> {
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+            try (PreparedStatement statement = conn.prepareStatement(sql.toString())) {
 
                 int numberOfInsertedRows = statement.executeUpdate();
                 LOG.log(Level.INFO, "Updated " + numberOfInsertedRows + " Entry's " + VerificationUser.CLASS + " on DB execute Update.");
@@ -137,13 +138,14 @@ public class UserVerificationPostgreSql {
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB execute Update.", ex);
             }
-            return null;
+            return Optional.empty();
         });
     }
 
     public Optional<VerificationUser> checkForLoginVerification(String uuid, String timestamp) {
         String sql = "SELECT * FROM " + VerificationUser.CLASS + " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\' " +
-                "AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";
+                "AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'" +
+                "AND " + VerificationUser.TOKEN_VALID + " = TRUE";
         AtomicReference<Optional<VerificationUser>> verificationUser = new AtomicReference<>(Optional.empty());
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
@@ -153,9 +155,9 @@ public class UserVerificationPostgreSql {
                     VerificationUser tmpUser = new VerificationUser();
                     tmpUser.setUuid(resultSet.getString(VerificationUser.UUID));
                     tmpUser.setPin(resultSet.getString(VerificationUser.PIN));
-                    tmpUser.setValid(resultSet.getBoolean(VerificationUser.VALID));
+                    tmpUser.setTokenActive(resultSet.getBoolean(VerificationUser.TOKEN_ACTIVE));
                     tmpUser.setTimestamp(LocalDateTime.parse(resultSet.getString(VerificationUser.TIMESTAMP)));
-                    tmpUser.setInfectedStatus(resultSet.getBoolean(VerificationUser.INFECTED_STATUS));
+                    tmpUser.setTokenValid(resultSet.getBoolean(VerificationUser.TOKEN_VALID));
 
                     verificationUser.set(Optional.of(tmpUser));
                 }

@@ -32,7 +32,7 @@ public class UserPostgreSql {
                 try (PreparedStatement statement = conn.prepareStatement(sql)) {
                     statement.executeUpdate();
                 } catch (SQLException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    LOG.log(Level.SEVERE, "Something went wrong while table creation / connection to DB!", ex);
                 }
             });
         }
