@@ -73,8 +73,9 @@ void processVerificationForUserInput(void)
 
     displayUuidAndTekForVerification(uuid, pin);
 
-    // frequently ask server for verification
-    if (getVerification(&uuid, &pin) == false)
+    // send pin to server for verification
+    std::string *timestamp = sendPinForVerification(&uuid, &pin);
+    if(timestamp == NULL)
     {
         displayVerificationFailed();
         sleep(5000);
@@ -83,7 +84,10 @@ void processVerificationForUserInput(void)
     {
         displayVerificationSuccess();
         sleep(5000);
-        // TODO
+        // TODO:
+        // check frequently if there is a valid entry for login with infected information
+        // -> if infected, send needed TEK data
+        // -> no infection, remove / ignore / reset infection_state to normal
     }
 }
 

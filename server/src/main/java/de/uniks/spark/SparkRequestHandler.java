@@ -131,7 +131,7 @@ public class SparkRequestHandler {
             }
         });
 
-        post(ROUTING_PREFIX + "/verify/updateTEK", (request, response) -> {
+        post(ROUTING_PREFIX + "/verify/update", (request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             UuidDateTekPostPayload input;
             try {

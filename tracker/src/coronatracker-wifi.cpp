@@ -232,12 +232,12 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
     }
 }
 
-bool getVerification(std::string *uuidstr, std::string *pin)
+std::string *sendPinForVerification(std::string *uuidstr, std::string *pin)
 {
     if (!WiFi.isConnected() && !connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
-        return false;
+        return NULL;
     }
 
     HTTPClient http;
@@ -256,19 +256,22 @@ bool getVerification(std::string *uuidstr, std::string *pin)
     int httpResponseCode = http.POST(ss.str().c_str());
     std::string bodyResponse = http.getString().c_str();
 
-    if (httpResponseCode != HTTP_CODE_OK)
+    if (httpResponseCode != HTTP_CODE_OK &&
+        bodyResponse.compare("Invalid") != 0)
     {
         Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
         Serial.println(bodyResponse.c_str());
+        // bodyResponse should contain a timestamp to get get feedback from server after successfull user validation
         disconnectWifi();
-        return false;
+        return &bodyResponse;
     }
     else
     {
+        // something went wrong, so abort
         Serial.print("HTTP Response Code 200: ");
         Serial.println(bodyResponse.c_str());
-        //TODO get timestamp as string to send tek to server
+        Serial.println("Something went wrong on server / user-side. Abort!");
         disconnectWifi();
-        return true;
+        return NULL;
     }
 }
