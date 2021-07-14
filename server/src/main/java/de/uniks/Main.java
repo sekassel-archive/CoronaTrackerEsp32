@@ -16,7 +16,7 @@ public class Main {
     public static void main(String[] args) {
         SparkRequestHandler.handleRequests();
         scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 100, 60, TimeUnit.MINUTES);
-        //TODO: cleanup for login entries in verificationUser DB like once in a day
+        //TODO: cleanup for login entries in verificationUser DB sometimes
 
         try {
             Thread springThread = new Thread(SpringBoot::startSpring);

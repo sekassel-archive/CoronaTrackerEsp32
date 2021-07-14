@@ -101,7 +101,7 @@ void setup()
     }
 
     // button still pressed
-    if (digitalRead(0) == 0)
+    if (digitalRead(0) == 0 && nextAction != ACTION_WIFI_CONFIG)
     {
         processVerificationForUserInput();
     }
