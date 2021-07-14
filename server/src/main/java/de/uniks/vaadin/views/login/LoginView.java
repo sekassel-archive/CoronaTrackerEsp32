@@ -30,7 +30,7 @@ public class LoginView extends HorizontalLayout implements BeforeEnterObserver {
 
         i18n.setHeader(new LoginI18n.Header());
         i18n.getHeader().setTitle("UUID");
-        i18n.getHeader().setDescription("32 character long UUID");
+        i18n.getHeader().setDescription("36 character long UUID");
         i18n.getForm().setUsername("UUID");
         i18n.getForm().setTitle("Verification");
         i18n.getForm().setSubmit("OK");
@@ -38,7 +38,7 @@ public class LoginView extends HorizontalLayout implements BeforeEnterObserver {
         i18n.getForm().setForgotPassword("");
         i18n.getErrorMessage().setTitle("Ups");
         i18n.getErrorMessage().setMessage("Something went wrong.");
-        i18n.setAdditionalInformation("The UUID have to be 32 digits long and PIN shouldn't be older than 10 minutes!");
+        i18n.setAdditionalInformation("The UUID have to be 36 digits long and PIN shouldn't be older than 10 minutes!");
         return i18n;
     }
 

@@ -38,12 +38,12 @@ void startInitializeSteps(void)
 
 void processVerificationForUserInput(void)
 {
-    int count = 3;
+    int count = 4;
     // button should at least be pressed a amount of time
     do
     {
-        displayVerificationCountdown(count++);
-        sleep(1000);
+        displayVerificationCountdown(count--);
+        sleep(1);
         if (digitalRead(0) != 0)
         {
             return;
@@ -52,10 +52,7 @@ void processVerificationForUserInput(void)
 
     // wait for release button
     displayReleaseButton();
-    do
-    {
-        sleep(100);
-    } while (digitalRead(0) != 0);
+    while (digitalRead(0) == 0)sleep(1);
 
     // generate PIN and get UUID to display
     srand((unsigned)time(NULL));
@@ -73,17 +70,23 @@ void processVerificationForUserInput(void)
 
     displayUuidAndTekForVerification(uuid, pin);
 
+    while (digitalRead(0) != 0)sleep(1);
+
+    // wait for release button
+    displayReleaseButton();
+    while (digitalRead(0) == 0)sleep(1);
+
     // send pin to server for verification
     std::string *timestamp = sendPinForVerification(&uuid, &pin);
     if(timestamp == NULL)
     {
         displayVerificationFailed();
-        sleep(5000);
+        sleep(5);
     }
     else
     {
         displayVerificationSuccess();
-        sleep(5000);
+        sleep(5);
         // TODO:
         // check frequently if there is a valid entry for login with infected information
         // -> if infected, send needed TEK data

@@ -43,11 +43,14 @@ void displayUuidAndTekForVerification(std::string uuid, std::string pin)
 {
     initDisplay();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_10);
     display.drawString(64, 0, "UUID:");
-    display.drawString(64, 16, uuid.c_str());
-    display.drawString(64, 32, "PIN:");
-    display.drawString(64, 48, pin.c_str());
+    display.drawString(64, 11, uuid.substr(0,18).c_str());
+    display.drawString(64, 22, uuid.substr(18,35).c_str());
+    display.drawString(64, 33, "PIN:");
+    display.drawString(64, 44, pin.c_str());
     display.display();
+    display.setFont(ArialMT_Plain_16);
 }
 
 void displayVerificationFailed(void)
