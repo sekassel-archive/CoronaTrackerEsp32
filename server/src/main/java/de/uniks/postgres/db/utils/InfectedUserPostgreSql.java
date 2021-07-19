@@ -22,7 +22,7 @@ public class InfectedUserPostgreSql {
 
             String sql = "CREATE TABLE IF NOT EXISTS public." + InfectedUser.CLASS + " ("
                     + InfectedUser.UUID + " TEXT NOT NULL,"
-                    + InfectedUser.TEK + " TEXT NOT NULL,"
+                    + InfectedUser.TEK + " TEXT DEFAULT NULL,"
                     + InfectedUser.RSIN + " INT NOT NULL)";
 
             connection.ifPresent(conn -> {
@@ -35,6 +35,28 @@ public class InfectedUserPostgreSql {
         }
     }
 
+    public Optional<Integer> createIncompleteTekInputEntry(String uuid, int rsin) {
+        String sql = "INSERT INTO " + InfectedUser.CLASS + "(" + InfectedUser.UUID + ", " + InfectedUser.RSIN + ") " + "VALUES(?, ?)";
+
+        return connection.flatMap(conn -> {
+            Optional<Integer> optionalOfInsertedRows = Optional.empty();
+
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+
+                statement.setString(1, uuid);
+                statement.setInt(2, rsin);
+
+                int numberOfInsertedRows = statement.executeUpdate();
+                optionalOfInsertedRows = Optional.of(numberOfInsertedRows);
+
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Failed to create initial TEK Entry in DB for uuid:" + uuid + " and rsin: " + rsin, ex);
+            }
+            return optionalOfInsertedRows;
+        });
+    }
+
+    @Deprecated
     public Optional<Integer> save(InfectedUser infUser) {
         InfectedUser nonNullUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be added should not be null");
         String sql = "INSERT INTO " + InfectedUser.CLASS + "(" + InfectedUser.UUID + ", " + InfectedUser.TEK + ", "

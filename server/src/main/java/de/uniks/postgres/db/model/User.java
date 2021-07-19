@@ -2,10 +2,12 @@ package de.uniks.postgres.db.model;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import lombok.Data;
 
 import java.lang.reflect.Type;
 import java.util.List;
 
+@Data
 public class User {
     // user is a reserved SQL keyword, avoid naming CLASS just "user" (used as table name)
     public static final String CLASS = "trackerUser";
@@ -38,23 +40,8 @@ public class User {
         this.rpiList = new Gson().fromJson(rpiListAsJSONArray, collectionType);
     }
 
-    public String getUuid() {
-        return uuid;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public Integer getEnin() {
-        return enin;
-    }
-
     public String getRpiListAsJSONArray() {
         return new Gson().toJson(rpiList);
     }
 
-    public List<byte[]> getRpiList() {
-        return rpiList;
-    }
 }

@@ -25,9 +25,18 @@ public class VerificationUser {
     public static final String TOKEN_VALID = "tokenValid";
     public static final String TIMESTAMP = "timestamp";
 
+    public static final String INPUT_READY_FOR_PICKUP = "inputReadyForPickup";
+    public static final String USER_INFECTED = "userInfected";
+    public static final String RSIN = "rsin";
+
     private String uuid;
     private String pin;
     private Boolean tokenActive;
     private Boolean tokenValid;
     private LocalDateTime timestamp;
+
+    // only set if verification is successful (data comes from user input ui)
+    private boolean inputReadyForPickup;
+    private boolean userInfected;
+    private int rsin;
 }

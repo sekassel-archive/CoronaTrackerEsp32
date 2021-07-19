@@ -11,12 +11,17 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
+import de.uniks.cwa.utils.CWACryptography;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
+import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.vaadin.crm.security.model.CustomUserDetails;
 import de.uniks.vaadin.views.main.MainView;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 @Route(value = "myDeviceVerification", layout = MainView.class)
@@ -76,14 +81,31 @@ public class MyDeviceView extends VerticalLayout {
         submitButton.addClickListener(event -> {
             CustomUserDetails loginToken = (CustomUserDetails) authentication.getPrincipal();
             loginToken.setExpired();
-            radioGroup.setEnabled(false);
-            datePicker.setEnabled(false);
-            submitButton.setEnabled(false);
-            Boolean infectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
-            LocalDate pickedDate = datePicker.getValue();
-            //check time button pressed <10min
-            //TODO: input data to db to trigger actions required for infection case
-            Notification.show("Success! Your Data will be processed soon.");
+            if (loginToken.isAccountNonExpired()) {
+                radioGroup.setEnabled(false);
+                datePicker.setEnabled(false);
+                submitButton.setEnabled(false);
+                Boolean positiveInfectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
+                LocalDateTime pickedDate = datePicker.getValue().atStartOfDay();
+                int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                //TODO: input data to db to trigger actions required for infection case
+                UserVerificationPostgreSql verifUsrDB = new UserVerificationPostgreSql();
+                if (positiveInfectedState) {
+                    //verifUsrDB.flagAsInfected();
+
+                    //TODO: move to spark
+                    InfectedUserPostgreSql infUsrDB = new InfectedUserPostgreSql();
+                    for (int i = 0; i < 14; i++) {
+                        infUsrDB.createIncompleteTekInputEntry(loginToken.getUsername(), rsin + (144 * i));
+                    }
+                } else {
+                    //verUsrDB.flagAsNotInfected();
+                }
+
+                Notification.show("Success! Your Data will be processed soon.");
+            } else {
+                Notification.show("Your session is expired! Reload Page and try again.");
+            }
         });
 
         add(readonlyField);

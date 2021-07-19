@@ -133,9 +133,9 @@ public class SparkRequestHandler {
 
         post(ROUTING_PREFIX + "/verify/update", (request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
-            UuidDateTekPostPayload input;
+            UuidPinTimePostPayload input;
             try {
-                input = mapper.readValue(request.body(), UuidDateTekPostPayload.class);
+                input = mapper.readValue(request.body(), UuidPinTimePostPayload.class);
             } catch (JsonParseException | JsonMappingException e) {
                 response.status(HTTP_BAD_REQUEST);
                 return "Request body invalid!";
@@ -146,9 +146,12 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            //TODO: validate and put TEK's in db for infection check
+            //TODO: check in DB for user data input from old verifications
+            //TODO: give back the enin for infection date,
+            //      NOT_INFECTED if no infection is present
+            //      and WAIT if there is no data from user
 
-            return "ok";
+            return "WAIT";
         });
     }
 
