@@ -81,6 +81,7 @@ public class MyDeviceView extends VerticalLayout {
             submitButton.setEnabled(false);
             Boolean infectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
             LocalDate pickedDate = datePicker.getValue();
+            //check time button pressed <10min
             //TODO: input data to db to trigger actions required for infection case
             Notification.show("Success! Your Data will be processed soon.");
         });

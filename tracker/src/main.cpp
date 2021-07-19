@@ -103,7 +103,7 @@ void setup()
     // button still pressed
     if (digitalRead(0) == 0 && nextAction != ACTION_WIFI_CONFIG)
     {
-        processVerificationForUserInput();
+        processVerificationForUserInput(&exposureStatus);
     }
 
     switch (nextAction)
@@ -134,10 +134,10 @@ void setup()
 
         if (exposureStatus == EXPOSURE_DETECT)
         {
+            isDisplayActive = true;
             // remember if Tek was send to server to prevent to send it twice
-            sendTekInfoToServerAfterInfection();
+            // sendTekInfoToServerAfterInfection();
         }
-        // TODO: show infection status on display or do it in function
         break;
     }
     } // switch case end

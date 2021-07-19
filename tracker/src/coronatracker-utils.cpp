@@ -36,9 +36,9 @@ void startInitializeSteps(void)
     !initSPIFFS() ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
 }
 
-void processVerificationForUserInput(void)
+void processVerificationForUserInput(exposure_status *exp_state)
 {
-    int count = 4;
+    int count = 3;
     // button should at least be pressed a amount of time
     do
     {
@@ -52,7 +52,8 @@ void processVerificationForUserInput(void)
 
     // wait for release button
     displayReleaseButton();
-    while (digitalRead(0) == 0)sleep(1);
+    while (digitalRead(0) == 0)
+        sleep(1);
 
     // generate PIN and get UUID to display
     srand((unsigned)time(NULL));
@@ -70,15 +71,17 @@ void processVerificationForUserInput(void)
 
     displayUuidAndTekForVerification(uuid, pin);
 
-    while (digitalRead(0) != 0)sleep(1);
+    while (digitalRead(0) != 0)
+        sleep(1);
 
     // wait for release button
     displayReleaseButton();
-    while (digitalRead(0) == 0)sleep(1);
+    while (digitalRead(0) == 0)
+        sleep(1);
 
     // send pin to server for verification
-    std::string *timestamp = sendPinForVerification(&uuid, &pin);
-    if(timestamp == NULL)
+    std::string timestamp;
+    if (sendPinForVerification(&uuid, &pin, &timestamp) == false)
     {
         displayVerificationFailed();
         sleep(5);
@@ -86,11 +89,39 @@ void processVerificationForUserInput(void)
     else
     {
         displayVerificationSuccess();
-        sleep(5);
-        // TODO:
         // check frequently if there is a valid entry for login with infected information
         // -> if infected, send needed TEK data
-        // -> no infection, remove / ignore / reset infection_state to normal
+        // -> no infection, remove / ignore / reset exposure_state to normal
+        std::string response;
+        do
+        {
+            sleep(10);
+            response = checkServerSuccessfullDataInput(&uuid, &pin, &timestamp);
+        } while (response.compare("WAIT") == 0);
+
+        if (response.compare("ERROR") == 0)
+        {
+            // something went wrong, abort
+            Serial.println("Something on checkServerSuccessfullDataInput went wrong, abort!");
+        }
+        else if (response.compare("NOT_INFECTED") == 0)
+        {
+            // server will not detect same infection anymore, reset exposure_state and done
+            Serial.printf("No Infection, reset exposure_state to normal.");
+            *exp_state = EXPOSURE_NO_DETECT;
+        }
+        else
+        {
+            // infection detected and user is infected too, so we need to send collected TEK's to server
+            int startInfectionEnin = std::atoi(response.c_str());
+            Serial.printf("HTTP Response Code 200, but this device-owner is infected! Start-Infection ENIN: %i", startInfectionEnin);
+            std::vector<int> eninToBeSendToServer;
+            for (int i = 0; i < 14; i++)
+            {
+                eninToBeSendToServer.push_back(startInfectionEnin + (144 * i));
+            }
+            //TODO: put in db file and send / remove on next ACTION_INFECTION_REQUEST
+        }
     }
 }
 

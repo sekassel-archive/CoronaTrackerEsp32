@@ -92,17 +92,17 @@ exposure_status getInfectionStatus(std::string *uuidstr)
 
     HTTPClient http;
 
-    // Your Domain name with URL path or IP address with path
+    // your domain name with URL path
     http.begin(String(SERVER_URL) + String(POST_INFECTION_STATUS));
 
-    // Specify content-type header
+    // specify content-type header
     http.addHeader("Content-Type", "application/json");
 
-    // Data to send with HTTP POST
+    // data to send with HTTP POST
     std::stringstream stringStream;
     stringStream << "{\"uuid\":\"" << uuidstr->c_str() << "\"}";
 
-    // Send HTTP POST request
+    // send HTTP POST request
     int httpResponseCode = http.POST(stringStream.str().c_str());
     String body = http.getString();
     disconnectWifi();
@@ -134,13 +134,9 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
 {
     HTTPClient http;
 
-    // Your Domain name with URL path or IP address with path
     http.begin(String(SERVER_URL) + String(POST_DATA_INPUT_RPIS));
-
-    // Specify content-type header: application/json
     http.addHeader("Content-Type", "application/json");
 
-    // Data to send with HTTP POST
     std::stringstream ss;
     std::vector<std::string>::iterator rpiListIter = rpiData->begin();
 
@@ -156,7 +152,7 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
     }
     ss << "]\"}";
 
-    // Send HTTP POST request
+    // send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     String body = http.getString();
 
@@ -193,17 +189,13 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
 
     HTTPClient http;
 
-    // Your Domain name with URL path or IP address with path
     http.begin(String(SERVER_URL) + String(POST_DATA_INPUT_TEK));
-
-    // Specify content-type header: application/json
     http.addHeader("Content-Type", "application/json");
 
-    // Data to send with HTTP POST
     std::stringstream ss;
     ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"enin\":\"" << enin << "\",\"tek\":\"" << tekData->c_str() << "\"}";
 
-    // Send HTTP POST request
+    // send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     String body = http.getString();
 
@@ -232,38 +224,35 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
     }
 }
 
-std::string *sendPinForVerification(std::string *uuidstr, std::string *pin)
+bool sendPinForVerification(std::string *uuidstr, std::string *pin, std::string *timestamp)
 {
     if (!WiFi.isConnected() && !connectToStoredWifi())
     {
         Serial.println("Could not Connect to Wifi");
-        return NULL;
+        return false;
     }
 
     HTTPClient http;
 
-    // Your Domain name with URL path or IP address with path
     http.begin(String(SERVER_URL) + String(POST_VERIFICATION));
-
-    // Specify content-type header: application/json
     http.addHeader("Content-Type", "application/json");
 
-    // Data to send with HTTP POST
     std::stringstream ss;
     ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"pin\":\"" << pin->c_str() << "\"}";
 
-    // Send HTTP POST request
+    // send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     std::string bodyResponse = http.getString().c_str();
 
-    if (httpResponseCode != HTTP_CODE_OK &&
+    if (httpResponseCode == HTTP_CODE_OK &&
         bodyResponse.compare("Invalid") != 0)
     {
         Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
         Serial.println(bodyResponse.c_str());
         // bodyResponse should contain a timestamp to get get feedback from server after successfull user validation
         disconnectWifi();
-        return &bodyResponse;
+        *timestamp = bodyResponse.c_str();
+        return true;
     }
     else
     {
@@ -272,6 +261,35 @@ std::string *sendPinForVerification(std::string *uuidstr, std::string *pin)
         Serial.println(bodyResponse.c_str());
         Serial.println("Something went wrong on server / user-side. Abort!");
         disconnectWifi();
-        return NULL;
+        return false;
     }
+}
+
+std::string checkServerSuccessfullDataInput(std::string *uuidstr, std::string *pin, std::string *timestamp)
+{
+    if (!WiFi.isConnected() && !connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return "WAIT";
+    }
+
+    HTTPClient http;
+    http.begin(String(SERVER_URL) + String(POST_VERIFICATION_DATA));
+    http.addHeader("Content-Type", "application/json");
+
+    std::stringstream ss;
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"pin\":\"" << pin->c_str() << "\", \"timestamp\":\"" << timestamp->c_str() << "\"}";
+
+    // send HTTP POST request
+    int httpResponseCode = http.POST(ss.str().c_str());
+    std::string bodyResponse = http.getString().c_str();
+    disconnectWifi();
+    
+    if (httpResponseCode != HTTP_CODE_OK)
+    {
+        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
+        Serial.println(bodyResponse.c_str());
+        return "WAIT";
+    }
+    return bodyResponse;
 }

@@ -14,7 +14,7 @@
 // used to be for main
 void firstStartInitializeSteps();
 void startInitializeSteps(void);
-void processVerificationForUserInput(void);
+void processVerificationForUserInput(exposure_status *exp_state);
 
 void actionScanForBluetoothDevices(int* scannedDevices);
 void advertiseBluetoothDevice(int* scannedDevices);
