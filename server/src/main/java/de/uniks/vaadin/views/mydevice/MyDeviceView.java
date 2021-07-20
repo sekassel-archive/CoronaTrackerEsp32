@@ -87,7 +87,6 @@ public class MyDeviceView extends VerticalLayout {
                 Boolean positiveInfectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
                 LocalDateTime pickedDate = datePicker.getValue().atStartOfDay();
                 int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                //TODO: input data to db to trigger actions required for infection case
                 UserVerificationPostgreSql verifUsrDB = new UserVerificationPostgreSql();
                 verifUsrDB.flagDataInputPickupable(loginToken.getUsername(), loginToken.getPassword(),
                         loginToken.getTimestamp(), rsin, positiveInfectedState);

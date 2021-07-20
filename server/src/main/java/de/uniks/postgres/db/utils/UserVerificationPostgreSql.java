@@ -192,5 +192,75 @@ public class UserVerificationPostgreSql {
             }
             return Optional.empty();
         });
+
+        //TODO: remove/flag collected data in db 14d < input date,
+        //      because why should be check a infection that happened
+        //      before detected exposure date.
+        //      So we dont need to check these entries again, because
+        //      user is proofed NOT infected or the next 14 days infected.
+        //      Especially the detected exposure entry!
+    }
+
+    // give back the enin for infection date,
+    // NOT_INFECTED if no infection is present
+    // and WAIT if there is no data from user
+    public String checkForUserDataInput(String uuid, String pin, String timestamp) {
+        if (LocalDateTime.parse(timestamp).isBefore(LocalDateTime.now().minus(1, ChronoUnit.DAYS)) ||
+                LocalDateTime.parse(timestamp).isAfter(LocalDateTime.now())) {
+            return "WAIT";
+        }
+
+        String sql = "SELECT * FROM " + VerificationUser.CLASS + " WHERE " +
+                VerificationUser.UUID + " = \'" + uuid + "\' AND " +
+                VerificationUser.PIN + " = \'" + pin + "\' AND " +
+                VerificationUser.TIMESTAMP + " = \'" + timestamp + "\' AND " +
+                VerificationUser.INPUT_READY_FOR_PICKUP + " = TRUE";
+
+        AtomicReference<VerificationUser> user = new AtomicReference<>();
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                if (resultSet.next()) {
+                    VerificationUser tmpUser = new VerificationUser();
+                    tmpUser.setUserInfected(resultSet.getBoolean(VerificationUser.USER_INFECTED));
+                    tmpUser.setRsin(resultSet.getInt(VerificationUser.RSIN));
+                    user.set(tmpUser);
+                }
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "SQL Exception happened in checkForUserDataInput", ex);
+            }
+        });
+
+        if (user.get() == null) {
+            return "WAIT";
+        }
+
+        String sql2 = "UPDATE " + VerificationUser.CLASS + " SET " +
+                VerificationUser.INPUT_READY_FOR_PICKUP + " = FALSE , " +
+                " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\'" +
+                " AND " + VerificationUser.PIN + " = \'" + pin + "\'" +
+                " AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";
+
+        connection.flatMap(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql2.toString())) {
+                int numberOfInsertedRows = statement.executeUpdate();
+                LOG.log(Level.INFO, "Updated " + numberOfInsertedRows + " Entry's " + VerificationUser.CLASS + " on DB checkForUserDataInput.");
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB checkForUserDataInput.", ex);
+            }
+            return Optional.empty();
+        });
+
+        if (user.get().getUserInfected()) {
+            int rsin = user.get().getRsin();
+            InfectedUserPostgreSql infUsrDB = new InfectedUserPostgreSql();
+            for (int i = 0; i < 14; i++) {
+                infUsrDB.createIncompleteTekInputEntry(uuid, rsin + (144 * i));
+            }
+            return String.valueOf(user.get().getRsin());
+        } else {
+            return "NOT_INFECTED";
+        }
     }
 }

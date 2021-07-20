@@ -160,4 +160,13 @@ public class InfectedUserPostgreSql {
             }
         });
     }
+
+    public boolean isIncompleteTekInputEntryPresent() {
+        //TODO implement
+        return false;
+    }
+
+    public void completeTekInputEntry() {
+        //TODO implement
+    }
 }

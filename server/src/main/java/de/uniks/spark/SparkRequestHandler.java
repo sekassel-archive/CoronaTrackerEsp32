@@ -70,7 +70,6 @@ public class SparkRequestHandler {
             return "Success!";
         }));
 
-        //TODO: remove
         post(ROUTING_PREFIX + "/data/input/tek/share", ((request, response) -> {
             ObjectMapper mapper = new ObjectMapper();
             InfectedUserPostPayload input;
@@ -81,20 +80,13 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            if (input.isValid() && hasContactWithInfectedByStatus(input.getUuid())) {
-                infectedUserDb.save(input.getInfectedUserForDB());
+            // validate TEK and complete infection Data
+            if (input.isValid() && infectedUserDb.isIncompleteTekInputEntryPresent()) {
+                infectedUserDb.completeTekInputEntry();
                 return "Success!";
             }
             response.status(HTTP_BAD_REQUEST);
-/*
-            InfectedUserPostgreSql infUsrDB = new InfectedUserPostgreSql();
-            for (int i = 0; i < 14; i++) {
-                infUsrDB.createIncompleteTekInputEntry(loginToken.getUsername(), rsin + (144 * i));
-            }
-
- */
-
-            return "Request values invalid!";
+            return "Request body invalid!";
         }));
 
         post(ROUTING_PREFIX + "/infection/status", (request, response) -> {
@@ -112,7 +104,7 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            return hasContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
+            return hadContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
         });
 
         post(ROUTING_PREFIX + "/verify", (request, response) -> {
@@ -154,18 +146,17 @@ public class SparkRequestHandler {
                 return "Request body invalid!";
             }
 
-            //TODO: check in DB for user data input from old verifications
-            //TODO: give back the enin for infection date,
-            //      NOT_INFECTED if no infection is present
-            //      and WAIT if there is no data from user
-
-            return "WAIT";
+            // give back the enin for infection date,
+            // NOT_INFECTED if no infection is present
+            // and WAIT if there is no data from user
+            return verificationDb.checkForUserDataInput(input.getUuid(), input.getPin(), input.getTimestamp());
         });
     }
 
-    private static Boolean hasContactWithInfectedByStatus(String uuid) {
+    private static Boolean hadContactWithInfectedByStatus(String uuid) {
         List<User> foundUser = userDb.get(uuid);
-        if (!foundUser.isEmpty() && foundUser.stream().filter(user -> user.getStatus().equals(1)).findAny().isPresent()) {
+        if (!foundUser.isEmpty() && foundUser.stream()
+                .filter(user -> user.getStatus().equals(1) || user.getStatus().equals(2)).findAny().isPresent()) {
             return true;
         }
         return false;

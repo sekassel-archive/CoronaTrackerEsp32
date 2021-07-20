@@ -2,10 +2,10 @@ package de.uniks.cwa;
 
 import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.cwa.utils.CWARequests;
-import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
-import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -29,14 +29,14 @@ public class CwaDataInterpreter {
 
     /**
      * subsequently, we compare contact information from cwa DB with our postgres DB
-     *
+     * <p>
      * status:
      * - 0: Only entries that needs to be checked. Imply that nothing was found yet.
      * - 1: There was a contact with an infected device. User needs to be warned.
      * - 2: Contact resulted in a proofed infection. User that were in contact needs to be warned.
-     *      TEK needs to be send from MC to server
+     * TEK needs to be send from MC to server
      * - 3: A contact with an infected device resulted in a proofed NO infection.
-     *      Remove Warning, no infection check needed anymore
+     * Remove Warning, no infection check needed anymore
      */
     public static void checkForInfectionsHourlyTask() {
         try {

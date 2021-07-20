@@ -5,11 +5,10 @@ import de.uniks.postgres.db.model.InfectedUser;
 import lombok.Data;
 
 @Data
-@Deprecated
 public class InfectedUserPostPayload implements Validable {
     private String uuid;
     private String tek;
-    private Integer rsin; // TODO: change to enin and calculate rsin
+    private Integer rsin;
 
     public boolean isValid() {
         boolean validUuid = ((uuid != null) && (uuid.length() == 36));

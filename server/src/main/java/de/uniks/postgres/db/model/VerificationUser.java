@@ -6,14 +6,14 @@ import java.time.LocalDateTime;
 
 /**
  * PIN: The correctness of the pin is not checked if value is given.
- *      UserVerificationService will pull the pin for the given uuid/username
- *      and springboot crm compares pin internally.
- *
+ * UserVerificationService will pull the pin for the given uuid/username
+ * and springboot crm compares pin internally.
+ * <p>
  * TOKEN_ACTIVE: Prevent more than one active session/entry in db to login with.
- *
+ * <p>
  * TOKEN_VALID: This boolean has nothing to do if the given pin was correct or not.
- *              It does just indicate if there was just one active login entry in db and
- *              at this time pin was set.
+ * It does just indicate if there was just one active login entry in db and
+ * at this time pin was set.
  */
 
 @Data
@@ -36,7 +36,7 @@ public class VerificationUser {
     private LocalDateTime timestamp;
 
     // only set if verification is successful (data comes from user input ui)
-    private boolean inputReadyForPickup;
-    private boolean userInfected;
+    private Boolean inputReadyForPickup;
+    private Boolean userInfected;
     private int rsin;
 }
