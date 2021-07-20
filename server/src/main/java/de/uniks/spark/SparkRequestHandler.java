@@ -86,6 +86,14 @@ public class SparkRequestHandler {
                 return "Success!";
             }
             response.status(HTTP_BAD_REQUEST);
+/*
+            InfectedUserPostgreSql infUsrDB = new InfectedUserPostgreSql();
+            for (int i = 0; i < 14; i++) {
+                infUsrDB.createIncompleteTekInputEntry(loginToken.getUsername(), rsin + (144 * i));
+            }
+
+ */
+
             return "Request values invalid!";
         }));
 

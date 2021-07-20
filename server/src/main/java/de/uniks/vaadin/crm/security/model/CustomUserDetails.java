@@ -12,14 +12,20 @@ import java.util.Collection;
 public class CustomUserDetails implements UserDetails {
     private String uuid;
     private String pin;
+    private String timestamp;
     private LocalDateTime expireTimestamp;
     private Boolean expired;
 
-    public CustomUserDetails(String uuid, String pin) {
+    public CustomUserDetails(String uuid, String pin, String timestamp) {
         this.expireTimestamp = LocalDateTime.now().plus(10, ChronoUnit.MINUTES);
         this.uuid = uuid;
         this.pin = pin;
+        this.timestamp = timestamp;
         this.expired = false;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
     }
 
     public void setExpired() {

@@ -12,7 +12,6 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import de.uniks.cwa.utils.CWACryptography;
-import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.vaadin.crm.security.model.CustomUserDetails;
 import de.uniks.vaadin.views.main.MainView;
@@ -90,18 +89,8 @@ public class MyDeviceView extends VerticalLayout {
                 int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
                 //TODO: input data to db to trigger actions required for infection case
                 UserVerificationPostgreSql verifUsrDB = new UserVerificationPostgreSql();
-                if (positiveInfectedState) {
-                    //verifUsrDB.flagAsInfected();
-
-                    //TODO: move to spark
-                    InfectedUserPostgreSql infUsrDB = new InfectedUserPostgreSql();
-                    for (int i = 0; i < 14; i++) {
-                        infUsrDB.createIncompleteTekInputEntry(loginToken.getUsername(), rsin + (144 * i));
-                    }
-                } else {
-                    //verUsrDB.flagAsNotInfected();
-                }
-
+                verifUsrDB.flagDataInputPickupable(loginToken.getUsername(), loginToken.getPassword(),
+                        loginToken.getTimestamp(), rsin, positiveInfectedState);
                 Notification.show("Success! Your Data will be processed soon.");
             } else {
                 Notification.show("Your session is expired! Reload Page and try again.");

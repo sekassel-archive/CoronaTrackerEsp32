@@ -26,7 +26,11 @@ public class UserVerificationPostgreSql {
                     + VerificationUser.PIN + " TEXT,"
                     + VerificationUser.TOKEN_ACTIVE + " BOOLEAN NOT NULL,"
                     + VerificationUser.TOKEN_VALID + " BOOLEAN DEFAULT FALSE,"
-                    + VerificationUser.TIMESTAMP + " TEXT NOT NULL)";
+                    + VerificationUser.TIMESTAMP + " TEXT NOT NULL,"
+                    + VerificationUser.INPUT_READY_FOR_PICKUP + " BOOLEAN DEFAULT FALSE,"
+                    + VerificationUser.USER_INFECTED + " BOOLEAN DEFAULT FALSE,"
+                    + VerificationUser.RSIN + " INT DEFAULT NULL"
+                    + ")";
 
             connection.ifPresent(conn -> {
                 try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -166,5 +170,27 @@ public class UserVerificationPostgreSql {
             }
         });
         return verificationUser.get();
+    }
+
+    public void flagDataInputPickupable(String uuid, String pin, String timestamp, int rsin, boolean infectedState) {
+        String sql = "UPDATE " + VerificationUser.CLASS + " SET " +
+                VerificationUser.INPUT_READY_FOR_PICKUP + " = TRUE , " +
+                VerificationUser.USER_INFECTED + " = " + infectedState + " , " +
+                VerificationUser.RSIN + " = " + rsin + " , " +
+                " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\'" +
+                " AND " + VerificationUser.PIN + " = \'" + pin + "\'" +
+                " AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";
+
+        connection.flatMap(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql.toString())) {
+
+                int numberOfInsertedRows = statement.executeUpdate();
+                LOG.log(Level.INFO, "Updated " + numberOfInsertedRows + " Entry's " + VerificationUser.CLASS + " on DB flagAsInfected.");
+
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagAsInfected.", ex);
+            }
+            return Optional.empty();
+        });
     }
 }
