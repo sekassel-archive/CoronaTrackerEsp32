@@ -12,6 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import de.uniks.cwa.utils.CWACryptography;
+import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.vaadin.crm.security.model.CustomUserDetails;
 import de.uniks.vaadin.views.main.MainView;
@@ -84,12 +85,26 @@ public class MyDeviceView extends VerticalLayout {
                 radioGroup.setEnabled(false);
                 datePicker.setEnabled(false);
                 submitButton.setEnabled(false);
+
+                String uuid = loginToken.getUsername();
+                String pin = loginToken.getPassword();
                 Boolean positiveInfectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
                 LocalDateTime pickedDate = datePicker.getValue().atStartOfDay();
                 int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
+                // flag verificationEntry as pickupable, so device will be able to get rsin (just once)
                 UserVerificationPostgreSql verifUsrDB = new UserVerificationPostgreSql();
-                verifUsrDB.flagDataInputPickupable(loginToken.getUsername(), loginToken.getPassword(),
-                        loginToken.getTimestamp(), rsin, positiveInfectedState);
+                verifUsrDB.flagDataInputPickupable(uuid, pin, loginToken.getTimestamp(), rsin, positiveInfectedState);
+
+                // remove/flag collected data in db < input date,
+                // because why should be check a infection that happened
+                // before detected exposure date.
+                // so we don't need to check these entries again, because
+                // user is proofed NOT infected or the next 14 days infected.
+                // especially the detected exposure entry!
+                UserPostgreSql userDB = new UserPostgreSql();
+                userDB.flagInfectionStateAfterDataInput(uuid, rsin, positiveInfectedState);
+
                 Notification.show("Success! Your Data will be processed soon.");
             } else {
                 Notification.show("Your session is expired! Reload Page and try again.");

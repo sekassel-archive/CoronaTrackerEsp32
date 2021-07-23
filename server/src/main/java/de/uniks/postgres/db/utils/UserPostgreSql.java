@@ -2,6 +2,7 @@ package de.uniks.postgres.db.utils;
 
 import de.uniks.postgres.db.PostgresConnect;
 import de.uniks.postgres.db.model.User;
+import de.uniks.postgres.db.model.VerificationUser;
 import org.eclipse.jetty.util.ajax.JSON;
 
 import java.sql.*;
@@ -169,6 +170,25 @@ public class UserPostgreSql {
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }
+        });
+    }
+
+    public void flagInfectionStateAfterDataInput(String uuid, int rsin, Boolean infectedState) {
+        int infectionStateNumber = infectedState == true ? 2 : 3; // 2 = proofed infection, 3 = proofed no infection
+        int maxEnin = rsin + (144 - 1); // rsin = 00:00 am -> rsin + 143 = 23:50pm
+
+        String sqlCleanUp = "UPDATE " + User.CLASS + " SET " +
+                User.STATUS + " = " + infectionStateNumber + " " +
+                " WHERE " + User.UUID + " = \'" + uuid + "\'" +
+                " AND " + User.ENIN + " <= \'" + maxEnin + "\'";
+
+        connection.flatMap(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sqlCleanUp)) {
+                statement.executeUpdate();
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagInfectionStateAfterDataInput.", ex);
+            }
+            return Optional.empty();
         });
     }
 }

@@ -192,14 +192,6 @@ public class UserVerificationPostgreSql {
             }
             return Optional.empty();
         });
-
-        //TODO: remove/flag collected data in db 14d < input date,
-        //      because why should be check a infection that happened
-        //      before detected exposure date.
-        //      So we don't need to check these entries again, because
-        //      user is proofed NOT infected or the next 14 days infected.
-        //      Especially the detected exposure entry!
-
     }
 
     // give back the enin for infection date,
@@ -237,14 +229,14 @@ public class UserVerificationPostgreSql {
             return "WAIT";
         }
 
-        String sql2 = "UPDATE " + VerificationUser.CLASS + " SET " +
+        String sqlCleanUp = "UPDATE " + VerificationUser.CLASS + " SET " +
                 VerificationUser.INPUT_READY_FOR_PICKUP + " = FALSE , " +
                 " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\'" +
                 " AND " + VerificationUser.PIN + " = \'" + pin + "\'" +
                 " AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";
 
         connection.flatMap(conn -> {
-            try (PreparedStatement statement = conn.prepareStatement(sql2.toString())) {
+            try (PreparedStatement statement = conn.prepareStatement(sqlCleanUp)) {
                 int numberOfInsertedRows = statement.executeUpdate();
                 LOG.log(Level.INFO, "Updated " + numberOfInsertedRows + " Entry's " + VerificationUser.CLASS + " on DB checkForUserDataInput.");
             } catch (SQLException ex) {
