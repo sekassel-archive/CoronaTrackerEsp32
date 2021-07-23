@@ -29,7 +29,6 @@ public class CustomUserDetails implements UserDetails {
     }
 
     public void setExpired() {
-        //TODO: change in db too, create task to change it
         this.expired = true;
     }
 

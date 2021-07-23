@@ -26,7 +26,7 @@ public class UserVerificationService implements UserDetailsService {
         // retrieve login data for username from db and create CustomUserDetails to hand it to spring security handler
         UserVerificationPostgreSql verificationDb = new UserVerificationPostgreSql();
 
-        String timestamp = LocalDateTime.now().toString(); // TODO: maybe add a unique id to login entry
+        String timestamp = LocalDateTime.now().toString();
         Optional<Integer> loginVerificationEntry = verificationDb.createLoginVerificationEntry(uuid, timestamp);
 
         if (loginVerificationEntry.isEmpty() || loginVerificationEntry.get() != 1) {
@@ -44,7 +44,7 @@ public class UserVerificationService implements UserDetailsService {
             if (verificationUser.isPresent()) {
                 VerificationUser user = verificationUser.get();
                 CustomUserDetails customUserDetails = new CustomUserDetails(user.getUuid(), user.getPin(), timestamp);
-                //TODO: check if it is required to give the login entry free for a direct re-login - insignificant
+                // insignificant, but check here if it is required to give the login entry free for a direct re-login
                 return customUserDetails;
             }
         }
