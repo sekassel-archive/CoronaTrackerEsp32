@@ -2,12 +2,14 @@ package de.uniks.postgres.db.utils;
 
 import de.uniks.postgres.db.PostgresConnect;
 import de.uniks.postgres.db.model.InfectedUser;
+import de.uniks.spark.payload.InfectedUserPostPayload;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,6 +37,49 @@ public class InfectedUserPostgreSql {
         }
     }
 
+    public List<InfectedUser> get(String uuid) {
+        List<InfectedUser> infUsers = new ArrayList<>();
+        String sql = "SELECT * FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = \'" + uuid + "\'";
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String tek = resultSet.getString(InfectedUser.TEK);
+                    Integer rsin = resultSet.getInt(InfectedUser.RSIN);
+
+                    infUsers.add(new InfectedUser(uuid, tek, rsin));
+                }
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, null, ex);
+            }
+        });
+        return infUsers;
+    }
+
+    public List<InfectedUser> getAllCompleteInfectedUser() {
+        List<InfectedUser> infUserCollection = new ArrayList<>();
+        String sql = "SELECT * FROM " + InfectedUser.CLASS +
+                " WHERE " + InfectedUser.TEK + " IS NOT NULL";
+
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String uuid = resultSet.getString(InfectedUser.UUID);
+                    String tek = resultSet.getString(InfectedUser.TEK);
+                    Integer rsin = resultSet.getInt(InfectedUser.RSIN);
+
+                    infUserCollection.add(new InfectedUser(uuid, tek, rsin));
+                }
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Couldn't get all completed Entries of infected Users from DB.", ex);
+            }
+        });
+        return infUserCollection;
+    }
+
     public Optional<Integer> createIncompleteTekInputEntry(String uuid, int rsin) {
         String sql = "INSERT INTO " + InfectedUser.CLASS + "(" + InfectedUser.UUID + ", " + InfectedUser.RSIN + ") " + "VALUES(?, ?)";
 
@@ -56,80 +101,34 @@ public class InfectedUserPostgreSql {
         });
     }
 
-    @Deprecated
-    public Optional<Integer> save(InfectedUser infUser) {
-        InfectedUser nonNullUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be added should not be null");
-        String sql = "INSERT INTO " + InfectedUser.CLASS + "(" + InfectedUser.UUID + ", " + InfectedUser.TEK + ", "
-                + InfectedUser.RSIN + ") " + "VALUES(?, ?, ?)";
-
-        return connection.flatMap(conn -> {
-            Optional<Integer> optionalOfInsertedRows = Optional.empty();
-
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
-
-                statement.setString(1, nonNullUser.getUuid());
-                statement.setString(2, nonNullUser.getTekAsJSONArray());
-                statement.setInt(3, nonNullUser.getRsin());
-
-                int numberOfInsertedRows = statement.executeUpdate();
-                optionalOfInsertedRows = Optional.of(numberOfInsertedRows);
-
-            } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
-            return optionalOfInsertedRows;
-        });
-    }
-
-    public List<InfectedUser> get(String uuid) {
-        List<InfectedUser> infUsers = new ArrayList<>();
-        String sql = "SELECT * FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = \'" + uuid + "\'";
+    public boolean isIncompleteTekInputEntryPresent(InfectedUserPostPayload input) {
+        String sql = "SELECT COUNT(*)" +
+                " FROM " + InfectedUser.CLASS +
+                " WHERE " + InfectedUser.UUID + " = \'" + input.getUuid() + "\'" +
+                " AND " + InfectedUser.TEK + " IS NULL" +
+                " AND " + InfectedUser.RSIN + " = \'" + input.getRsin() + "\'";
+        AtomicReference<Integer> userCount = new AtomicReference<>(0);
         connection.ifPresent(conn -> {
             try (Statement statement = conn.createStatement();
                  ResultSet resultSet = statement.executeQuery(sql)) {
-
-                while (resultSet.next()) {
-                    String tek = resultSet.getString(InfectedUser.TEK);
-                    Integer rsin = resultSet.getInt(InfectedUser.RSIN);
-
-                    infUsers.add(new InfectedUser(uuid, tek, rsin));
+                if (resultSet.next()) {
+                    userCount.set(resultSet.getInt("count"));
                 }
             } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.WARNING, "SQL Exception happened in isIncompleteTekInputEntryPresent", ex);
             }
         });
-        return infUsers;
+        return userCount.get() >= 1 ? true : false;
     }
 
-    public List<InfectedUser> getAll() {
-        List<InfectedUser> infUserCollection = new ArrayList<>();
-        String sql = "SELECT * FROM " + InfectedUser.CLASS;
-
-        connection.ifPresent(conn -> {
-            try (Statement statement = conn.createStatement();
-                 ResultSet resultSet = statement.executeQuery(sql)) {
-
-                while (resultSet.next()) {
-                    String uuid = resultSet.getString(InfectedUser.UUID);
-                    String tek = resultSet.getString(InfectedUser.TEK);
-                    Integer rsin = resultSet.getInt(InfectedUser.RSIN);
-
-                    infUserCollection.add(new InfectedUser(uuid, tek, rsin));
-                }
-            } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
-            }
-        });
-        return infUserCollection;
-    }
-
-    public void update(InfectedUser infUser) {
-        InfectedUser nonNullUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be updated should not be null");
+    public void completeTekInputEntry(InfectedUser infectedUser) {
+        InfectedUser nonNullUser = Objects.requireNonNull(infectedUser, "The " + InfectedUser.CLASS + " to be updated should not be null");
         String sql = "UPDATE " + InfectedUser.CLASS + " "
                 + "SET "
-                + InfectedUser.TEK + " = ?, "
-                + InfectedUser.RSIN + " = ? "
+                + InfectedUser.TEK + " = ? "
                 + "WHERE "
+                + InfectedUser.RSIN + " = ? "
+                + "AND "
                 + InfectedUser.UUID + " = ?";
 
         connection.ifPresent(conn -> {
@@ -141,7 +140,7 @@ public class InfectedUserPostgreSql {
                 statement.executeUpdate();
 
             } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+                LOG.log(Level.SEVERE, "Couldn't complete TEK Entry for infected User input in DB.", ex);
             }
         });
     }
@@ -159,14 +158,5 @@ public class InfectedUserPostgreSql {
                 LOG.log(Level.SEVERE, null, ex);
             }
         });
-    }
-
-    public boolean isIncompleteTekInputEntryPresent() {
-        //TODO implement
-        return false;
-    }
-
-    public void completeTekInputEntry() {
-        //TODO implement
     }
 }

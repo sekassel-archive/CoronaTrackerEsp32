@@ -48,7 +48,7 @@ public class CwaDataInterpreter {
             cwaData = CWARequests.getUnzippedInfectionData();
 
             // our own infectedUser from infectedUser TABLE
-            infectedUserList = infectedUserDb.getAll();
+            infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
 
             // we need to get our own infected user into the data set of the cwa and put it in a map like:
             // [enin: rpi(from cwa inf. user tek) .... rpi2 (from our inf. user db)],[enin2: ...] usw.

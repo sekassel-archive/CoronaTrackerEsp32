@@ -3,6 +3,7 @@ package de.uniks.spark;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
@@ -81,8 +82,8 @@ public class SparkRequestHandler {
             }
 
             // validate TEK and complete infection Data
-            if (input.isValid() && infectedUserDb.isIncompleteTekInputEntryPresent()) {
-                infectedUserDb.completeTekInputEntry();
+            if (input.isValid() && infectedUserDb.isIncompleteTekInputEntryPresent(input)) {
+                infectedUserDb.completeTekInputEntry(new InfectedUser(input));
                 return "Success!";
             }
             response.status(HTTP_BAD_REQUEST);

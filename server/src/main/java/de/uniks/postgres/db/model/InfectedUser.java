@@ -2,6 +2,7 @@ package de.uniks.postgres.db.model;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import de.uniks.spark.payload.InfectedUserPostPayload;
 import lombok.Data;
 
 import java.lang.reflect.Type;
@@ -28,6 +29,10 @@ public class InfectedUser {
         Type collectionType = new TypeToken<byte[]>() {
         }.getType();
         this.tek = new Gson().fromJson(tekAsString, collectionType);
+    }
+
+    public InfectedUser(InfectedUserPostPayload input) {
+        this(input.getUuid(), input.getTek(), input.getRsin());
     }
 
     public String getTekAsJSONArray() {

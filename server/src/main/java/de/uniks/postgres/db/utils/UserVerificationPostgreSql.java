@@ -196,9 +196,10 @@ public class UserVerificationPostgreSql {
         //TODO: remove/flag collected data in db 14d < input date,
         //      because why should be check a infection that happened
         //      before detected exposure date.
-        //      So we dont need to check these entries again, because
+        //      So we don't need to check these entries again, because
         //      user is proofed NOT infected or the next 14 days infected.
         //      Especially the detected exposure entry!
+
     }
 
     // give back the enin for infection date,
