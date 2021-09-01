@@ -278,13 +278,14 @@ std::string checkServerSuccessfullDataInput(std::string *uuidstr, std::string *p
     http.addHeader("Content-Type", "application/json");
 
     std::stringstream ss;
-    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"pin\":\"" << pin->c_str() << "\", \"timestamp\":\"" << timestamp->c_str() << "\"}";
+    ss << "{\"uuid\":\"" << uuidstr->c_str() << "\",\"pin\":\"" << pin->c_str()
+       << "\", \"timestamp\":\"" << timestamp->c_str() << "\"}";
 
     // send HTTP POST request
     int httpResponseCode = http.POST(ss.str().c_str());
     std::string bodyResponse = http.getString().c_str();
     disconnectWifi();
-    
+
     if (httpResponseCode != HTTP_CODE_OK)
     {
         Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);

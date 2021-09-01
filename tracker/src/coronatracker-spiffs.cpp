@@ -439,7 +439,8 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
     return true;
 }
 
-std::vector<std::string> *getExposureTek(signed char *tek, int *enin){
+std::vector<std::string> *getExposureTek(signed char *tek, int *enin)
+{
 // check if exposureTeks are available
 // get Teks to be send to server
 // remove sended TEK from exposure TEKs
