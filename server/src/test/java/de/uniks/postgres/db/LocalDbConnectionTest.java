@@ -135,6 +135,29 @@ public class LocalDbConnectionTest {
     }
 
     @Test
+    public void printInfectedUserDB() {
+        String sql = "SELECT * FROM " + InfectedUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+
+                while (resultSet.next()) {
+                    String uuid = resultSet.getString(InfectedUser.UUID);
+                    String tek = resultSet.getString(InfectedUser.TEK);
+                    String rsin = resultSet.getString(InfectedUser.RSIN);
+                    System.out.println("uuid:" + uuid + "\n" +
+                            "tek:" + tek + "\n" +
+                            "rsin:" + rsin + "\n" +
+                            "\n");
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                Assert.fail();
+            }
+        });
+    }
+
+    @Test
     @Ignore
     public void wipeLocalUserDB() {
         String sql = "TRUNCATE TABLE " + User.CLASS + ";";
