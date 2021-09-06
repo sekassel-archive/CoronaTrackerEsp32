@@ -109,8 +109,7 @@ exposure_status getInfectionStatus(std::string *uuidstr)
 
     if (httpResponseCode != HTTP_CODE_OK)
     {
-        Serial.print("HTTP Response Code not 200! Body: ");
-        Serial.println(body);
+        Serial.println("HTTP Response Code not 200!");
         return EXPOSURE_UPDATE_FAILED;
     }
     else
@@ -168,6 +167,7 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
         {
             Serial.print("HTTP Response Code 200: ");
             Serial.println(body);
+            Serial.println("Successfully sendet Contact Informations to Server!");
         }
         else
         {
@@ -203,8 +203,7 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
 
     if (httpResponseCode != HTTP_CODE_OK)
     {
-        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
-        Serial.println(body);
+        Serial.printf("HTTP Response Code: %i\n", httpResponseCode);
         return false;
     }
     else
@@ -213,13 +212,13 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
         {
             Serial.print("HTTP Response Code 200: ");
             Serial.println(body);
+            Serial.println("Successfully sendet Tek Information to Server!");
         }
         else
         {
-            Serial.printf("HTTP Response Code 200, but Body not Success! Body instead: %s\n", body);
+            // body should be "Success!" if not changed in server, this should never happen
+            Serial.printf("HTTP Response Code 200, but (Body) not Success! Body instead: %s\n", body);
         }
-        // body should be "Success!" if not changed in server
-        // TODO: remove body check later for better performance
         return true;
     }
 }
@@ -288,8 +287,7 @@ std::string checkServerSuccessfullDataInput(std::string *uuidstr, std::string *p
 
     if (httpResponseCode != HTTP_CODE_OK)
     {
-        Serial.printf("HTTP Response Code: %i\nBody: ", httpResponseCode);
-        Serial.println(bodyResponse.c_str());
+        Serial.printf("HTTP Response Code: %i\n", httpResponseCode);
         return "WAIT";
     }
     return bodyResponse;

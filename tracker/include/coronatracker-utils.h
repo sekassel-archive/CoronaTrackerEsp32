@@ -21,6 +21,7 @@ void advertiseBluetoothDevice(int* scannedDevices);
 
 void setupWifiConnection(bool* wifiInitialized);
 void sendCollectedDataToServer(void);
+void sendExposureInformationIfExists(void);
 exposure_status getInfectionStatusFromServer(void);
 bool sendTekInfoToServerAfterInfection(void);
 

@@ -114,13 +114,21 @@ public class LocalDbConnectionTest {
                     Boolean tokenActive = resultSet.getBoolean(VerificationUser.TOKEN_ACTIVE);
                     Boolean tokenValid = resultSet.getBoolean(VerificationUser.TOKEN_VALID);
                     String timestamp = resultSet.getString(VerificationUser.TIMESTAMP);
+                    Boolean inputReadyForPickup = resultSet.getBoolean(VerificationUser.INPUT_READY_FOR_PICKUP);
+                    Boolean userInfected = resultSet.getBoolean(VerificationUser.USER_INFECTED);
+                    String rsin = resultSet.getString(VerificationUser.RSIN);
                     System.out.println("uuid:" + uuid + "\n" +
                             "pin:" + pin + "\n" +
                             "tokenActive:" + tokenActive.toString() + "\n" +
                             "tokenValid:" + tokenValid.toString() + "\n" +
-                            "timestamp:" + timestamp + "\n\n");
+                            "timestamp:" + timestamp + "\n" +
+                            "inputReadyForPickup:" + inputReadyForPickup + "\n" +
+                            "userInfected:" + userInfected + "\n" +
+                            "rsin:" + rsin + "\n" +
+                            "\n");
                 }
             } catch (SQLException ex) {
+                ex.printStackTrace();
                 Assert.fail();
             }
         });
@@ -134,6 +142,7 @@ public class LocalDbConnectionTest {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.executeUpdate();
             } catch (SQLException throwables) {
+                throwables.printStackTrace();
                 Assert.fail();
             }
         });
@@ -147,6 +156,7 @@ public class LocalDbConnectionTest {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.executeUpdate();
             } catch (SQLException throwables) {
+                throwables.printStackTrace();
                 Assert.fail();
             }
         });
@@ -159,6 +169,35 @@ public class LocalDbConnectionTest {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
                 statement.executeUpdate();
             } catch (SQLException throwables) {
+                throwables.printStackTrace();
+                Assert.fail();
+            }
+        });
+    }
+
+    @Ignore
+    @Test
+    public void deleteLocalUserVerificationDB() {
+        String sql = "DROP TABLE " + VerificationUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+                Assert.fail();
+            }
+        });
+    }
+
+    @Ignore
+    @Test
+    public void deleteLocalInfectedUserDB() {
+        String sql = "DROP TABLE " + InfectedUser.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
                 Assert.fail();
             }
         });

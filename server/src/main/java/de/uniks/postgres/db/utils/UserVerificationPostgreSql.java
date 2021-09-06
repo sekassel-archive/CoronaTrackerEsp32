@@ -176,7 +176,7 @@ public class UserVerificationPostgreSql {
         String sql = "UPDATE " + VerificationUser.CLASS + " SET " +
                 VerificationUser.INPUT_READY_FOR_PICKUP + " = TRUE , " +
                 VerificationUser.USER_INFECTED + " = " + infectedState + " , " +
-                VerificationUser.RSIN + " = " + rsin + " , " +
+                VerificationUser.RSIN + " = " + rsin + " " +
                 " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\'" +
                 " AND " + VerificationUser.PIN + " = \'" + pin + "\'" +
                 " AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";
@@ -188,6 +188,7 @@ public class UserVerificationPostgreSql {
                 LOG.log(Level.INFO, "Updated " + numberOfInsertedRows + " Entry's " + VerificationUser.CLASS + " on DB flagAsInfected.");
 
             } catch (SQLException ex) {
+                ex.printStackTrace();
                 LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagAsInfected.", ex);
             }
             return Optional.empty();
@@ -230,7 +231,7 @@ public class UserVerificationPostgreSql {
         }
 
         String sqlCleanUp = "UPDATE " + VerificationUser.CLASS + " SET " +
-                VerificationUser.INPUT_READY_FOR_PICKUP + " = FALSE , " +
+                VerificationUser.INPUT_READY_FOR_PICKUP + " = FALSE " +
                 " WHERE " + VerificationUser.UUID + " = \'" + uuid + "\'" +
                 " AND " + VerificationUser.PIN + " = \'" + pin + "\'" +
                 " AND " + VerificationUser.TIMESTAMP + " = \'" + timestamp + "\'";

@@ -114,13 +114,14 @@ void processVerificationForUserInput(exposure_status *exp_state)
         {
             // infection detected and user is infected too, so we need to send collected TEK's to server
             int startInfectionEnin = std::atoi(response.c_str());
-            Serial.printf("HTTP Response Code 200, but this device-owner is infected! Start-Infection ENIN: %i", startInfectionEnin);
-            std::vector<int> eninToBeSendToServer;
+            Serial.printf("HTTP Response Code 200, but this device-owner is infected! \nStart-Infection ENIN: %i\n", startInfectionEnin);
+            Serial.print("Inserting Exposure TEKs into Database: ");
             for (int i = 0; i < 14; i++)
             {
-                eninToBeSendToServer.push_back(startInfectionEnin + (144 * i));
+                // put in db file and send / remove on next ACTION_INFECTION_REQUEST
+                insertExposureInformationToDatabase(startInfectionEnin + (144 * i));
             }
-            //TODO: put in db file and send / remove on next ACTION_INFECTION_REQUEST
+            Serial.println("Done!");
         }
     }
 }
@@ -214,6 +215,40 @@ void sendCollectedDataToServer()
 
     // remove remaining (sended) collectedContactInformation from db, so it won't be send twice
     deleteCollectedContactInformationsSendedToServerFromDb(&collectedContactInformation);
+}
+
+void sendExposureInformationIfExists(void)
+{
+    std::vector<int> expVector;
+    std::string uuid = readUuid();
+    std::string tekData;
+
+    // check in db for exp entry that matches with existing tek entrys
+    checkExposureInformation(&expVector);
+
+    if (expVector.empty())
+    {
+        Serial.println("No exposure data to send to server.");
+        return;
+    }
+    
+    Serial.print("Exposure data to send to server:");
+    Serial.print(expVector.size());
+    Serial.println(" Entrys");
+
+    for (std::vector<int>::iterator vIt = expVector.begin(); vIt != expVector.end(); vIt++)
+    {
+        if (getExposureInformation((*vIt), &tekData))
+        {
+            // if JOIN collects data, send it to server
+            if (sendTekInformation(&uuid, (*vIt), &tekData))
+            {
+                // remove exp entry to prevent sending information twice
+                removeExposureInformation((*vIt));
+                Serial.printf("Removed TEK: %i from exp table in db", (*vIt));
+            }
+        }
+    }
 }
 
 exposure_status getInfectionStatusFromServer()

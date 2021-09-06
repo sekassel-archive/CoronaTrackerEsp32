@@ -64,20 +64,10 @@ bool printDatabases()
     Serial.println("_________________Temporary Exposure Keys___________________");
     printSQLResult(tek_db, "SELECT * FROM tek");
     Serial.println("___________________________________________________________");
-    sqlite3_close(tek_db);
-
-    sqlite3 *exposure_tek_db;
-
-    if (sqlite3_open(EXPOSURE_TEKS_DATABASE_SQLITE_PATH, &exposure_tek_db) != SQLITE_OK)
-    {
-        Serial.println("Error on opening database");
-        return false;
-    }
-
-    Serial.println("______________________exposure TEKs________________________");
-    printSQLResult(exposure_tek_db, "SELECT * FROM tek");
+    Serial.println("________________Saved Exposure Identifiers_________________");
+    printSQLResult(tek_db, "SELECT * FROM exp");
     Serial.println("___________________________________________________________");
-    sqlite3_close(exposure_tek_db);
+    sqlite3_close(tek_db);
 
     return true;
 }
@@ -109,26 +99,28 @@ bool initSpiffsCreateDataBases()
     char *errMsg;
     if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS tek (tek BLOB, enin INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
     {
-        Serial.printf("Failed to create table tek in datbase: %s\n", errMsg);
+        Serial.printf("Failed to create table tek in database: %s\n", errMsg);
         sqlite3_close(db);
-        return false;
-    }
-    sqlite3_free(errMsg);
-    sqlite3_close(db);
-
-    createFile(EXPOSURE_TEKS_DATABASE_PATH);
-
-    if (sqlite3_open(EXPOSURE_TEKS_DATABASE_SQLITE_PATH, &db))
-    {
+        if (strcmp(errMsg, "file is not a database") == 0)
+        {
+            SPIFFS.remove(TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
+            Serial.printf("Removed file: %s\n", TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
+        }
         return false;
     }
 
-    if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS tek (tek BLOB, enin INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
+    if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS exp (enin INTEGER);", NULL, NULL, &errMsg) != SQLITE_OK)
     {
-        Serial.printf("Failed to create table tek in datbase: %s\n", errMsg);
+        Serial.printf("Failed to create table exp in database: %s\n", errMsg);
         sqlite3_close(db);
+        if (strcmp(errMsg, "file is not a database") == 0)
+        {
+            SPIFFS.remove(TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
+            Serial.printf("Removed file: %s\n", TEMPORARY_EXPOSURE_KEY_DATABASE_PATH);
+        }
         return false;
     }
+
     sqlite3_free(errMsg);
     sqlite3_close(db);
 
@@ -142,7 +134,7 @@ bool initSpiffsCreateDataBases()
     // UNIQUE Keyword does not work currently (https://github.com/siara-cc/esp32_arduino_sqlite3_lib/issues/18)
     if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS main (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
     {
-        Serial.printf("Failed to create table main in datbase: %s\n", errMsg);
+        Serial.printf("Failed to create table main in database: %s\n", errMsg);
         sqlite3_close(db);
         if (strcmp(errMsg, "file is not a database") == 0)
         {
@@ -154,7 +146,7 @@ bool initSpiffsCreateDataBases()
 
     if (sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS temp (time INTEGER, bl_data BLOB);", NULL, NULL, &errMsg) != SQLITE_OK)
     {
-        Serial.printf("Failed to create table temp in datbase: %s\n", errMsg);
+        Serial.printf("Failed to create table temp in database: %s\n", errMsg);
         sqlite3_close(db);
         if (strcmp(errMsg, "file is not a database") == 0)
         {
@@ -370,11 +362,10 @@ bool insertTemporaryExposureKeyIntoDatabase(signed char *tek, size_t tek_length,
     return true;
 }
 
-bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int enin)
+bool insertExposureInformationToDatabase(int enin)
 {
-    Serial.println("Inserting Exposure TEKs into Database");
     sqlite3 *tek_db;
-    if (sqlite3_open(EXPOSURE_TEKS_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
     {
         Serial.println("Could not open database");
         return false;
@@ -383,7 +374,8 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
     sqlite3_stmt *res;
     const char *tail;
 
-    const char *sql_command = "INSERT INTO tek VALUES (?,?);";
+    // TODO: remove duplicates
+    const char *sql_command = "INSERT INTO exp VALUES (?);";
 
     if (sqlite3_prepare_v2(tek_db, sql_command, strlen(sql_command), &res, &tail) != SQLITE_OK)
     {
@@ -392,14 +384,7 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
         return false;
     }
 
-    if (sqlite3_bind_blob(res, 1, tek, tek_length, SQLITE_STATIC) != SQLITE_OK)
-    {
-        Serial.printf("ERROR binding blob(%s): %s\n", tek, sqlite3_errmsg(tek_db));
-        sqlite3_close(tek_db);
-        return false;
-    }
-
-    if (sqlite3_bind_int(res, 2, enin) != SQLITE_OK)
+    if (sqlite3_bind_int(res, 1, enin) != SQLITE_OK)
     {
         Serial.printf("ERROR binding int(%d): %s\n", enin, sqlite3_errmsg(tek_db));
         sqlite3_close(tek_db);
@@ -421,7 +406,7 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
     }
 
     std::stringstream delete_sql;
-    delete_sql << "DELETE FROM tek WHERE enin <";
+    delete_sql << "DELETE FROM exp WHERE enin <";
     delete_sql << enin - (144 * 14); //Two Weeks
     delete_sql << ";";
 
@@ -430,7 +415,7 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
     {
         Serial.printf("SQL error on delete: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
-        return false;
+        //return false;
     }
 
     sqlite3_free(zErrMsg);
@@ -439,13 +424,130 @@ bool insertExposureTEKsIntoDatabase(signed char *tek, size_t tek_length, int eni
     return true;
 }
 
-std::vector<std::string> *getExposureTek(signed char *tek, int *enin)
+void checkExposureInformation(std::vector<int> *expTekVector)
 {
-// check if exposureTeks are available
-// get Teks to be send to server
-// remove sended TEK from exposure TEKs
-// there may be TEKs for future rsin, so ignore these as long as we dont have an generated one
-// it will be deleted < 14d if no TEK were generated
+    // check if exposureTeks are available
+    sqlite3 *tek_db;
+
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(tek_db));
+        return;
+    }
+
+    std::stringstream ss;
+    ss << "SELECT * FROM exp ;";
+
+    sqlite3_stmt *stmt = NULL;
+    if (sqlite3_prepare_v2(tek_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
+        Serial.println("Seems like there is no exposure data in DB to send to server!");
+        return;
+    }
+
+    while (true)
+    {
+        int status = sqlite3_step(stmt);
+
+        if (status == SQLITE_DONE)
+        {
+            // SQLITE_DONE: We read all rows and escape the sql data collection loop
+            break;
+        }
+
+        if (status != SQLITE_ROW)
+        {
+            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(tek_db));
+            Serial.println("SQLITE_ROW: No row found. Maybe an error or we are ready with data collection. Escape loop.");
+            break;
+        }
+
+        expTekVector->push_back(sqlite3_column_int(stmt, 0));
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(tek_db);
+}
+
+bool getExposureInformation(int expTek, std::string *tekData)
+{
+    // check if exposureTeks are available -> returned Teks will be send to server
+    // there may be TEKs for future rsin, so ignore these as long as we dont have an generated one
+    sqlite3 *tek_db;
+
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening database: %s\n", sqlite3_errmsg(tek_db));
+        return false;
+    }
+
+    std::stringstream ss;
+    ss << "SELECT tek FROM tek WHERE enin = " << expTek << " ;";
+
+    sqlite3_stmt *stmt = NULL;
+    if (sqlite3_prepare_v2(tek_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
+    {
+        Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
+        Serial.println("Seems like there is no exposure data in DB to send to server!");
+        return false;
+    }
+
+    while (true)
+    {
+        int status = sqlite3_step(stmt);
+
+        if (status == SQLITE_DONE)
+        {
+            // SQLITE_DONE: We read all rows and escape the sql data collection loop
+            break;
+        }
+
+        if (status != SQLITE_ROW)
+        {
+            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(tek_db));
+            Serial.println("SQLITE_ROW: No row found. Maybe an error or we are ready with data collection. Escape loop.");
+            break;
+        }
+
+        const char *rawTekData = (const char *)sqlite3_column_blob(stmt, 0);
+
+        std::stringstream ss;
+        ss << "[";
+
+        for (int i = 0; i < 16; i++)
+        {
+            ss << (int)rawTekData[i];
+            i == 15 ? ss << "]" : ss << ",";
+        }
+
+    }
+
+    sqlite3_finalize(stmt);
+    sqlite3_close(tek_db);
+    return true;
+}
+
+void removeExposureInformation(int sendedExpTek)
+{
+    // remove sended TEK from exposure TEKs
+    sqlite3 *tek_db;
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening main database: %s\n", sqlite3_errmsg(tek_db));
+        return;
+    }
+
+    std::stringstream ss;
+    ss << "DELETE FROM exp WHERE enin = " << sendedExpTek << ";";
+    char *zErrMsg;
+    if (sqlite3_exec(tek_db, ss.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+
+    sqlite3_close(tek_db);
 }
 
 bool getCurrentTek(signed char *tek, int *enin)

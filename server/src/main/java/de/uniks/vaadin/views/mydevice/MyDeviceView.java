@@ -80,8 +80,8 @@ public class MyDeviceView extends VerticalLayout {
 
         submitButton.addClickListener(event -> {
             CustomUserDetails loginToken = (CustomUserDetails) authentication.getPrincipal();
-            loginToken.setExpired();
             if (loginToken.isAccountNonExpired()) {
+                loginToken.setExpired();
                 radioGroup.setEnabled(false);
                 datePicker.setEnabled(false);
                 submitButton.setEnabled(false);
@@ -90,7 +90,7 @@ public class MyDeviceView extends VerticalLayout {
                 String pin = loginToken.getPassword();
                 Boolean positiveInfectedState = radioGroup.getValue().equals(POSITIV_INFECTED);
                 LocalDateTime pickedDate = datePicker.getValue().atStartOfDay();
-                int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+                int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L);
 
                 // flag verificationEntry as pickupable, so device will be able to get rsin (just once)
                 UserVerificationPostgreSql verifUsrDB = new UserVerificationPostgreSql();

@@ -1,5 +1,6 @@
 package de.uniks.vaadin.views.rsinoverview;
 
+import de.uniks.spark.payload.InfectedUserPostPayload;
 import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,13 @@ public class EasyRsinTimeTest {
     }
     @Test
     public void showTimeTest() {
-        System.out.println("Time: " + new Date(new Long( Integer.parseInt("2702075")) * 600 * 1000).toLocaleString());
+        System.out.println("Time: " + new Date(new Long( Integer.parseInt("2718420")) * 600 * 1000).toLocaleString());
+    }
+
+    @Test
+    public void InfectedUserPostPayloadTest(){
+        InfectedUserPostPayload infectedUserPostPayload = new InfectedUserPostPayload();
+        infectedUserPostPayload.setEnin(2718440);
+        assertEquals(2718420,infectedUserPostPayload.getRsin());
     }
 }

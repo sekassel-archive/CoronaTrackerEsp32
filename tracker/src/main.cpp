@@ -130,13 +130,15 @@ void setup()
     {
         Serial.println("Start: ACTION_INFECTION_REQUEST");
         sendCollectedDataToServer();
+        sendExposureInformationIfExists();
         exposureStatus = getInfectionStatusFromServer();
 
         if (exposureStatus == EXPOSURE_DETECT)
         {
             isDisplayActive = true;
-            // remember if Tek was send to server to prevent to send it twice
-            // sendTekInfoToServerAfterInfection();
+            Serial.println("ExposureState: EXPOSURE_DETECT");
+        } else {
+            Serial.println("ExposureState: EXPOSURE_NO_DETECT");
         }
         break;
     }
