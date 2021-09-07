@@ -424,7 +424,7 @@ bool insertExposureInformationToDatabase(int enin)
     return true;
 }
 
-void checkExposureInformation(std::vector<int> *expTekVector)
+void checkExposureInformation(std::vector<int> *expRsinVector)
 {
     // check if exposureTeks are available
     sqlite3 *tek_db;
@@ -435,8 +435,9 @@ void checkExposureInformation(std::vector<int> *expTekVector)
         return;
     }
 
+    // the exp table contain rsin actually
     std::stringstream ss;
-    ss << "SELECT * FROM exp ;";
+    ss << "SELECT DISTINCT * FROM exp ;";
 
     sqlite3_stmt *stmt = NULL;
     if (sqlite3_prepare_v2(tek_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
@@ -463,14 +464,14 @@ void checkExposureInformation(std::vector<int> *expTekVector)
             break;
         }
 
-        expTekVector->push_back(sqlite3_column_int(stmt, 0));
+        expRsinVector->push_back(sqlite3_column_int(stmt, 0));
     }
 
     sqlite3_finalize(stmt);
     sqlite3_close(tek_db);
 }
 
-bool getExposureInformation(int expTek, std::string *tekData)
+bool getExposureInformation(int expRsin, std::string *tekData)
 {
     // check if exposureTeks are available -> returned Teks will be send to server
     // there may be TEKs for future rsin, so ignore these as long as we dont have an generated one
@@ -483,7 +484,7 @@ bool getExposureInformation(int expTek, std::string *tekData)
     }
 
     std::stringstream ss;
-    ss << "SELECT tek FROM tek WHERE enin = " << expTek << " ;";
+    ss << "SELECT tek FROM tek WHERE enin >= " << expRsin << " AND enin <= " << expRsin + 143 << " ;";
 
     sqlite3_stmt *stmt = NULL;
     if (sqlite3_prepare_v2(tek_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
@@ -493,53 +494,45 @@ bool getExposureInformation(int expTek, std::string *tekData)
         return false;
     }
 
-    while (true)
+
+    int status = sqlite3_step(stmt);
+
+    if (status != SQLITE_ROW || status == SQLITE_DONE)
     {
-        int status = sqlite3_step(stmt);
-
-        if (status == SQLITE_DONE)
-        {
-            // SQLITE_DONE: We read all rows and escape the sql data collection loop
-            break;
-        }
-
-        if (status != SQLITE_ROW)
-        {
-            Serial.printf("ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(tek_db));
-            Serial.println("SQLITE_ROW: No row found. Maybe an error or we are ready with data collection. Escape loop.");
-            break;
-        }
-
-        const char *rawTekData = (const char *)sqlite3_column_blob(stmt, 0);
-
-        std::stringstream ss;
-        ss << "[";
-
-        for (int i = 0; i < 16; i++)
-        {
-            ss << (int)rawTekData[i];
-            i == 15 ? ss << "]" : ss << ",";
-        }
-
+        Serial.printf("SQLITE_ROW: No row found. ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(tek_db));
+        return false;
     }
 
+    const char *rawTekData = (const char *)sqlite3_column_blob(stmt, 0);
+
+    std::stringstream ss;
+    ss << "[";
+
+    for (int i = 0; i < 16; i++)
+    {
+        ss << (int)rawTekData[i];
+        i == 15 ? ss << "]" : ss << ",";
+    }
+
+    *tekData = ss.str().c_str();
+    
     sqlite3_finalize(stmt);
     sqlite3_close(tek_db);
     return true;
 }
 
-void removeExposureInformation(int sendedExpTek)
+void removeExposureInformation(int sendedExpRsin)
 {
     // remove sended TEK from exposure TEKs
     sqlite3 *tek_db;
     if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
     {
-        Serial.printf("ERROR opening main database: %s\n", sqlite3_errmsg(tek_db));
+        Serial.printf("ERROR opening tek database: %s\n", sqlite3_errmsg(tek_db));
         return;
     }
 
     std::stringstream ss;
-    ss << "DELETE FROM exp WHERE enin = " << sendedExpTek << ";";
+    ss << "DELETE FROM exp WHERE enin = " << sendedExpRsin << ";";
     char *zErrMsg;
     if (sqlite3_exec(tek_db, ss.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
     {
