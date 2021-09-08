@@ -3,6 +3,7 @@ package de.uniks.spark;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
@@ -11,6 +12,7 @@ import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.spark.payload.*;
 
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +42,14 @@ public class SparkRequestHandler {
                 newUuid = UUID.randomUUID().toString();
             } while (!userDb.get(newUuid).isEmpty());
             return newUuid;
+        });
+
+        get(ROUTING_PREFIX + "/todaysRsin", (request, response) -> {
+            Date date = new Date();
+            date.setHours(0);
+            date.setMinutes(0);
+            date.setSeconds(0);
+            return CWACryptography.getRollingStartIntervalNumber(date.getTime() / 1000L);
         });
 
         /**
