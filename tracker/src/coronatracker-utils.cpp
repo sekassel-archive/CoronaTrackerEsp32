@@ -236,7 +236,7 @@ void sendExposureInformationIfExists(void)
     Serial.print(expVector.size());
     Serial.println(" Entrys");
 
-    printDatabases();
+    //printDatabases();
 
     for (std::vector<int>::iterator vIt = expVector.begin(); vIt != expVector.end(); vIt++)
     {
