@@ -265,4 +265,18 @@ public class LocalDbConnectionTest {
             }
         });
     }
+
+    @Ignore
+    @Test
+    public void deleteLocalUserDB() {
+        String sql = "DROP TABLE " + User.CLASS + ";";
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.executeUpdate();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+                Assert.fail();
+            }
+        });
+    }
 }
