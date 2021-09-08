@@ -1,10 +1,11 @@
-#include <BLEDevice.h>
-#include <Arduino.h>
-
+#pragma once
 #include "coronatracker-crypto.h"
 #include "coronatracker-spiffs.h"
+#include <Arduino.h>
+#include <BLEDevice.h>
 
-bool initBLE(bool initScan, bool initAdvertisment);
+void initializeBluetoothForScan();
+bool initializeBluetoothForAdvertisment(int *nextRsin);
 void deinitBLE(bool releaseMemory);
 std::vector<std::string> scanForCovidDevices(uint32_t duration);
 bool generateNewTemporaryExposureKey(int ENIntervalNumber);

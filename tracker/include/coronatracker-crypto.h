@@ -1,4 +1,5 @@
-#include "Arduino.h"
+#pragma once
+#include <Arduino.h>
 #include "coronatracker-hkdf.h"
 #include "mbedtls/md.h"
 #include "mbedtls/aes.h"
