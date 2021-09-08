@@ -82,6 +82,46 @@ bool getNewUuid(std::string *uuidstr)
     return true;
 }
 
+int getTodaysRsin(void)
+{
+    if (!WiFi.isConnected() && !connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return 0;
+    }
+    else
+    {
+        HTTPClient http;
+
+        http.begin(String(SERVER_URL) + String(GET_TODAYS_RSIN));
+        int code = http.GET();
+
+        if (!(code == HTTP_CODE_OK))
+        {
+            Serial.println("Failed to connect to server!");
+            http.end();
+            return 0;
+        }
+        else
+        {
+            String rsinStr = http.getString();
+            http.end();
+
+            if (rsinStr.length() == 7)
+            {
+                return rsinStr.toInt();
+            }
+            else
+            {
+                Serial.println("RSIN from Server != 7 character! Probably invalid RSIN.");
+                Serial.print("Recieved string: ");
+                Serial.println(rsinStr);
+                return 0;
+            }
+        }
+    }
+}
+
 exposure_status getInfectionStatus(std::string *uuidstr)
 {
     if (!connectToStoredWifi())

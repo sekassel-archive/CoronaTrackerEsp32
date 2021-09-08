@@ -5,7 +5,7 @@
 #include <BLEDevice.h>
 
 void initializeBluetoothForScan();
-bool initializeBluetoothForAdvertisment();
+bool initializeBluetoothForAdvertisment(int *nextRsin);
 void deinitBLE(bool releaseMemory);
 std::vector<std::string> scanForCovidDevices(uint32_t duration);
 bool generateNewTemporaryExposureKey(int ENIntervalNumber);

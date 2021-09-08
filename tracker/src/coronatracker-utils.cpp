@@ -21,12 +21,12 @@
 #endif
 #pragma endregion DISPLAY_INCLUDES
 
-void firstStartInitializeSteps()
+void firstStartInitializeSteps(int *savedRsin)
 {
     !initSpiffsCreateDataBases() ? restartAfterErrorWithDelay("SPIFFS initialize failed!") : Serial.println("Initialized SPIFFS.");
     !connectToStoredWifi() ? restartAfterErrorWithDelay("Couldn't connect to Wifi!") : Serial.println("Connected to WiFi.");
     !initializeTime() ? restartAfterErrorWithDelay("Time initialize failed!") : Serial.println("Initialized Time.");
-    !initializeTek() ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key!") : Serial.println("Initialized Tek.");
+    !initializeTek(savedRsin) ? restartAfterErrorWithDelay("Failed to generate Temporary Exposure Key!") : Serial.println("Initialized Tek.");
     !initializeUuid() ? restartAfterErrorWithDelay("Failed to get UUID!") : Serial.println("Initialized UUID.");
     !disconnectWifi() ? Serial.println("Disconnect Failed!") : Serial.println("Disconnecting Wifi.");
 }
@@ -136,9 +136,9 @@ void actionScanForBluetoothDevices(int *scannedDevices)
     cleanUpTempDatabase();
 }
 
-void advertiseBluetoothDevice(int *scannedDevices)
+void advertiseBluetoothDevice(int *scannedDevices, int *savedRsin)
 {
-    if (initializeBluetoothForAdvertisment() == false)
+    if (initializeBluetoothForAdvertisment(savedRsin) == false)
     {
         restartAfterErrorWithDelay("Initialize Bluetooth for Advertisment failed!");
     }
@@ -231,7 +231,7 @@ void sendExposureInformationIfExists(void)
         Serial.println("No exposure data to send to server.");
         return;
     }
-    
+
     Serial.print("Exposure data to send to server:");
     Serial.print(expVector.size());
     Serial.println(" Entrys");
@@ -265,17 +265,31 @@ exposure_status getInfectionStatusFromServer()
     return getInfectionStatus(&uuid);
 }
 
-bool initializeTek(void)
+bool initializeTek(int *savedRsin)
 {
-    Serial.print("Generating TEK - ");
+    if (*savedRsin == 0)
+    {
+        *savedRsin = getTodaysRsin();
+        if (*savedRsin == 0)
+        {
+            Serial.println("Something went wrong while RSIN get from server.");
+            return false;
+        }
+        else
+        {
+            Serial.printf("Recieved actual RSIN from Server: %i\n", *savedRsin);
+        }
+    }
+
+    Serial.print("Lookup for TEK - ");
     signed char tek[16];
     int enin;
-    if (getCurrentTek(tek, &enin))
+    if (getCurrentTek(tek, &enin) && enin >= *savedRsin)
     {
-        Serial.print("TEK already exists: ");
+        Serial.print("already exists: ");
         for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
         {
-            Serial.print(tek[i]);
+            Serial.printf(" %02hhX", tek[i]);
         }
         Serial.println(" ");
     }
@@ -285,13 +299,14 @@ bool initializeTek(void)
         {
             return false;
         }
-        Serial.print("Generated TEK:");
+        Serial.print("new generated: ");
         for (int i = 0; i < (sizeof(tek) / sizeof(tek[0])); i++)
         {
-            Serial.print(tek[i]);
+            Serial.printf(" %02hhX", tek[i]);
         }
         Serial.println(" ");
     }
+    *savedRsin += EKROLLING_PERIOD;
     return true;
 }
 

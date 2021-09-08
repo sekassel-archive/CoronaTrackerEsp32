@@ -14,6 +14,7 @@
 #define INFECTION_REQUEST_INTERVALL int(2 * 60) // auf 18 min setzen!
 #pragma endregion CUSTOM_DEFINITIONS
 
+
 #include "coronatracker-utils.h"
 
 #pragma region DISPLAY_INCLUDES
@@ -37,6 +38,7 @@ RTC_DATA_ATTR int nextAction = 0;
 RTC_DATA_ATTR bool wifiInitialized = false;
 RTC_DATA_ATTR int bootCount = 0;
 RTC_DATA_ATTR int scannedDevices = -1;
+RTC_DATA_ATTR int savedRsin = 0;
 RTC_DATA_ATTR bool firstBoot = true;
 RTC_DATA_ATTR bool requestOnStartUp = false; // for disabling startup request
 RTC_DATA_ATTR exposure_status exposureStatus = EXPOSURE_NO_UPDATE;
@@ -87,7 +89,7 @@ void setup()
     {
         if (firstBoot)
         {
-            firstStartInitializeSteps();
+            firstStartInitializeSteps(&savedRsin);
 
             firstBoot = false;
 
@@ -117,7 +119,7 @@ void setup()
     case ACTION_ADVERTISE:
     {
         Serial.println("Start: ACTION_ADVERTISE");
-        advertiseBluetoothDevice(&scannedDevices);
+        advertiseBluetoothDevice(&scannedDevices, &savedRsin);
         break;
     }
     case ACTION_WIFI_CONFIG:

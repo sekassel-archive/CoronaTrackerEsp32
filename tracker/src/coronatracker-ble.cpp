@@ -51,7 +51,7 @@ void initializeBluetoothForScan()
     pBLEScan->setWindow(99); // less or equal setInterval value
 }
 
-bool initializeBluetoothForAdvertisment()
+bool initializeBluetoothForAdvertisment(int *nextRsin)
 {
     BLEDevice::init("");
     Serial.println("Initializing Advertisment");
@@ -65,11 +65,12 @@ bool initializeBluetoothForAdvertisment()
 
     int currentENIN = calculateENIntervalNumber(time(NULL));
 
-    //If entry is older than a day
-    if (currentENIN - EKROLLING_PERIOD >= enin)
+    // if entry is older than a day OR from the day before
+    if ((currentENIN - EKROLLING_PERIOD) >= enin || currentENIN >= *nextRsin)
     {
         Serial.printf("Generating new TEK at: %d\n", currentENIN);
         generateNewTemporaryExposureKey(currentENIN);
+        *nextRsin += EKROLLING_PERIOD;
     }
 
     esp_power_level_t power = esp_ble_tx_power_get(ESP_BLE_PWR_TYPE_ADV);
