@@ -501,6 +501,9 @@ bool getExposureInformation(int expRsin, std::string *tekData)
     {
         sqlite3_finalize(stmt);
         sqlite3_close(tek_db);
+        // this can produce an output like: 
+        // SQLITE_ROW: No row found. sqlite3_errmsg: bad parameter or other API misuse
+        // which means that there is no data to be found, no action required
         Serial.printf("SQLITE_ROW: No row found. sqlite3_errmsg: %s\n", sqlite3_errmsg(tek_db));
         return false;
     }

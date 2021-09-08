@@ -1,8 +1,10 @@
 package de.uniks.postgres.db;
 
+import de.uniks.cwa.CwaDataInterpreter;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.model.VerificationUser;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -12,8 +14,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LocalDbConnectionTest {
@@ -77,6 +82,40 @@ public class LocalDbConnectionTest {
         userInterface.delete(user);
         userBack = userInterface.get(user.getUuid());
         Assert.assertTrue(userBack.isEmpty());
+    }
+
+    @Test
+    public void runInfectionCheckOnLocalUserTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        UserPostgreSql userDb = new UserPostgreSql();
+        InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
+        ConcurrentHashMap<Integer, List<byte[]>> emptyCwaData = new ConcurrentHashMap<>();
+
+        Collection<InfectedUser>  infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
+
+        // access private method with reflection
+        Class cwaClass = CwaDataInterpreter.class;
+        Method builderMethod = cwaClass.getDeclaredMethod("buildInfectedUserEninRpisMap", ConcurrentHashMap.class, Collection.class);
+        builderMethod.setAccessible(true);
+
+        ConcurrentHashMap<Integer, List<byte[]>> eninRpisMap =
+                (ConcurrentHashMap<Integer, List<byte[]>>) builderMethod.invoke(null, emptyCwaData, infectedUserList);
+
+        Assert.assertFalse(eninRpisMap.isEmpty());
+
+        Method queryInfectionCheckMethod = cwaClass.getDeclaredMethod("buildAndQueryInfectionCheckOnDb", UserPostgreSql.class, ConcurrentHashMap.class);
+        queryInfectionCheckMethod.setAccessible(true);
+
+        Optional<List<User>> infectedUserActionRequired =
+                (Optional<List<User>>) queryInfectionCheckMethod.invoke(null, userDb, eninRpisMap);
+
+        if(infectedUserActionRequired.isEmpty()){
+            System.out.println("\nNO INFECTED USER FOUND!\n");
+        } else {
+            System.out.println("\nINFECTED USER FOUND: " + infectedUserActionRequired.get().size() + "\n");
+            infectedUserActionRequired.get().forEach(user -> {
+                System.out.println("\nUUID:" + user.getUuid() + "\nstatus:" + user.getStatus() + "\nenin:" + user.getEnin() + "\n");
+            });
+        }
     }
 
     @Test
@@ -157,8 +196,8 @@ public class LocalDbConnectionTest {
         });
     }
 
-    @Test
     @Ignore
+    @Test
     public void wipeLocalUserDB() {
         String sql = "TRUNCATE TABLE " + User.CLASS + ";";
         connection.ifPresent(conn -> {
@@ -171,8 +210,8 @@ public class LocalDbConnectionTest {
         });
     }
 
-    @Test
     @Ignore
+    @Test
     public void wipeLocalInfectedUserDB() {
         String sql = "TRUNCATE TABLE " + InfectedUser.CLASS + ";";
         connection.ifPresent(conn -> {
@@ -185,6 +224,7 @@ public class LocalDbConnectionTest {
         });
     }
 
+    @Ignore
     @Test
     public void wipeLocalUserVerificationDB() {
         String sql = "TRUNCATE TABLE " + VerificationUser.CLASS + ";";

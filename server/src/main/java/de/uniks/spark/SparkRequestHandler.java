@@ -46,7 +46,7 @@ public class SparkRequestHandler {
          * example body:
          * {
          *     "uuid":"d7134243-b21c-4d2f-a9e3-ff0de17608dc",
-         *     "status":"2",
+         *     "status":"0",
          *     "enin":"2697408",
          *     "rpiList":"[[0,24,22,2,111,-57,37,63,-83,33,-55,-77,59,25,-21,29],[0,49,115,-69,90,51,-128,10,28,51,-107,-28,-5,-11,54,-12]]"
          * }
@@ -62,6 +62,7 @@ public class SparkRequestHandler {
             }
 
             if (!input.isValid()) {
+                //TODO: sometimes this if will be entered, even if input is valid?! wtf
                 response.status(HTTP_BAD_REQUEST);
                 return "Request values invalid!";
             }
