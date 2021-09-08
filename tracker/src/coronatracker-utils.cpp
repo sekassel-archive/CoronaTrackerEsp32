@@ -247,7 +247,7 @@ void sendExposureInformationIfExists(void)
             {
                 // remove exp entry to prevent sending information twice
                 removeExposureInformation((*vIt));
-                Serial.printf("Removed TEK: %i from exp table in db", (*vIt));
+                Serial.printf("Removed TEK: %i from exp table in db\n", (*vIt));
             }
         }
     }
@@ -263,17 +263,6 @@ exposure_status getInfectionStatusFromServer()
         return EXPOSURE_UPDATE_FAILED;
     }
     return getInfectionStatus(&uuid);
-}
-
-bool sendTekInfoToServerAfterInfection(void)
-{
-    int enin;
-    std::string uuidstr;
-    std::string tekData;
-
-    // TODO: gather the data to be sent to server without duplicates
-
-    return sendTekInformation(&uuidstr, enin, &tekData);
 }
 
 bool initializeTek(void)

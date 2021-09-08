@@ -483,11 +483,11 @@ bool getExposureInformation(int expRsin, std::string *tekData)
         return false;
     }
 
-    std::stringstream ss;
-    ss << "SELECT tek FROM tek WHERE enin >= " << expRsin << " AND enin <= " << expRsin + 143 << " ;";
+    std::stringstream ssQuery;
+    ssQuery << "SELECT tek FROM tek WHERE enin >= " << expRsin << " AND enin <= " << expRsin + 143 << " ;";
 
     sqlite3_stmt *stmt = NULL;
-    if (sqlite3_prepare_v2(tek_db, ss.str().c_str(), ss.str().length(), &stmt, nullptr) != SQLITE_OK)
+    if (sqlite3_prepare_v2(tek_db, ssQuery.str().c_str(), ssQuery.str().length(), &stmt, nullptr) != SQLITE_OK)
     {
         Serial.printf("ERROR preparing sql: %s\n", sqlite3_errmsg(tek_db));
         Serial.println("Seems like there is no exposure data in DB to send to server!");
@@ -499,7 +499,9 @@ bool getExposureInformation(int expRsin, std::string *tekData)
 
     if (status != SQLITE_ROW || status == SQLITE_DONE)
     {
-        Serial.printf("SQLITE_ROW: No row found. ERROR sqlite3 step sql: %s\n", sqlite3_errmsg(tek_db));
+        sqlite3_finalize(stmt);
+        sqlite3_close(tek_db);
+        Serial.printf("SQLITE_ROW: No row found. sqlite3_errmsg: %s\n", sqlite3_errmsg(tek_db));
         return false;
     }
 

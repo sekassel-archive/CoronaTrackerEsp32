@@ -55,7 +55,7 @@ void setNextAction(int action);
 void goIntoDeepSleep(bool requestInfections);
 
 // TODO: change location for display stuff
-bool initializeDeviceSpecificDisplay(tm timeinfo);
+void initializeDeviceSpecificDisplay(tm timeinfo);
 
 void setup()
 {
@@ -216,7 +216,7 @@ void goIntoDeepSleep(bool requestInfections)
     esp_deep_sleep_start();
 }
 
-bool initializeDeviceSpecificDisplay(tm timeinfo)
+void initializeDeviceSpecificDisplay(tm timeinfo)
 {
     if (!isDisplayActive)
     {
