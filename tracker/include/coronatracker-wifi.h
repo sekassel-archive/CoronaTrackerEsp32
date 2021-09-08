@@ -4,8 +4,8 @@
 #include <WiFiManager.h>
 #include <HTTPClient.h>
 
-//#define SERVER_URL "https://tracing.uniks.de/api"
-#define SERVER_URL "http://192.168.2.2:4567/api"
+#define SERVER_URL "https://tracing.uniks.de/api"
+//#define SERVER_URL "http://192.168.2.2:4567/api"
 #define GET_TEST_URL "/ping"
 #define GET_NEW_UUID "/uuid"
 #define GET_TODAYS_RSIN "/todaysRsin"

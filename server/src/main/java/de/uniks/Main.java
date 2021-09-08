@@ -15,7 +15,10 @@ public class Main {
 
     public static void main(String[] args) {
         SparkRequestHandler.handleRequests();
-        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 100, 60, TimeUnit.MINUTES);
+
+        // delay 60 min, scan schedule 3 times a day -> every 8h
+        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 60, 8 * 60, TimeUnit.MINUTES);
+
         //TODO: cleanup for login entries in verificationUser DB sometimes
 
         try {
