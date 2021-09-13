@@ -3,7 +3,7 @@ package de.uniks.spark.payload;
 import lombok.Data;
 
 @Data
-public class UuidPinPostPayload implements Validable {
+public class UuidPinPostPayload {
     private String uuid;
     private String pin;
 

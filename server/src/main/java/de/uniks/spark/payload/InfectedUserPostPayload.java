@@ -4,11 +4,10 @@ import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.postgres.db.model.InfectedUser;
 import lombok.Data;
 
-import java.time.*;
 import java.util.Date;
 
 @Data
-public class InfectedUserPostPayload implements Validable {
+public class InfectedUserPostPayload {
     private String uuid;
     private String tek;
     private Integer enin;
@@ -23,7 +22,7 @@ public class InfectedUserPostPayload implements Validable {
         boolean validRsin = ((rsin != null) && ((int) (Math.log10(rsin) + 1) == 7));
 
         boolean validTimeSpan = (validRsin)
-                && (rsin < (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L))))
+                && (rsin <= (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L))))
                 && (rsin > (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L)) - (24 * 144)));
 
         return validUuid && validTek && validTimeSpan;

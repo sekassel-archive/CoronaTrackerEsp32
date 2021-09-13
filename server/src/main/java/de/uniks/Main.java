@@ -17,7 +17,7 @@ public class Main {
         SparkRequestHandler.handleRequests();
 
         // delay 60 min, scan schedule 3 times a day -> every 8h
-        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 60, 8 * 60, TimeUnit.MINUTES);
+        scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 10, 8*60, TimeUnit.MINUTES);
 
         //TODO: cleanup for login entries in verificationUser DB sometimes
 

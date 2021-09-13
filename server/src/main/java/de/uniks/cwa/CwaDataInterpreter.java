@@ -6,6 +6,7 @@ import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
+import org.springframework.util.StopWatch;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
@@ -40,6 +41,9 @@ public class CwaDataInterpreter {
      */
     public static void checkForInfectionsHourlyTask() {
         try {
+            StopWatch stopWatch =new StopWatch();
+            stopWatch.start();
+
             lastCheckTimeString = "Infection check in progress...";
             InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
             UserPostgreSql userDb = new UserPostgreSql();
@@ -64,7 +68,10 @@ public class CwaDataInterpreter {
             lastCheckTimeString = DateTimeFormatter.ISO_INSTANT.format(Instant.now().truncatedTo(ChronoUnit.SECONDS))
                     .replaceAll("[TZ]", " ") + " UTC";
 
+            stopWatch.stop();
             LOG.log(Level.INFO, "Hourly cwa data update and check successfully processed at " + lastCheckTimeString);
+            LOG.log(Level.INFO, "Total time needed: " + stopWatch.getTotalTimeSeconds() / 60 + " minutes.");
+
         } catch (Exception ex) {
             lastCheckTimeString = "Ups, something went wrong. Waiting for next scheduled infection check.";
             LOG.log(Level.SEVERE, "CWA Data couldn't process hourly update during getData from CWA Database!", ex);

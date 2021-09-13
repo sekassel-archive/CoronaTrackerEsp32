@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 @Data
-public class UserPostPayload implements Validable {
+public class UserPostPayload {
     private String uuid;
     private Integer status;
     private Integer enin;
@@ -22,7 +22,7 @@ public class UserPostPayload implements Validable {
         boolean validEnin = ((enin != null) && ((int) (Math.log10(enin) + 1) == 7));
 
         boolean validTimeSpan = (validEnin)
-                && (enin < (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L))))
+                && (enin <= (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L))))
                 && (enin > (CWACryptography.getRollingStartIntervalNumber((System.currentTimeMillis() / 1000L)) - (24 * 144)));
         boolean validRawRpiList = ((rpiList != null) && (rpiList.length() > 31));
         boolean validRpiList = false;
