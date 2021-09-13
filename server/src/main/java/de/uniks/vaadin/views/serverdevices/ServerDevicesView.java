@@ -5,7 +5,7 @@ import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
@@ -13,7 +13,7 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
-import com.vaadin.flow.router.RouteAlias;
+import de.uniks.SpringBoot;
 import de.uniks.cwa.CwaDataInterpreter;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.vaadin.views.main.MainView;
@@ -21,11 +21,14 @@ import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Route(value = "serverDevicesInformation", layout = MainView.class)
 @PageTitle("Server Devices")
 @CssImport("./styles/views/serverdevices/server-devices-view.css")
 public class ServerDevicesView extends VerticalLayout {
+    private static final Logger LOG = Logger.getLogger(ServerDevicesView.class.getName());
     private static UserPostgreSql userPostgreSql = new UserPostgreSql();
 
     public ServerDevicesView() {
@@ -70,25 +73,31 @@ public class ServerDevicesView extends VerticalLayout {
 
             add(idleComp);
         } else {
-            TreeGrid<RsinEntrys> grid = new TreeGrid<>();
-            grid.setItems(localInfectionList);
-
-            grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date").setSortable(true);
-            grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
-            grid.addColumn(RsinEntrys::getTekEntrys).setHeader("TEK Entrys");
-            grid.setHeightByRows(true);
-            grid.addThemeVariants(GridVariant.LUMO_NO_BORDER,
-                    GridVariant.LUMO_NO_ROW_BORDERS, GridVariant.LUMO_ROW_STRIPES);
-            grid.setSelectionMode(Grid.SelectionMode.NONE);
-            grid.setItemDetailsRenderer(TemplateRenderer.<RsinEntrys>of(
-                    "<div style='border: 1px solid gray; padding: 5px; width: 90%; box-sizing: border-box;'>"
-                            + "<div><b>TEK Data: </b>[[item.tekAsBlock]]</div>"
-                            + "</div>")
-                    .withProperty("tekAsBlock", RsinEntrys::getTekListAsBlock)
-                    .withEventHandler("handleClick", rsin -> {
-                        grid.getDataProvider().refreshItem(rsin);
-                    }));
-            add(grid);
+            try {
+                TreeGrid<RsinEntrys> grid = new TreeGrid<>();
+                grid.setItems(localInfectionList);
+                grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date").setSortable(true);
+                grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
+                grid.addColumn(RsinEntrys::getTekEntriesCount).setHeader("TEK Entrys");
+                grid.setHeightByRows(true);
+                grid.addThemeVariants(GridVariant.LUMO_NO_BORDER,
+                        GridVariant.LUMO_NO_ROW_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+                grid.setSelectionMode(Grid.SelectionMode.NONE);
+                grid.setItemDetailsRenderer(TemplateRenderer.<RsinEntrys>of(
+                        "<div style='border: 1px solid gray; padding: 5px; width: 90%; box-sizing: border-box;'>"
+                                + "<div><b>TEK Data: </b>[[item.tekAsBlock]]</div>"
+                                + "</div>")
+                        .withProperty("tekAsBlock", RsinEntrys::getTekListAsBlock)
+                        .withEventHandler("handleClick", rsin -> {
+                            grid.getDataProvider().refreshItem(rsin);
+                        }));
+                add(grid);
+            } catch (Exception e) {
+                // Constructor can throw exception for adding same item multiple times and
+                // the dataprovider for grids behave sometimes a bit weird
+                LOG.log(Level.WARNING, "Failed to initiate grid for Server Device View!", e);
+                Notification.show("Ups, something went wrong with the Grid. Try again later!");
+            }
         }
     }
 }

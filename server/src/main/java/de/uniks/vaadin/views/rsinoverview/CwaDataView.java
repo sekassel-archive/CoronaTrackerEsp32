@@ -5,6 +5,7 @@ import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.details.DetailsVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.grid.GridVariant;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.treegrid.TreeGrid;
@@ -17,11 +18,14 @@ import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Route(value = "rsin", layout = MainView.class)
 @PageTitle("RSIN Overview")
 @CssImport("./styles/views/rsinoverview/rsin-overview-view.css")
 public class CwaDataView extends HorizontalLayout {
+    private static final Logger LOG = Logger.getLogger(CwaDataView.class.getName());
 
     public CwaDataView() {
         setId("rsin-overview-view");
@@ -46,25 +50,32 @@ public class CwaDataView extends HorizontalLayout {
 
             add(component);
         } else {
-            TreeGrid<RsinEntrys> grid = new TreeGrid<>();
-            grid.setItems(rsinList);
+            try {
+                TreeGrid<RsinEntrys> grid = new TreeGrid<>();
+                grid.setItems(rsinList);
 
-            grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date").setSortable(true);
-            grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
-            grid.addColumn(RsinEntrys::getTekEntrys).setHeader("TEK Entrys");
-            grid.setHeightByRows(true);
-            grid.addThemeVariants(GridVariant.LUMO_NO_BORDER,
-                    GridVariant.LUMO_NO_ROW_BORDERS, GridVariant.LUMO_ROW_STRIPES);
-            grid.setSelectionMode(Grid.SelectionMode.NONE);
-            grid.setItemDetailsRenderer(TemplateRenderer.<RsinEntrys>of(
-                    "<div style='border: 1px solid gray; padding: 5px; width: 90%; box-sizing: border-box;'>"
-                            + "<div><b>TEK Data: </b>[[item.tekAsBlock]]</div>"
-                            + "</div>")
-                    .withProperty("tekAsBlock", RsinEntrys::getTekListAsBlock)
-                    .withEventHandler("handleClick", rsin -> {
-                        grid.getDataProvider().refreshItem(rsin);
-                    }));
-            add(grid);
+                grid.addColumn(RsinEntrys::getRsinDate).setHeader("Date").setSortable(true);
+                grid.addColumn(RsinEntrys::getRsin).setHeader("RSIN");
+                grid.addColumn(RsinEntrys::getTekEntriesCount).setHeader("TEK Entrys");
+                grid.setHeightByRows(true);
+                grid.addThemeVariants(GridVariant.LUMO_NO_BORDER,
+                        GridVariant.LUMO_NO_ROW_BORDERS, GridVariant.LUMO_ROW_STRIPES);
+                grid.setSelectionMode(Grid.SelectionMode.NONE);
+                grid.setItemDetailsRenderer(TemplateRenderer.<RsinEntrys>of(
+                        "<div style='border: 1px solid gray; padding: 5px; width: 90%; box-sizing: border-box;'>"
+                                + "<div><b>TEK Data: </b>[[item.tekAsBlock]]</div>"
+                                + "</div>")
+                        .withProperty("tekAsBlock", RsinEntrys::getTekListAsBlock)
+                        .withEventHandler("handleClick", rsin -> {
+                            grid.getDataProvider().refreshItem(rsin);
+                        }));
+                add(grid);
+            } catch (Exception e) {
+                // Constructor can throw exception for adding same item multiple times and
+                // the dataprovider for grids behave sometimes a bit weird
+                LOG.log(Level.WARNING, "Failed to initiate grid for CWA Data View!", e);
+                Notification.show("Ups, something went wrong with the Grid. Try again later!");
+            }
         }
     }
 }
