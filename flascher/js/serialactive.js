@@ -346,6 +346,10 @@ async function flashBootloader(file) {
     filesFlashed = filesFlashed + 1;
   }
   fileReader.readAsArrayBuffer(file)
+  /*fetch("https://github.com/drinkbuddy/trackerTest/releases/download/refs/heads/master/firmware.bin")
+    .then(res => res.blob()).then(blob => {
+      fileReader.readAsArrayBuffer(blob);
+    });*/
   //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
 }
 function concatTypedArrays(a, b) { // a, b TypedArray of same type
