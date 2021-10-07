@@ -196,7 +196,7 @@ public class LocalDbConnectionTest {
         });
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void wipeLocalUserDB() {
         String sql = "TRUNCATE TABLE " + User.CLASS + ";";

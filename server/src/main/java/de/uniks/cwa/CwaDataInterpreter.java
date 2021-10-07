@@ -20,13 +20,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CwaDataInterpreter {
-
     private static final Logger LOG = Logger.getLogger(CwaDataInterpreter.class.getName());
+
+    public static final String INFECTION_CHECK_IN_PROGRESS = "Infection check in progress...";
+    public static final String NO_INFECTION_CHECK_BY_NOW = "No infection check by now.";
 
     private static ConcurrentHashMap<Integer, List<byte[]>> cwaData = new ConcurrentHashMap<>();
     private static Collection<InfectedUser> infectedUserList = new ArrayList<>();
 
-    public static String lastCheckTimeString = "No infection check by now.";
+    public static String lastCheckTimeString = NO_INFECTION_CHECK_BY_NOW;
+    public static StopWatch stopWatch = new StopWatch();
 
     /**
      * subsequently, we compare contact information from cwa DB with our postgres DB
@@ -41,10 +44,9 @@ public class CwaDataInterpreter {
      */
     public static void checkForInfectionsHourlyTask() {
         try {
-            StopWatch stopWatch =new StopWatch();
             stopWatch.start();
 
-            lastCheckTimeString = "Infection check in progress...";
+            lastCheckTimeString = INFECTION_CHECK_IN_PROGRESS;
             InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
             UserPostgreSql userDb = new UserPostgreSql();
 

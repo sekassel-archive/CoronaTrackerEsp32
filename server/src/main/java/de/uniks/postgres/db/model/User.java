@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Data;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -40,8 +41,12 @@ public class User {
         this.rpiList = new Gson().fromJson(rpiListAsJSONArray, collectionType);
     }
 
-    public String getRpiListAsJSONArray() {
-        return new Gson().toJson(rpiList);
+    public List<String> getRpiListAsJSONArray() {
+        List<String> rpiListCollector = new ArrayList<>();
+        rpiList.forEach(entry -> {
+            rpiListCollector.add("[" + new Gson().toJson(entry) + "]");
+        });
+        return rpiListCollector;
     }
 
 }

@@ -1,5 +1,6 @@
 package de.uniks.vaadin.views.serverdevices;
 
+import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.details.DetailsVariant;
@@ -13,6 +14,7 @@ import com.vaadin.flow.component.treegrid.TreeGrid;
 import com.vaadin.flow.data.renderer.TemplateRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import de.uniks.Main;
 import de.uniks.SpringBoot;
 import de.uniks.cwa.CwaDataInterpreter;
 import de.uniks.postgres.db.utils.UserPostgreSql;
@@ -21,6 +23,8 @@ import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +33,7 @@ import java.util.logging.Logger;
 @CssImport("./styles/views/serverdevices/server-devices-view.css")
 public class ServerDevicesView extends VerticalLayout {
     private static final Logger LOG = Logger.getLogger(ServerDevicesView.class.getName());
-    private static UserPostgreSql userPostgreSql = new UserPostgreSql();
+    private static final UserPostgreSql userPostgreSql = new UserPostgreSql();
 
     public ServerDevicesView() {
         setId("server-devices-view");
@@ -37,18 +41,39 @@ public class ServerDevicesView extends VerticalLayout {
         TextField trackerUserField = new TextField();
         trackerUserField.setValue(userPostgreSql.getUserCount().toString());
         trackerUserField.setLabel("ESP32 Tracker Users");
+        trackerUserField.setWidth("150px");
         trackerUserField.setReadOnly(true);
 
         TextField infectionCheckField = new TextField();
         infectionCheckField.setValue(CwaDataInterpreter.lastCheckTimeString);
         infectionCheckField.setLabel("Last Infection Check Status");
-        infectionCheckField.setWidth("400px");
+        infectionCheckField.setWidth("350px");
         infectionCheckField.setReadOnly(true);
+
+        TextField infectionCheckTimeField = new TextField();
+        infectionCheckTimeField.setValue((int) CwaDataInterpreter.stopWatch.getTotalTimeSeconds() / 60 + " min");
+        infectionCheckTimeField.setLabel("Total time needed");
+        infectionCheckTimeField.setWidth("120px");
+        infectionCheckTimeField.setReadOnly(true);
+
+        Button manualInfStartButton = new Button();
+        manualInfStartButton.setText("Trigger Infection Check");
+        manualInfStartButton.setWidth("200px");
+        manualInfStartButton.setDisableOnClick(true);
+        manualInfStartButton.addClickListener(buttonClickEvent -> {
+            if (Main.triggerInfectionCheck()) {
+                Notification.show("Success! Restarted Infection Check Scheduler.");
+            } else {
+                Notification.show("Fail! Scheduler seems to be busy, try again later.");
+            }
+        });
 
         Details component = new Details();
         component.setSummaryText("Show Uni Tracker collected Information");
         component.addContent(trackerUserField);
         component.addContent(infectionCheckField);
+        component.addContent(infectionCheckTimeField);
+        component.addContent(manualInfStartButton);
         component.addThemeVariants(DetailsVariant.REVERSE, DetailsVariant.FILLED);
         component.setOpened(true);
         add(component);

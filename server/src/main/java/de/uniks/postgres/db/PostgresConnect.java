@@ -14,7 +14,7 @@ public class PostgresConnect {
 
     // DB_URL is not final, because it will be changed in LocalDbConnectionTest through reflections (will not work if field is final)
     private static String DB_URL = "jdbc:postgresql://database:5432/tracker";
-    //private static String DB_URL = "jdbc:postgresql://192.168.5.3:5432/tracker";
+    private static String LOCAL_DB_URL = "jdbc:postgresql://192.168.5.3:5432/tracker";
     private static final String USER = "tracker";
     private static final String PASS = "mk2G4FsO8wah1tp4TqqT";
 
@@ -24,6 +24,11 @@ public class PostgresConnect {
                 connection = Optional.ofNullable(DriverManager.getConnection(DB_URL, USER, PASS));
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, "Can't connect to postgres DB!", ex);
+                try {
+                    connection = Optional.ofNullable(DriverManager.getConnection(LOCAL_DB_URL, USER, PASS));
+                } catch (SQLException ex2) {
+                    LOG.log(Level.SEVERE, "Can't connect to local postgres DB!", ex2);
+                }
             }
         }
         return connection;

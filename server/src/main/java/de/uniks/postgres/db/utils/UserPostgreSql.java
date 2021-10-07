@@ -44,22 +44,32 @@ public class UserPostgreSql {
         String sql = "INSERT INTO " + User.CLASS + "(" + User.UUID + ", " + User.STATUS
                 + ", " + User.ENIN + ", " + User.RPILIST + ") " + "VALUES(?, ?, ?, ?)";
 
-        return connection.flatMap(conn -> {
-            Optional<Integer> optionalOfInsertedRows = Optional.empty();
-            try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setString(1, nonNullUser.getUuid());
-                statement.setInt(2, nonNullUser.getStatus());
-                statement.setInt(3, nonNullUser.getEnin());
-                statement.setString(4, nonNullUser.getRpiListAsJSONArray());
+        AtomicReference<Integer> count = new AtomicReference<>(0);
 
-                int numberOfInsertedRows = statement.executeUpdate();
-                optionalOfInsertedRows = Optional.of(numberOfInsertedRows);
+        nonNullUser.getRpiListAsJSONArray().forEach(tekEntry -> {
+            Optional<Integer> integer = connection.flatMap(conn -> {
+                Optional<Integer> optionalOfInsertedRows = Optional.empty();
+                try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                    statement.setString(1, nonNullUser.getUuid());
+                    statement.setInt(2, nonNullUser.getStatus());
+                    statement.setInt(3, nonNullUser.getEnin());
+                    statement.setString(4, tekEntry);
 
-            } catch (SQLException ex) {
-                LOG.log(Level.SEVERE, "Failed " + User.CLASS + " save statement on DB execute Update.", ex);
+                    int numberOfInsertedRows = statement.executeUpdate();
+                    optionalOfInsertedRows = Optional.of(numberOfInsertedRows);
+
+                } catch (SQLException ex) {
+                    LOG.log(Level.SEVERE, "Failed " + User.CLASS + " save statement on DB execute Update.", ex);
+                }
+                return optionalOfInsertedRows;
+            });
+            if (integer.isPresent()) {
+                count.updateAndGet(v -> v + (int) integer.get());
             }
-            return optionalOfInsertedRows;
         });
+
+        LOG.log(Level.INFO, "DB saved user data with " + count.get() + " new entries.");
+        return Optional.of(count.get());
     }
 
     public List<User> get(String uuid) {
@@ -98,15 +108,14 @@ public class UserPostgreSql {
         sql.append("SELECT * FROM "
                 + User.CLASS + " WHERE ("
                 + User.ENIN + " = " + enin + ") AND ("
-                + User.STATUS + " = 0) AND (");
+                + User.STATUS + " = 0) AND ("
+                + User.RPILIST + " IN (");
 
         for (byte[] rpiArray : rpiList) {
-            sql.append("(" + User.RPILIST + " LIKE \'%"
-                    + JSON.toString(rpiArray) + "%\') ");
-            sql.append("OR ");
+            sql.append("\'" + JSON.toString(rpiArray) + "\',");
         }
-        sql.setLength(Math.max(sql.length() - 3, 0)); // length of const string "OR " = 3
-        sql.append(")");
+        sql.setLength(Math.max(sql.length() - 1, 0));
+        sql.append("))");
         return getWithPrimitiveSql(sql.toString());
     }
 
@@ -140,8 +149,8 @@ public class UserPostgreSql {
                 + "WHERE "
                 + User.UUID + " = ? AND "
                 + User.STATUS + " = ? AND "
-                + User.ENIN + " = ? AND "
-                + User.RPILIST + " = ? ";
+                + User.ENIN + " = ? ";
+        //+ User.RPILIST + " = ? ";
 
         connection.ifPresent(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
@@ -149,7 +158,6 @@ public class UserPostgreSql {
                 statement.setString(2, nonNullUser.getUuid());
                 statement.setInt(3, nonNullUser.getStatus());
                 statement.setInt(4, nonNullUser.getEnin());
-                statement.setString(5, nonNullUser.getRpiListAsJSONArray());
 
                 statement.executeUpdate();
 
