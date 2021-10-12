@@ -346,12 +346,60 @@ async function flashBootloader(file) {
     filesFlashed = filesFlashed + 1;
   }
   fileReader.readAsArrayBuffer(file)
-  /*fetch("https://github.com/drinkbuddy/trackerTest/releases/download/refs/heads/master/firmware.bin")
+  /*fetch("https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661")
     .then(res => res.blob()).then(blob => {
       fileReader.readAsArrayBuffer(blob);
     });*/
   //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
 }
+
+function testDownload() {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', 'https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661');
+  xhr.responseType = 'blob';
+  xhr.setRequestHeader('Accept', 'application/octet-stream');
+  xhr.onload = () => {
+    downloadBlob(xhr.response, 'testfirmware.bin');
+  }
+  xhr.send();
+}
+function downloadBlob(blob, name = 'file.txt') {
+  // Convert your blob into a Blob URL (a special url that points to an object in the browser's memory)
+  const blobUrl = URL.createObjectURL(blob);
+
+  // Create a link element
+  const link = document.createElement("a");
+
+  // Set link's href to point to the Blob URL
+  link.href = blobUrl;
+  link.download = name;
+
+  // Append link to the body
+  document.body.appendChild(link);
+
+  // Dispatch click event on the link
+  // This is necessary as link.click() does not work on the latest firefox
+  link.dispatchEvent(
+    new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      view: window
+    })
+  );
+
+  // Remove link from body
+  document.body.removeChild(link);
+}
+
+
+/* For the example */
+const exportButton = document.getElementById('export');
+const jsonBlob = new Blob(['{"name": "test"}'])
+
+exportButton.addEventListener('click', () => {
+  testDownload();
+});
+
 function concatTypedArrays(a, b) { // a, b TypedArray of same type
   var c = new (a.constructor)(a.length + b.length);
   c.set(a, 0);
