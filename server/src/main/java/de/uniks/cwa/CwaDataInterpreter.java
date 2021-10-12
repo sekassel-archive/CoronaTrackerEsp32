@@ -44,13 +44,14 @@ public class CwaDataInterpreter {
      */
     public static void checkForInfectionsHourlyTask() {
         try {
+            stopWatch = new StopWatch();
             stopWatch.start();
 
             lastCheckTimeString = INFECTION_CHECK_IN_PROGRESS;
             InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
             UserPostgreSql userDb = new UserPostgreSql();
 
-            // cwa db get every 1h a new data set. So we'll get a hourly update of cwaData in memory
+            // cwa db get every 1h a new data set. So we'll need a update of cwaData in memory
             cwaData = CWARequests.getUnzippedInfectionData();
 
             // our own infectedUser from infectedUser TABLE

@@ -1,11 +1,13 @@
 package de.uniks.postgres.db;
 
 import de.uniks.cwa.CwaDataInterpreter;
+import de.uniks.cwa.utils.CWACryptography;
 import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.model.VerificationUser;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
+import de.uniks.spark.payload.UserPostPayload;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
@@ -13,12 +15,16 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+import java.util.concurrent.ScheduledExecutorService;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.*;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class LocalDbConnectionTest {
@@ -26,6 +32,7 @@ public class LocalDbConnectionTest {
     // change ip address for your local DB
     private static final String LOCAL_DB_URL = "jdbc:postgresql://192.168.5.3:5432/tracker";
     private Optional<Connection> connection;
+    private static UserPostgreSql userDb = new UserPostgreSql();
 
     @BeforeAll
     public void establishLocalDbConnection() throws NoSuchFieldException, IllegalAccessException {
@@ -90,7 +97,7 @@ public class LocalDbConnectionTest {
         InfectedUserPostgreSql infectedUserDb = new InfectedUserPostgreSql();
         ConcurrentHashMap<Integer, List<byte[]>> emptyCwaData = new ConcurrentHashMap<>();
 
-        Collection<InfectedUser>  infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
+        Collection<InfectedUser> infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
 
         // access private method with reflection
         Class cwaClass = CwaDataInterpreter.class;
@@ -108,13 +115,36 @@ public class LocalDbConnectionTest {
         Optional<List<User>> infectedUserActionRequired =
                 (Optional<List<User>>) queryInfectionCheckMethod.invoke(null, userDb, eninRpisMap);
 
-        if(infectedUserActionRequired.isEmpty()){
+        if (infectedUserActionRequired.isEmpty()) {
             System.out.println("\nNO INFECTED USER FOUND!\n");
         } else {
             System.out.println("\nINFECTED USER FOUND: " + infectedUserActionRequired.get().size() + "\n");
             infectedUserActionRequired.get().forEach(user -> {
                 System.out.println("\nUUID:" + user.getUuid() + "\nstatus:" + user.getStatus() + "\nenin:" + user.getEnin() + "\n");
             });
+        }
+    }
+
+    @Test
+    public void fillUserDBWithTrashData() {
+        for (int i = 0; i < 10; i++) {
+            String newUuid;
+            do {
+                newUuid = UUID.randomUUID().toString();
+            } while (!userDb.get(newUuid).isEmpty());
+
+            for (int last14days = 13; last14days >= 0; last14days--) {
+                LocalDateTime pickedDate = LocalDateTime.now().minusDays(last14days);
+                int rsin = CWACryptography.getRollingStartIntervalNumber(pickedDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli() / 1000L);
+                for (int dayTimeSlot = 143; dayTimeSlot >= 0; dayTimeSlot--) {
+                    UserPostPayload input = new UserPostPayload();
+                    input.setUuid(newUuid);
+                    input.setStatus(0);
+                    input.setEnin(rsin + dayTimeSlot);
+                    input.setRpiList("[[" + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "," + ((-100) + new Random().nextInt(200 + 1)) + "]]");
+                    userDb.save(input.getUserForDB());
+                }
+            }
         }
     }
 
