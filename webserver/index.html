@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Coronatracker Flasher</title>
+  <link rel="manifest" href="/manifest.json"/>
+  <link rel="stylesheet" href="./css/serialisactive.css"/>
+  <link rel="icon" href="./favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" href="./images/hello-icon-152.png"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="white"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+  <meta name="apple-mobile-web-app-title" content="Hello World"/>
+  <meta name="msapplication-TileImage" content="images/hello-icon-144.png"/>
+  <meta name="msapplication-TileColor" content="#FFFFFF"/>
+  <script src="http://www.myersdaily.org/joseph/javascript/md5.js"></script>
+</head>
+<body>
+  <div class="activeApp">
+    <header class="activeAppheader">
+      <img src="/images/notconnectedgif.gif" class="status" alt="status" id="statusPic"/>
+      <p>
+        Serial is active
+      </p>
+      <input type="file" id="file-selector" multiple>
+      <input type="file" id="file-selector2" multiple>
+      <button id="connectButton">Connect</button>
+      <button id="bootloaderButton">enter bootloader</button>
+      <button id="syncButton">sync</button>
+      <button id="export">reset</button>
+      <button id="spiAttachButton">spiAttachButton</button>
+      <button id="spiSetParamsButton">spiSetParamsButton</button>
+      <button id="changeBaudButton">changeBaudButton</button>
+    </header>
+  </div>
+</body>
+<script src="./js/serialactive.js"></script>
+</html>
