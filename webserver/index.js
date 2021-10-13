@@ -1,60 +1,75 @@
-//var fs = require('fs');
-//var http = require('http');
-//var https = require('https');
-//var privateKey  = fs.readFileSync('sslcert/server.key', 'utf8');
-//var certificate = fs.readFileSync('sslcert/server.crt', 'utf8');
+var fs = require('fs');
+var http = require('http');
+var https = require('https');
+var privateKey = fs.readFileSync('keys/key.pem');
+var certificate = fs.readFileSync('keys/cert.pem');
 
-//var credentials = {key: privateKey, cert: certificate};
+var credentials = { key: privateKey, cert: certificate };
 var express = require('express');
 var app = express();
 
 app.get('/', (req, res) => {
-    res.sendFile('./index.html', { root: '.'});
-  })
+    res.sendFile('./index.html', { root: '.' });
+})
 
 app.get('/pages/serialnotactive.html', (req, res) => {
-    res.sendFile('./pages/serialnotactive.html', { root: '.'});
+    res.sendFile('./pages/serialnotactive.html', { root: '.' });
+})
+
+app.get('/firmwares/firmware.bin', async (req, res) => {
+    const axios = require('axios');
+
+    const response = await axios.get('https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661', {responseType: 'arraybuffer', headers: {'accept': 'application/octet-stream'}});
+    console.log(response.data);
+    res.setHeader('content-type', 'application/octet-stream');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(response.data);
+    
 })
 
 app.get('/css/serialnotactive.css', (req, res) => {
-    res.sendFile('./css/serialnotactive.css', { root: '.'});
+    res.sendFile('./css/serialnotactive.css', { root: '.' });
 })
 
 app.get('/images/noSerial.png', (req, res) => {
-    res.sendFile('./images/noSerial.png', { root: '.'});
+    res.sendFile('./images/noSerial.png', { root: '.' });
 })
 
 app.get('/images/hello-icon-152.png', (req, res) => {
-    res.sendFile('./images/hello-icon-152.png', { root: '.'});
+    res.sendFile('./images/hello-icon-152.png', { root: '.' });
 })
 
 app.get('/favicon.ico', (req, res) => {
-    res.sendFile('./favicon.ico', { root: '.'});
+    res.sendFile('./favicon.ico', { root: '.' });
 })
 
 app.get('/css/serialisactive.css', (req, res) => {
-    res.sendFile('./css/serialisactive.css', { root: '.'});
+    res.sendFile('./css/serialisactive.css', { root: '.' });
 })
 
 app.get('/js/serialactive.js', (req, res) => {
-    res.sendFile('./js/serialactive.js', { root: '.'});
+    res.sendFile('./js/serialactive.js', { root: '.' });
 })
 
 app.get('/images/notconnectedgif.gif', (req, res) => {
-    res.sendFile('./images/notconnectedgif.gif', { root: '.'});
+    res.sendFile('./images/notconnectedgif.gif', { root: '.' });
 })
 
 app.get('/manifest.json', (req, res) => {
-    res.sendFile('./manifest.json', { root: '.'});
+    res.sendFile('./manifest.json', { root: '.' });
 })
 
 app.get('/images/hello-icon-144.png', (req, res) => {
-    res.sendFile('./images/hello-icon-144.png', { root: '.'});
+    res.sendFile('./images/hello-icon-144.png', { root: '.' });
 })
 
-app.listen(80, () => {console.log('Started')})
-//var httpServer = http.createServer(app);
-//var httpsServer = https.createServer(credentials, app);
+app.get('/sw.js', (req, res) => {
+    res.sendFile('./sw.js', { root: '.' });
+})
 
-//httpServer.listen(8080);
-//httpsServer.listen(8443);
+//app.listen(80, () => {console.log('Started')})
+var httpServer = http.createServer(app);
+var httpsServer = https.createServer(credentials, app);
+
+httpServer.listen(80, () => { console.log('Started http Server') });
+httpsServer.listen(443, () => { console.log('Started https Server') });

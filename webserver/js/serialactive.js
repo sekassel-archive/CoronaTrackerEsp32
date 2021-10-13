@@ -355,7 +355,7 @@ async function flashBootloader(file) {
 
 function testDownload() {
   const xhr = new XMLHttpRequest();
-  xhr.open('GET', 'https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661');
+  xhr.open('GET', 'http://127.0.0.1/firmwares/firmware.bin');
   xhr.responseType = 'blob';
   xhr.setRequestHeader('Accept', 'application/octet-stream');
   xhr.onload = () => {

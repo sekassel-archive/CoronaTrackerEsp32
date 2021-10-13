@@ -9,6 +9,7 @@
   "author": "Jonathan Meier",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.23.0",
     "express": "^4.17.1"
   }
 }
