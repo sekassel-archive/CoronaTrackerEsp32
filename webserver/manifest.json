@@ -1,6 +1,6 @@
 {
-  "name": "Hello World",
-  "short_name": "Hello",
+  "name": "Coronatracker flashing tool",
+  "short_name": "Flasher",
   "icons": [{
     "src": "images/hello-icon-128.png",
       "sizes": "128x128",
