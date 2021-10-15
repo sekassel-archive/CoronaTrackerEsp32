@@ -19,6 +19,17 @@ app.get('/pages/serialnotactive.html', (req, res) => {
 app.get('/firmwares/firmware.bin', async (req, res) => {
     const axios = require('axios');
 
+    const response = await axios.get( await getLatestFirmwareLink(), {responseType: 'arraybuffer', headers: {'accept': 'application/octet-stream'}});
+    console.log(response.data);
+    res.setHeader('content-type', 'application/octet-stream');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.send(response.data);
+    
+})
+
+app.get('/hashes/firmware.hash', async (req, res) => {
+    const axios = require('axios');
+
     const response = await axios.get('https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661', {responseType: 'arraybuffer', headers: {'accept': 'application/octet-stream'}});
     console.log(response.data);
     res.setHeader('content-type', 'application/octet-stream');
@@ -26,6 +37,23 @@ app.get('/firmwares/firmware.bin', async (req, res) => {
     res.send(response.data);
     
 })
+
+async function getLatestFirmwareLink() {
+    const axios = require('axios');
+
+    const response = await axios.get('https://api.github.com/repos/drinkbuddy/trackerTest/releases/latest', {responseType: 'json', headers: {'accept': 'application/vnd.github.v3+json'}});
+    const data = response['data'];
+    console.log(data);
+    const assets = data['assets'];
+    for(var i = 0; i < assets.length; i++){
+        const asset = assets[i];
+        console.log(asset);
+        if (asset['name'] == 'firmware.bin'){
+            return asset['url'];
+        }
+    }
+    throw new Error('Latest Firmware Asset Link Not Found');
+}
 
 app.get('/css/serialnotactive.css', (req, res) => {
     res.sendFile('./css/serialnotactive.css', { root: '.' });
