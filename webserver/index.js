@@ -28,13 +28,13 @@ app.get('/firmwares/firmware.bin', async (req, res) => {
 })
 
 app.get('/hashes/firmware.hash', async (req, res) => {
-    const axios = require('axios');
-
+    /*const axios = require('axios');
+    -------TODO-------
     const response = await axios.get('https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661', {responseType: 'arraybuffer', headers: {'accept': 'application/octet-stream'}});
     console.log(response.data);
     res.setHeader('content-type', 'application/octet-stream');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(response.data);
+    res.send(response.data);*/
     
 })
 
