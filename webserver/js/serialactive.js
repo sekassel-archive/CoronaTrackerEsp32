@@ -263,7 +263,7 @@ const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
 const adress3 = Uint8Array.of(0x00, 0xe0, 0x00, 0x00);
 const adress4 = Uint8Array.of(0x00, 0x00, 0x01, 0x00);
 const adresses = Array.of(adress1, adress2, adress3, adress4);
-async function flashBootloader(file) {
+async function flashFileFromUrl(url) {
   //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
   //c0 00 02 10 00 00 00 00 00 00 3e 00 00 10 00 00 00 00 04 00 00 00 10 00 00 c0
@@ -271,86 +271,99 @@ async function flashBootloader(file) {
   //const res = await read(secReader);
   //await read(secReader);
 
-  var fileReader = new FileReader();
-  var fileContent = new Uint8Array();
-  fileReader.onload = async function () {
-    var readerResult = fileReader.result;
-    fileContent = new Uint8Array(readerResult)
-    if (!("TextDecoder" in window))
-      alert("Sorry, this browser does not support TextDecoder...");
+  return new Promise((resolve, reject) => {
+    var fileReader = new FileReader();
+    var fileContent = new Uint8Array();
+    fileReader.onload = async function () {
+      var readerResult = fileReader.result;
+      fileContent = new Uint8Array(readerResult)
+      if (!("TextDecoder" in window))
+        alert("Sorry, this browser does not support TextDecoder...");
 
-    var enc = new TextDecoder("utf-8");
-    console.log(fileContent.length)
-    const sizeHexString = toHexString(fileContent.length);
-    console.log(sizeHexString);
+      var enc = new TextDecoder("utf-8");
+      console.log(fileContent.length)
+      const sizeHexString = toHexString(fileContent.length);
+      console.log(sizeHexString);
 
-    //console.log(md5(fileContent.buffer));
-    //console.log(JSON.stringify(fileContent, null, 2));
-    //console.log(fileContent.length);
-    //console.log(checkSum);
+      //console.log(md5(fileContent.buffer));
+      //console.log(JSON.stringify(fileContent, null, 2));
+      //console.log(fileContent.length);
+      //console.log(checkSum);
 
-    //fill filecontent with ff to fit x*1024
-    //if != 0
-    if (fileContent.length % 1024 != 0) {
-      const nOfFF = 1024 - fileContent.length % 1024;
-      var arrFF = new Uint8Array(nOfFF);
-      for (var i = 0; i < nOfFF; i++) {
-        arrFF[i] = 0xff;
+      //fill filecontent with ff to fit x*1024
+      //if != 0
+      if (fileContent.length % 1024 != 0) {
+        const nOfFF = 1024 - fileContent.length % 1024;
+        var arrFF = new Uint8Array(nOfFF);
+        for (var i = 0; i < nOfFF; i++) {
+          arrFF[i] = 0xff;
+        }
+        fileContent = concatTypedArrays(fileContent, arrFF);
       }
-      fileContent = concatTypedArrays(fileContent, arrFF);
+
+      console.log(md5(enc.decode(fileContent.buffer)));
+
+      const nOfDataPackets = Math.floor(fileContent.length / 1024);
+      console.log(nOfDataPackets);
+      const nOfDataPacketsHexString = toHexString(nOfDataPackets);
+
+      await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
+      await read(secReader);
+
+      for (var i = 0; i < nOfDataPackets; i++) {
+        var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
+        var checkSum = 0xef;
+        for (var j = 0; j < subArr.length; j++) {
+          checkSum = checkSum ^ subArr[j]; //TODO: escape checksum
+        }
+        var indexHexString = toHexString(i);
+
+        console.log(`len: ${subArr.length}`);
+
+        //subArr = escapeArray(subArr);
+        console.log(`checksum: ${checkSum}`);
+
+        console.log(`Hex: ${indexHexString}`);
+
+        await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
+        /*for (var j = 0; j < subArr.length; j++) {
+          writeToStream(writer, subArr[j]);
+        }*/
+        //writeToStream(writer, 0xc0);
+        //await new Promise(resolve => setTimeout(resolve, 3200));
+
+        const answer = await read(secReader);
+        if (answer.data[answer.data.length - 4] > 0) {
+          reject(new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`));
+        }
+      }
+      console.log('sended');
+
+      //get md5 checksum from esp
+      //c0001310000000000000100000003e00000000000000000000c0
+      await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
+      const md5SlipFrame = await read(secReader);
+      console.log(enc.decode(md5SlipFrame.data.buffer));
+      filesFlashed = filesFlashed + 1;
+      resolve()
     }
+    //fileReader.readAsArrayBuffer(file)
+    downloadBlobFromUrl(url, fileReader);
+    //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
+  })
 
-    console.log(md5(enc.decode(fileContent.buffer)));
 
-    const nOfDataPackets = Math.floor(fileContent.length / 1024);
-    console.log(nOfDataPackets);
-    const nOfDataPacketsHexString = toHexString(nOfDataPackets);
+}
 
-    await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
-    await read(secReader);
-
-    for (var i = 0; i < nOfDataPackets; i++) {
-      var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
-      var checkSum = 0xef;
-      for (var j = 0; j < subArr.length; j++) {
-        checkSum = checkSum ^ subArr[j]; //TODO: escape checksum
-      }
-      var indexHexString = toHexString(i);
-
-      console.log(`len: ${subArr.length}`);
-
-      //subArr = escapeArray(subArr);
-      console.log(`checksum: ${checkSum}`);
-
-      console.log(`Hex: ${indexHexString}`);
-
-      await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
-      /*for (var j = 0; j < subArr.length; j++) {
-        writeToStream(writer, subArr[j]);
-      }*/
-      //writeToStream(writer, 0xc0);
-      //await new Promise(resolve => setTimeout(resolve, 3200));
-
-      const answer = await read(secReader);
-      if (answer.data[answer.data.length - 4] > 0) {
-        throw new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`);
-      }
-    }
-    console.log('sended');
-
-    //get md5 checksum from esp
-    //c0001310000000000000100000003e00000000000000000000c0
-    await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
-    const md5SlipFrame = await read(secReader);
-    console.log(enc.decode(md5SlipFrame.data.buffer));
-    filesFlashed = filesFlashed + 1;
+function downloadBlobFromUrl(url, fileReader) {
+  const xhr = new XMLHttpRequest();
+  xhr.open('GET', url);
+  xhr.responseType = 'blob';
+  xhr.setRequestHeader('Accept', 'application/octet-stream');
+  xhr.onload = () => {
+    fileReader.readAsArrayBuffer(xhr.response);
   }
-  fileReader.readAsArrayBuffer(file)
-  /*fetch("https://api.github.com/repos/drinkbuddy/trackerTest/releases/assets/29689661")
-    .then(res => res.blob()).then(blob => {
-      fileReader.readAsArrayBuffer(blob);
-    });*/
-  //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
+  xhr.send();
 }
 
 function testDownload() {
@@ -475,6 +488,10 @@ async function connect() {
   await read(secReader);
   await spiSetParams();
   await read(secReader);
+  await flashFileFromUrl('http://127.0.0.1/firmwares/bootloader_dio_40m.bin');
+  await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin');
+  await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin');
+  await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin');
 
   console.log(md5("test"));
 }
