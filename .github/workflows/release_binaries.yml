@@ -1,0 +1,114 @@
+name: Release
+
+on:
+  create:
+    tags:
+      - v*
+
+jobs:
+  release:
+    name: Binary_Tracker_Release
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Checkout
+      uses: actions/checkout@v2
+      
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          
+    - name: Cache PlatformIO
+      uses: actions/cache@v2
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v1
+
+    - name: Install pio
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
+        
+    - name: Run PlatformIO build
+      run: pio run -e esp32devOTA --project-dir ./tracker
+      
+    - name: calc firmware hash
+      run: firmwarehash=$(md5sum ./tracker/.pio/build/esp32devOTA/firmware.bin) ; echo -e "{\x22firmware\x22\x3a \x22${firmwarehash::32}\x22," > hashes.json
+      
+    - name: calc partitions hash
+      run: partitionshash=$(md5sum ./tracker/.pio/build/esp32devOTA/partitions.bin) ; echo -e "\x22partitions\x22\x3a \x22${partitionshash::32}\x22," >> hashes.json
+      
+    - name: calc bootloader hash
+      run: bootloaderhash=$(md5sum /home/runner/.platformio/packages/framework-arduinoespressif32/tools/sdk/bin/bootloader_dio_40m.bin) ; echo -e "\x22bootloader\x22\x3a \x22${bootloaderhash::32}\x22," >> hashes.json
+      
+    - name: calc boot_app hash
+      run: bootapphash=$(md5sum /home/runner/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin) ; echo -e "\x22bootapp\x22\x3a \x22${bootapphash::32}\x22}" >> hashes.json
+      
+    - name: create release
+      uses: actions/create-release@v1
+      id: create_release
+      with:
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        tag_name: ${{ github.ref }}
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+          
+    - name: upload firmware binary
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./tracker/.pio/build/esp32devOTA/firmware.bin
+          asset_name: firmware.bin
+          asset_content_type: application/octet-stream
+          
+    - name: upload partitions binary
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./tracker/.pio/build/esp32devOTA/partitions.bin
+          asset_name: partitions.bin
+          asset_content_type: application/octet-stream
+          
+    - name: upload bootloader binary
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: /home/runner/.platformio/packages/framework-arduinoespressif32/tools/sdk/bin/bootloader_dio_40m.bin
+          asset_name: bootloader_dio_40m.bin
+          asset_content_type: application/octet-stream
+          
+    - name: upload boot_app binary
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: /home/runner/.platformio/packages/framework-arduinoespressif32/tools/partitions/boot_app0.bin
+          asset_name: boot_app0.bin
+          asset_content_type: application/octet-stream
+          
+    - name: upload hashes
+      uses: actions/upload-release-asset@v1
+      env:
+          GITHUB_TOKEN: ${{ github.token }}
+      with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+          asset_path: ./hashes.json
+          asset_name: hashes.json
+          asset_content_type: application/octet-stream
