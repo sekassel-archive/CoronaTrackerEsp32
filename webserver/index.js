@@ -119,6 +119,14 @@ app.get('/images/notconnectedgif.gif', (req, res) => {
     res.sendFile('./images/notconnectedgif.gif', { root: '.' });
 })
 
+app.get('/images/upload.gif', (req, res) => {
+    res.sendFile('./images/upload.gif', { root: '.' });
+})
+
+app.get('/images/noSerial.png', (req, res) => {
+    res.sendFile('./images/noSerial.png', { root: '.' });
+})
+
 app.get('/manifest.json', (req, res) => {
     res.sendFile('./manifest.json', { root: '.' });
 })
