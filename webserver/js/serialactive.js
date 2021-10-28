@@ -233,23 +233,6 @@ async function changeBaud() {
   //await read(secReader);
 }
 
-const fileSelector2 = document.getElementById('file-selector2');
-fileSelector2.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  //console.log(file);
-  md5OfFile(file)
-});
-async function md5OfFile(file) {
-  var fileReader = new FileReader();
-  fileReader.onload = async function () {
-    var readerResult = fileReader.result;
-    console.log(md5(readerResult));
-  }
-  fileReader.readAsBinaryString(file);
-}
-
-
-
 const fileSelector = document.getElementById('file-selector');
 fileSelector.addEventListener('change', (event) => {
   const file = event.target.files[0];
@@ -263,7 +246,7 @@ const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
 const adress3 = Uint8Array.of(0x00, 0xe0, 0x00, 0x00);
 const adress4 = Uint8Array.of(0x00, 0x00, 0x01, 0x00);
 const adresses = Array.of(adress1, adress2, adress3, adress4);
-async function flashFileFromUrl(url) {
+async function flashFileFromUrl(url, md5checksum) {
   //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
   //c0 00 02 10 00 00 00 00 00 00 3e 00 00 10 00 00 00 00 04 00 00 00 10 00 00 c0
@@ -301,10 +284,8 @@ async function flashFileFromUrl(url) {
         fileContent = concatTypedArrays(fileContent, arrFF);
       }
 
-      console.log(md5(enc.decode(fileContent.buffer)));
-
       const nOfDataPackets = Math.floor(fileContent.length / 1024);
-      console.log(nOfDataPackets);
+      console.log('Number of Data Packets', nOfDataPackets);
       const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
       await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
@@ -343,9 +324,15 @@ async function flashFileFromUrl(url) {
       //c0001310000000000000100000003e00000000000000000000c0
       await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
       const md5SlipFrame = await read(secReader);
-      console.log(enc.decode(md5SlipFrame.data.buffer));
+      const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
+      console.log(md5checksumToCheck.toString().normalize());
       filesFlashed = filesFlashed + 1;
-      resolve()
+      console.log(md5checksum.toString().normalize());
+      if(md5checksumToCheck.toString().normalize().trim() === md5checksum.toString().normalize().trim()) {
+        resolve();
+      } else {
+        reject(new Error('Checksum Fail'));
+      }
     }
     //fileReader.readAsArrayBuffer(file)
     downloadBlobFromUrl(url, fileReader);
@@ -364,6 +351,30 @@ function downloadBlobFromUrl(url, fileReader) {
     fileReader.readAsArrayBuffer(xhr.response);
   }
   xhr.send();
+}
+
+function downloadBlobFromUrlAsText(url) {
+  return new Promise((resolve, reject) => {
+    const fileReader = new FileReader();
+    fileReader.onload = () => {
+      const res = fileReader.result;
+      resolve(res);
+    }
+    fileReader.onerror = () => {
+      reject(new Error('Error in read file on downloadBlobFromUrlAsText'));
+    }
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'blob';
+    xhr.setRequestHeader('Accept', 'application/octet-stream');
+    xhr.onload = () => {
+      fileReader.readAsText(xhr.response);
+    }
+    xhr.onerror = () => {
+      reject(new Error('Error in http request from downloadBlobFromUrlAsText'));
+    }
+    xhr.send();
+  })
 }
 
 function testDownload() {
@@ -409,8 +420,11 @@ function downloadBlob(blob, name = 'file.txt') {
 const exportButton = document.getElementById('export');
 const jsonBlob = new Blob(['{"name": "test"}'])
 
-exportButton.addEventListener('click', () => {
-  testDownload();
+exportButton.addEventListener('click', async () => {
+  //testDownload();
+  const text = await downloadBlobFromUrlAsText('http://127.0.0.1/hashes/hashes.json');
+  console.log(text);
+  console.log(JSON.parse(text));
 });
 
 function concatTypedArrays(a, b) { // a, b TypedArray of same type
@@ -488,10 +502,12 @@ async function connect() {
   await read(secReader);
   await spiSetParams();
   await read(secReader);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/bootloader_dio_40m.bin');
-  await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin');
-  await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin');
-  await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin');
+  const hashesJsonText = await downloadBlobFromUrlAsText('http://127.0.0.1/hashes/hashes.json');
+  const hashesJson = JSON.parse(hashesJsonText);
+  await flashFileFromUrl('http://127.0.0.1/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
+  await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin', hashesJson['partitions']);
+  await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin', hashesJson['bootapp']);
+  await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin', hashesJson['firmware']);
 
   console.log(md5("test"));
 }
@@ -544,6 +560,7 @@ async function reset() {
 }
 
 async function writeToStream(writer, ...lines) {
+  console.log('[SEND]', lines);
   await writer.write(Uint8Array.of(lines[0]));
   for (var i = 1; i < lines.length - 1; i++) {
     /*console.log('vor IS Array');
@@ -553,12 +570,8 @@ async function writeToStream(writer, ...lines) {
     }
     //console.log('nach IS Array');*/
     if (ArrayBuffer.isView(lines[i])) {
-      console.log('vor new Array');
       const tmp = new Uint8Array(lines[i]);
-      console.log('nach new Array');
-      console.log(tmp);
       for (const tmpp of tmp) {
-        console.log(Uint8Array.of(tmpp));
         if (tmpp == 0xc0) {
           await writer.write(Uint8Array.of(0xdb));
           await writer.write(Uint8Array.of(0xdc));
@@ -573,7 +586,6 @@ async function writeToStream(writer, ...lines) {
     } else {
       //console.log('nach isview');
 
-      console.log('[SEND]', lines[i]);
       //writer.write(line); // + '\n'
       if (lines[i] == 0xc0) {
         await writer.write(Uint8Array.of(0xdb));
