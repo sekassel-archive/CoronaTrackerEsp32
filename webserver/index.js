@@ -11,6 +11,9 @@ var app = express();
 app.get('/', (req, res) => {
     res.sendFile('./index.html', { root: '.' });
 })
+app.get('/index.html', (req, res) => {
+    res.sendFile('./index.html', { root: '.' });
+})
 
 app.get('/pages/serialnotactive.html', (req, res) => {
     res.sendFile('./pages/serialnotactive.html', { root: '.' });
@@ -64,10 +67,6 @@ app.get('/hashes/hashes.json', async (req, res) => {
     const axios = require('axios');
 
     const response = await axios.get( await getLatestLink('hashes.json'), {responseType: 'arraybuffer', headers: {'accept': 'application/octet-stream'}});
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-
-    }
     res.setHeader('content-type', 'application/octet-stream');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.send(response.data);
@@ -95,8 +94,12 @@ app.get('/css/serialnotactive.css', (req, res) => {
     res.sendFile('./css/serialnotactive.css', { root: '.' });
 })
 
-app.get('/images/noSerial.png', (req, res) => {
-    res.sendFile('./images/noSerial.png', { root: '.' });
+app.get('/css/serialisactive.css', (req, res) => {
+    res.sendFile('./css/serialisactive.css', { root: '.' });
+})
+
+app.get('/css/style.css', (req, res) => {
+    res.sendFile('./css/style.css', { root: '.' });
 })
 
 app.get('/images/hello-icon-152.png', (req, res) => {
@@ -105,14 +108,6 @@ app.get('/images/hello-icon-152.png', (req, res) => {
 
 app.get('/favicon.ico', (req, res) => {
     res.sendFile('./favicon.ico', { root: '.' });
-})
-
-app.get('/css/serialisactive.css', (req, res) => {
-    res.sendFile('./css/serialisactive.css', { root: '.' });
-})
-
-app.get('/js/serialactive.js', (req, res) => {
-    res.sendFile('./js/serialactive.js', { root: '.' });
 })
 
 app.get('/images/notconnectedgif.gif', (req, res) => {
@@ -127,16 +122,20 @@ app.get('/images/noSerial.png', (req, res) => {
     res.sendFile('./images/noSerial.png', { root: '.' });
 })
 
-app.get('/manifest.json', (req, res) => {
-    res.sendFile('./manifest.json', { root: '.' });
-})
-
 app.get('/images/hello-icon-144.png', (req, res) => {
     res.sendFile('./images/hello-icon-144.png', { root: '.' });
 })
 
+app.get('/manifest.json', (req, res) => {
+    res.sendFile('./manifest.json', { root: '.' });
+})
+
 app.get('/sw.js', (req, res) => {
     res.sendFile('./sw.js', { root: '.' });
+})
+
+app.get('/js/serialactive.js', (req, res) => {
+    res.sendFile('./js/serialactive.js', { root: '.' });
 })
 
 //app.listen(80, () => {console.log('Started')})
