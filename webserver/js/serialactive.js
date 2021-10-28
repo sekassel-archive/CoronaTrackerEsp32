@@ -325,10 +325,10 @@ async function flashFileFromUrl(url, md5checksum) {
       await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
       const md5SlipFrame = await read(secReader);
       const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
-      console.log(md5checksumToCheck.toString().normalize());
+      console.log('Checksum from chip: ', md5checksumToCheck);
       filesFlashed = filesFlashed + 1;
-      console.log(md5checksum.toString().normalize());
-      if(md5checksumToCheck.toString().normalize().trim() === md5checksum.toString().normalize().trim()) {
+      console.log('Checksum from file: ', md5checksum);
+      if(md5checksumToCheck.localeCompare(md5checksum) == 0) {
         resolve();
       } else {
         reject(new Error('Checksum Fail'));
