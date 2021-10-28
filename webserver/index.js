@@ -1,10 +1,6 @@
 var fs = require('fs');
 var http = require('http');
-var https = require('https');
-var privateKey = fs.readFileSync('keys/key.pem');
-var certificate = fs.readFileSync('keys/cert.pem');
 
-var credentials = { key: privateKey, cert: certificate };
 var express = require('express');
 var app = express();
 
@@ -140,7 +136,5 @@ app.get('/js/serialactive.js', (req, res) => {
 
 //app.listen(80, () => {console.log('Started')})
 var httpServer = http.createServer(app);
-var httpsServer = https.createServer(credentials, app);
 
 httpServer.listen(80, () => { console.log('Started http Server') });
-httpsServer.listen(443, () => { console.log('Started https Server') });
