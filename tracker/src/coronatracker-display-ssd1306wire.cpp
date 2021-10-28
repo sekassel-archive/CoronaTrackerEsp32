@@ -4,7 +4,6 @@
 #include "coronatracker-display-ssd1306wire.h"
 #include "SSD1306Wire.h"
 
-
 #define DISPLAY_ADRESS 0x3c
 #define DISPLAY_SDA 5
 #define DISPLAY_SCL 4
@@ -19,6 +18,57 @@ void initDisplay()
     }
     display.setFont(ArialMT_Plain_16); //10, 16 or 24 are possible choices
     display.setTextAlignment(TEXT_ALIGN_LEFT);
+}
+
+void displayVerificationCountdown(int number)
+{
+    initDisplay();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 0, "Start verification in");
+    display.drawString(64, 16, String(number));
+    display.display();
+}
+
+void displayReleaseButton()
+{
+    initDisplay();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 0, "Please stop");
+    display.drawString(64, 16, "pressing button");
+    display.drawString(64, 32, "to continue.");
+    display.display();
+}
+
+void displayUuidAndTekForVerification(std::string uuid, std::string pin)
+{
+    initDisplay();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(64, 0, "UUID:");
+    display.drawString(64, 11, uuid.substr(0,18).c_str());
+    display.drawString(64, 22, uuid.substr(18,35).c_str());
+    display.drawString(64, 33, "PIN:");
+    display.drawString(64, 44, pin.c_str());
+    display.display();
+    display.setFont(ArialMT_Plain_16);
+}
+
+void displayVerificationFailed(void)
+{
+    initDisplay();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 0, "Verification failed!");
+    display.drawString(64, 16, "Try again later.");
+    display.display();
+}
+
+void displayVerificationSuccess(void)
+{
+    initDisplay();
+    display.setTextAlignment(TEXT_ALIGN_CENTER);
+    display.drawString(64, 0, "Successfully verified!");
+    display.drawString(64, 16, "Exchange data...");
+    display.display();
 }
 
 void configureWifiMessageOnDisplay()
