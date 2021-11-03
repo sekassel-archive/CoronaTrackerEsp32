@@ -13,10 +13,7 @@ import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.spark.payload.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
 import static java.net.HttpURLConnection.HTTP_UNAVAILABLE;
@@ -43,6 +40,19 @@ public class SparkRequestHandler {
 
         get(ROUTING_PREFIX + "/ping", (request, response) -> {
             return "pong";
+        });
+
+        get(ROUTING_PREFIX + "/daylightoffset", (request, response) -> {
+            // Creating a TimeZone
+            TimeZone offtime_zone = TimeZone.getTimeZone("Europe/Berlin");
+
+            // Creating date object
+            Date dt = new Date();
+
+            // Verifying daylight
+            Boolean bool_daylight = offtime_zone.inDaylightTime(dt);
+
+            return bool_daylight.toString();
         });
 
         get(ROUTING_PREFIX + "/uuid", (request, response) -> {
@@ -145,7 +155,7 @@ public class SparkRequestHandler {
                 return SERVICE_REQUEST_BODY_INVALID;
             }
 
-            return hadContactWithInfectedByStatus(input.getUuid()) ? "Infected" : "Unknown";
+            return isTrackerUserInfected(input.getUuid()) ? "Infected" : "Unknown";
         });
 
         post(ROUTING_PREFIX + "/verify", (request, response) -> {
@@ -208,12 +218,18 @@ public class SparkRequestHandler {
         return dbConnection.getConnection().isEmpty();
     }
 
-    private static Boolean hadContactWithInfectedByStatus(String uuid) {
+    private static Boolean isTrackerUserInfected(String uuid) {
+        // first check if there is a Status 2 for infected for that user
         List<User> foundUser = userDb.get(uuid);
         if (!foundUser.isEmpty() && foundUser.stream()
                 .filter(user -> user.getStatus().equals(1) || user.getStatus().equals(2)).findAny().isPresent()) {
             return true;
         }
+
+        // second, check if there is a entry in infected table for that user (important for the next 14d)
+
+        //TODO
+
         return false;
     }
 }

@@ -52,7 +52,7 @@ public class CwaDataInterpreter {
             UserPostgreSql userDb = new UserPostgreSql();
 
             // cwa db get every 1h a new data set. So we'll need a update of cwaData in memory
-            cwaData = CWARequests.getUnzippedInfectionData();
+            //cwaData = CWARequests.getUnzippedInfectionData();
 
             // our own infectedUser from infectedUser TABLE
             infectedUserList = infectedUserDb.getAllCompleteInfectedUser();

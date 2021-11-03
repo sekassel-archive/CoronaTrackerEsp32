@@ -5,7 +5,10 @@ import de.uniks.vaadin.views.viewmodels.RsinEntrys;
 import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,7 +29,9 @@ public class EasyRsinTimeTest {
     }
     @Test
     public void showTimeTest() {
-        System.out.println("Time: " + new Date(new Long( Integer.parseInt("2718420")) * 600 * 1000).toLocaleString());
+        System.out.println("Time: " + new Date(new Long( Integer.parseInt("2726439")) * 600 * 1000).toLocaleString());
+        int currentInstant = Math.toIntExact(Instant.now().getEpochSecond() / 600L);
+        System.out.println("Time: " + currentInstant);
     }
 
     @Test
