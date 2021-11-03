@@ -72,7 +72,7 @@ app.get('/hashes/hashes.json', async (req, res) => {
 async function getLatestLink(fileName) {
     const axios = require('axios');
 
-    const response = await axios.get('https://api.github.com/repos/drinkbuddy/trackerTest2/releases/latest', {responseType: 'json', headers: {'accept': 'application/vnd.github.v3+json'}});
+    const response = await axios.get('https://api.github.com/repos/sekassel/CoronaTrackerEsp32/releases/latest', {responseType: 'json', headers: {'accept': 'application/vnd.github.v3+json'}});
     const data = response['data'];
     console.log(data);
     const assets = data['assets'];
