@@ -496,12 +496,12 @@ async function connect() {
   await read(secReader);
   await spiSetParams();
   await read(secReader);
-  const hashesJsonText = await downloadBlobFromUrlAsText('http://127.0.0.1/hashes/hashes.json');
+  const hashesJsonText = await downloadBlobFromUrlAsText('https://flasher.uniks.de/hashes/hashes.json');
   const hashesJson = JSON.parse(hashesJsonText);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin', hashesJson['partitions']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin', hashesJson['bootapp']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin', hashesJson['firmware']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/partitions.bin', hashesJson['partitions']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/boot_app0.bin', hashesJson['bootapp']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/firmware.bin', hashesJson['firmware']);
   
   const sendedParagraph = document.createElement("p");
   const node = document.createTextNode("flashing complete");
