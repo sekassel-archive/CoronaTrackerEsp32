@@ -178,10 +178,6 @@ if ('serial' in navigator) {
   serialActive = 'active';
 }
 
-
-document.getElementById('syncButton').addEventListener('click', () => {
-  sync();
-});
 async function sync() {
   // writeToStream(outputStream.getWriter(), '\x01');
 
@@ -204,9 +200,6 @@ async function sync() {
   //b'\x07\x07\x12\x20' + 32 * b'\x55'
 }
 
-document.getElementById('spiAttachButton').addEventListener('click', () => {
-  spiAttach();
-});
 async function spiAttach() {
   //c0000d0800000000000000000000000000c0
   await writeToStream(writer, 0xc0, 0x00, 0x0d, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
@@ -214,9 +207,6 @@ async function spiAttach() {
   //console.log(res);
 }
 
-document.getElementById('spiSetParamsButton').addEventListener('click', () => {
-  spiSetParams();
-});
 async function spiSetParams() {
   //c0000b1800000000000000000000004000000001000010000000010000ffff0000c0
   //c0000b1800000000000000000000004000000001000010000000010000ffff0000c0
@@ -224,21 +214,11 @@ async function spiSetParams() {
   //await read(secReader);
 }
 
-document.getElementById('changeBaudButton').addEventListener('click', () => {
-  changeBaud();
-});
 async function changeBaud() {
   //c0000f0800000000000008070000000000c0
   writeToStream(writer, 0xc0, 0x00, 0x0f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
   //await read(secReader);
 }
-
-const fileSelector = document.getElementById('file-selector');
-fileSelector.addEventListener('change', (event) => {
-  const file = event.target.files[0];
-  //console.log(file);
-  flashBootloader(file)
-});
 
 var filesFlashed = 0;
 const adress1 = Uint8Array.of(0x00, 0x10, 0x00, 0x00);
@@ -415,18 +395,6 @@ function downloadBlob(blob, name = 'file.txt') {
   document.body.removeChild(link);
 }
 
-
-/* For the example */
-const exportButton = document.getElementById('export');
-const jsonBlob = new Blob(['{"name": "test"}'])
-
-exportButton.addEventListener('click', async () => {
-  //testDownload();
-  const text = await downloadBlobFromUrlAsText('http://127.0.0.1/hashes/hashes.json');
-  console.log(text);
-  console.log(JSON.parse(text));
-});
-
 function concatTypedArrays(a, b) { // a, b TypedArray of same type
   var c = new (a.constructor)(a.length + b.length);
   c.set(a, 0);
@@ -463,11 +431,6 @@ function toHexString(num) {
   }
   return numHexString;
 }
-
-
-document.getElementById('connectButton').addEventListener('click', () => {
-  connect();
-});
 
 let inputStream = null;
 let abortController = null;
@@ -531,9 +494,6 @@ async function syncAndRead(secReader) {
 }
 
 var secReader = null;
-document.getElementById('bootloaderButton').addEventListener('click', () => {
-  endFlash();
-});
 async function enterBootloader() {
   await port.setSignals({ dataTerminalReady: false });
   await port.setSignals({ requestToSend: true });
