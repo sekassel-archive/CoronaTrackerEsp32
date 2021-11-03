@@ -12,6 +12,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 import de.uniks.cwa.utils.CWACryptography;
+import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
 import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.vaadin.crm.security.model.CustomUserDetails;
@@ -104,6 +105,11 @@ public class MyDeviceView extends VerticalLayout {
                 // especially the detected exposure entry!
                 UserPostgreSql userDB = new UserPostgreSql();
                 userDB.flagInfectionStateAfterDataInput(uuid, rsin, positiveInfectedState);
+
+                if (positiveInfectedState == false) {
+                    InfectedUserPostgreSql infectedUserDB = new InfectedUserPostgreSql();
+                    infectedUserDB.delete(uuid);
+                }
 
                 Notification.show("Success! Your Data will be processed soon.");
             } else {

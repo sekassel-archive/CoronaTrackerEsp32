@@ -13,6 +13,7 @@ import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import de.uniks.spark.payload.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import static java.net.HttpURLConnection.HTTP_BAD_REQUEST;
@@ -56,7 +57,7 @@ public class SparkRequestHandler {
         });
 
         get(ROUTING_PREFIX + "/uuid", (request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -86,7 +87,7 @@ public class SparkRequestHandler {
          * }
          */
         post(ROUTING_PREFIX + "/data/input", ((request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -112,7 +113,7 @@ public class SparkRequestHandler {
         }));
 
         post(ROUTING_PREFIX + "/data/input/tek/share", ((request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -136,7 +137,7 @@ public class SparkRequestHandler {
         }));
 
         post(ROUTING_PREFIX + "/infection/status", (request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -159,7 +160,7 @@ public class SparkRequestHandler {
         });
 
         post(ROUTING_PREFIX + "/verify", (request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -188,7 +189,7 @@ public class SparkRequestHandler {
         });
 
         post(ROUTING_PREFIX + "/verify/update", (request, response) -> {
-            if(isDBNotConnected()){
+            if (isDBNotConnected()) {
                 response.status(HTTP_UNAVAILABLE);
                 return SERVICE_UNAVAILABLE;
             }
@@ -214,7 +215,7 @@ public class SparkRequestHandler {
         });
     }
 
-    private static Boolean isDBNotConnected(){
+    private static Boolean isDBNotConnected() {
         return dbConnection.getConnection().isEmpty();
     }
 
@@ -227,8 +228,18 @@ public class SparkRequestHandler {
         }
 
         // second, check if there is a entry in infected table for that user (important for the next 14d)
+        Date date = new Date();
+        date.setHours(0);
+        date.setMinutes(0);
+        date.setSeconds(0);
 
-        //TODO
+        InfectedUserPostPayload infectedUser = new InfectedUserPostPayload();
+        infectedUser.setUuid(uuid);
+        infectedUser.setEnin(CWACryptography.getRollingStartIntervalNumber(date.getTime() / 1000L));
+
+        if (infectedUserDb.isTekInputEntryPresent(infectedUser)) {
+            return true;
+        }
 
         return false;
     }
