@@ -1,9 +1,11 @@
 package de.uniks.postgres.db.utils;
 
 import de.uniks.postgres.db.PostgresConnect;
+import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.VerificationUser;
 
 import java.sql.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -256,5 +258,20 @@ public class UserVerificationPostgreSql {
         } else {
             return "NOT_INFECTED";
         }
+    }
+
+    public void cleanup() {
+        String sql = "DELETE FROM " + VerificationUser.CLASS + " WHERE " + VerificationUser.RSIN + " < ?";
+        int eninNow = Math.toIntExact(Instant.now().getEpochSecond() / 600L);
+
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setInt(1,  (eninNow - (144 * 14)));
+                statement.executeUpdate();
+
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Error while removing old VerificationUserData", ex);
+            }
+        });
     }
 }

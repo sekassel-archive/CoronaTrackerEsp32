@@ -6,6 +6,7 @@ import de.uniks.postgres.db.model.VerificationUser;
 import org.eclipse.jetty.util.ajax.JSON;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -196,21 +197,40 @@ public class UserPostgreSql {
             return Optional.empty();
         });
 
+        String sqlFlagInfectedState;
+
         if (infectedState == true) {
-            String sqlFlagInfected = "UPDATE " + User.CLASS + " SET " +
+            sqlFlagInfectedState = "UPDATE " + User.CLASS + " SET " +
                     User.STATUS + " = 2 " + /* 2 = proofed infection */
                     " WHERE " + User.UUID + " = \'" + uuid + "\'" +
                     " AND " + User.ENIN + " >= \'" + rsin + "\'";
-
-            connection.flatMap(conn -> {
-                try (PreparedStatement statement = conn.prepareStatement(sqlFlagInfected)) {
-                    statement.executeUpdate();
-                } catch (SQLException ex) {
-                    LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagInfectionStateAfterDataInput.", ex);
-                }
-                return Optional.empty();
-            });
+        } else {
+            sqlFlagInfectedState = "UPDATE " + User.CLASS + " SET " +
+                    User.STATUS + " = 0 " + /* 0 = needs to be checked in future */
+                    " WHERE " + User.UUID + " = \'" + uuid + "\'" +
+                    " AND " + User.ENIN + " >= \'" + rsin + "\'";
         }
+        connection.flatMap(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sqlFlagInfectedState)) {
+                statement.executeUpdate();
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagInfectionStateAfterDataInput.", ex);
+            }
+            return Optional.empty();
+        });
+    }
 
+    public void cleanup() {
+        String sql = "DELETE FROM " + User.CLASS + " WHERE " + User.ENIN + " < ?";
+        int eninNow = Math.toIntExact(Instant.now().getEpochSecond() / 600L);
+
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setInt(1, (eninNow - (144 * 14)));
+                statement.executeUpdate();
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Error while removing old UserData", ex);
+            }
+        });
     }
 }
