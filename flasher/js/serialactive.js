@@ -242,6 +242,7 @@ async function flashFileFromUrl(url, md5checksum) {
   const barRoot = document.getElementById("statusBarRoot");
   barRoot.appendChild(filenameParagraph);
 
+  //Add status bar
   const background = document.createElement("div");
   const bar = document.createElement("div");
 
@@ -318,6 +319,7 @@ async function flashFileFromUrl(url, md5checksum) {
         if (answer.data[answer.data.length - 4] > 0) {
           reject(new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`));
         }
+        //Update status bar
         progress = i * 100 / nOfDataPackets;
         bar.style.width = progress + "%";
       }
@@ -326,7 +328,7 @@ async function flashFileFromUrl(url, md5checksum) {
       console.log('sended');
       barRoot.removeChild(background);
       barRoot.removeChild(filenameParagraph);
-
+      progress = 1;
       //get md5 checksum from esp
       //c0001310000000000000100000003e00000000000000000000c0
       await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
@@ -496,12 +498,12 @@ async function connect() {
   await read(secReader);
   await spiSetParams();
   await read(secReader);
-  const hashesJsonText = await downloadBlobFromUrlAsText('http://127.0.0.1/hashes/hashes.json');
+  const hashesJsonText = await downloadBlobFromUrlAsText('https://flasher.uniks.de/hashes/hashes.json');
   const hashesJson = JSON.parse(hashesJsonText);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin', hashesJson['partitions']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin', hashesJson['bootapp']);
-  await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin', hashesJson['firmware']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/partitions.bin', hashesJson['partitions']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/boot_app0.bin', hashesJson['bootapp']);
+  await flashFileFromUrl('https://flasher.uniks.de/firmwares/firmware.bin', hashesJson['firmware']);
   
   const sendedParagraph = document.createElement("p");
   const node = document.createTextNode("flashing complete");
