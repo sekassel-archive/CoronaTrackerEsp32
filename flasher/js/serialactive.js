@@ -303,17 +303,11 @@ async function flashFileFromUrl(url, md5checksum) {
 
         console.log(`len: ${subArr.length}`);
 
-        //subArr = escapeArray(subArr);
         console.log(`checksum: ${checkSum}`);
 
         console.log(`Hex: ${indexHexString}`);
 
-        await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, /*TODO: convertToNumber*/ parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), /*0x00, 0x00, 0x00, 0x00,*/ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
-        /*for (var j = 0; j < subArr.length; j++) {
-          writeToStream(writer, subArr[j]);
-        }*/
-        //writeToStream(writer, 0xc0);
-        //await new Promise(resolve => setTimeout(resolve, 3200));
+        await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
         const answer = await read(secReader);
         if (answer.data[answer.data.length - 4] > 0) {
@@ -386,71 +380,11 @@ function downloadBlobFromUrlAsText(url) {
   })
 }
 
-function testDownload() {
-  const xhr = new XMLHttpRequest();
-  xhr.open('GET', 'http://127.0.0.1/firmwares/firmware.bin');
-  xhr.responseType = 'blob';
-  xhr.setRequestHeader('Accept', 'application/octet-stream');
-  xhr.onload = () => {
-    downloadBlob(xhr.response, 'testfirmware.bin');
-  }
-  xhr.send();
-}
-function downloadBlob(blob, name = 'file.txt') {
-  // Convert your blob into a Blob URL (a special url that points to an object in the browser's memory)
-  const blobUrl = URL.createObjectURL(blob);
-
-  // Create a link element
-  const link = document.createElement("a");
-
-  // Set link's href to point to the Blob URL
-  link.href = blobUrl;
-  link.download = name;
-
-  // Append link to the body
-  document.body.appendChild(link);
-
-  // Dispatch click event on the link
-  // This is necessary as link.click() does not work on the latest firefox
-  link.dispatchEvent(
-    new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      view: window
-    })
-  );
-
-  // Remove link from body
-  document.body.removeChild(link);
-}
-
 function concatTypedArrays(a, b) { // a, b TypedArray of same type
   var c = new (a.constructor)(a.length + b.length);
   c.set(a, 0);
   c.set(b, a.length);
   return c;
-}
-function escapeArray(arr) {
-  var numToEscape = 0;
-  for (var value of arr) {
-    if (value == 0xc0 || value == 0xdb) {
-      numToEscape++;
-    }
-  }
-  var resultArray = new Uint8Array(arr.length + numToEscape);
-  var indexCounter = 0;
-  for (var i = 0; i < arr.length; i++) {
-    if (arr[i] == 0xc0) {
-      resultArray[indexCounter++] = 0xdb;
-      resultArray[indexCounter++] = 0xdc;
-    } else if (arr[i] == 0xdb) {
-      resultArray[indexCounter++] = 0xdb;
-      resultArray[indexCounter++] = 0xdd;
-    } else {
-      resultArray[indexCounter++] = arr[i];
-    }
-  }
-  return resultArray;
 }
 
 function toHexString(num) {
@@ -473,20 +407,8 @@ async function connect() {
   await port.open({ baudRate: 115200 });
   let img = document.getElementById('statusPic').setAttribute("src", '../images/upload.gif');
 
-  /*abortController = new AbortController();
-
-  const decoder = new TextDecoderStream();
-  inputStream = port.readable;
-  const inputDone = inputStream.pipeTo(decoder.writable, { signal: abortController.signal });
-  const inputStreamAsText = decoder.readable.pipeThrough(new TransformStream(new LineBreakTransformer()));
-
-  //secReader = stream1.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
-
-  secReader = inputStreamAsText.getReader();*/
 
   writer = port.writable.getWriter();
-
-  //readLoop(secReader);
 
   await new Promise(resolve => setTimeout(resolve, 100));
   await enterBootloader();
@@ -579,11 +501,7 @@ async function writeToStream(writer, ...lines) {
           await writer.write(Uint8Array.of(tmpp));
         }
       }
-      //await writer.write(tmp);
     } else {
-      //console.log('nach isview');
-
-      //writer.write(line); // + '\n'
       if (lines[i] == 0xc0) {
         await writer.write(Uint8Array.of(0xdb));
         await writer.write(Uint8Array.of(0xdc));
@@ -597,10 +515,7 @@ async function writeToStream(writer, ...lines) {
 
   }
   await writer.write(Uint8Array.of(lines[lines.length - 1]));
-  /*lines.forEach(async (line) => {
-    
-  });*/
-  //await writer.write(arr);
+  
   //writer.releaseLock();
 }
 
@@ -628,28 +543,6 @@ async function readLoop(reader) {
 
 }
 
-async function readLoop2(reader) {
-  console.log('readloop begin');
-  /*while (true) {
-    try {
-      const { value, done } = await reader.read();
-      if (value) {
-        console.log(JSON.stringify(value, null, 2) + '\n');
-      }
-      if (done) {
-        console.log('[readLoop] DONE', done);
-        reader.releaseLock();
-        break;
-      }
-    } catch (e) {
-      console.log(e);
-      break;
-    }
-
-  }
-  console.log('readloop end');*/
-
-}
 var readingPromise = null;
 async function read(reader) {
   //try {
