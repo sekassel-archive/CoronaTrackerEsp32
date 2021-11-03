@@ -432,6 +432,10 @@ function toHexString(num) {
   return numHexString;
 }
 
+document.getElementById('connectButton').addEventListener('click', () => {
+  connect();
+});
+
 let inputStream = null;
 let abortController = null;
 async function connect() {
