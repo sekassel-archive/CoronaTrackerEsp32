@@ -1,5 +1,5 @@
 RPI = Rolling Proximity Identifiers
--> werden alle ~10 min gewechselt (also 144 mal ab 0 Uhr an)
+-> werden alle ~10 min gewechselt (also 144 mal ab dem Zeitpunkt wo die TEK erstellt wird)
 -> RPI = f(TEK, #)
 
 TEK = Temporary Exposure Key

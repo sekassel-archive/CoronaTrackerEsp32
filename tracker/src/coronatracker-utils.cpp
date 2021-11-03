@@ -236,7 +236,7 @@ void sendExposureInformationIfExists(void)
     Serial.print(expVector.size());
     Serial.println(" Entrys");
 
-    //printDatabases();
+    printDatabases();
 
     for (std::vector<int>::iterator vIt = expVector.begin(); vIt != expVector.end(); vIt++)
     {
@@ -255,14 +255,18 @@ void sendExposureInformationIfExists(void)
 
 exposure_status getInfectionStatusFromServer()
 {
-    // maybe move to main
     std::string uuid = readUuid();
     if (strcmp(uuid.c_str(), "NULL") == 0)
     {
         Serial.printf("Failed to read UUID from file!\n");
         return EXPOSURE_UPDATE_FAILED;
     }
-    return getInfectionStatus(&uuid);
+    exposure_status exp_stat = getInfectionStatus(&uuid);
+    if (exp_stat == EXPOSURE_NO_DETECT)
+    {
+        wipeExposureInformation();
+    }
+    return exp_stat;
 }
 
 bool initializeTek(int *savedRsin)
@@ -316,13 +320,21 @@ bool initializeTime(void)
     int start = millis();
     const int WAITTIME = 180000; // 3 Minutes
 
+    int daylightOffset = getDaylightOffset();
+    if (daylightOffset == -1)
+    {
+        return false;
+    }
+
     do
     {
         if ((millis() - start) >= WAITTIME)
         {
             return false;
         }
-        configTime(3600, 3600, NTP_SERVER);
+        
+        configTime(3600, daylightOffset, NTP_SERVER);
+
         delay(500);
 
     } while (!getLocalTime(&timeinfo));
