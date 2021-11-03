@@ -240,7 +240,7 @@ public class LocalDbConnectionTest {
         });
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void wipeLocalInfectedUserDB() {
         String sql = "TRUNCATE TABLE " + InfectedUser.CLASS + ";";
@@ -254,7 +254,7 @@ public class LocalDbConnectionTest {
         });
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void wipeLocalUserVerificationDB() {
         String sql = "TRUNCATE TABLE " + VerificationUser.CLASS + ";";

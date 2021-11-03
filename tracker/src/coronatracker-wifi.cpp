@@ -41,6 +41,41 @@ bool configureWifi()
     return result;
 }
 
+int getDaylightOffset(void)
+{
+    if (!WiFi.isConnected() && !connectToStoredWifi())
+    {
+        Serial.println("Could not Connect to Wifi");
+        return false;
+    }
+    else
+    {
+        HTTPClient http;
+
+        http.begin(String(SERVER_URL) + String(GET_DAYLIGHT_OFFSET));
+        int code = http.GET();
+        if (!(code == HTTP_CODE_OK))
+        {
+            Serial.println("Failed to connect to server!");
+            return -1;
+        }
+        else
+        {
+            String r = http.getString();
+            http.end();
+
+            if (r.equals("true"))
+            {
+                return 3600;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+}
+
 bool getNewUuid(std::string *uuidstr)
 {
     if (!WiFi.isConnected() && !connectToStoredWifi())
@@ -207,7 +242,7 @@ bool sendContactInformation(std::string *uuidstr, int enin, std::vector<std::str
         {
             Serial.print("HTTP Response Code 200: ");
             Serial.println(body);
-            Serial.println("Successfully sendet Contact Informations to Server!");
+            Serial.printf("Successfully sendet Contact Informations to Server! enin: %i\n", enin);
         }
         else
         {
@@ -244,6 +279,7 @@ bool sendTekInformation(std::string *uuidstr, int enin, std::string *tekData)
     if (httpResponseCode != HTTP_CODE_OK)
     {
         Serial.printf("HTTP Response Code: %i\n", httpResponseCode);
+        Serial.printf("Tried to send enin: %i\twith tek: %s\n", enin, tekData->c_str());
         return false;
     }
     else

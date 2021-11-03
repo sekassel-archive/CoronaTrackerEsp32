@@ -8,6 +8,7 @@
 //#define SERVER_URL "http://192.168.2.2:4567/api"
 #define GET_TEST_URL "/ping"
 #define GET_NEW_UUID "/uuid"
+#define GET_DAYLIGHT_OFFSET "/daylightoffset"
 #define GET_TODAYS_RSIN "/todaysRsin"
 #define POST_VERIFICATION "/verify"
 #define POST_VERIFICATION_DATA "/verify/update"
@@ -18,6 +19,7 @@
 bool disconnectWifi(void);
 bool connectToStoredWifi(void);
 bool configureWifi(void);
+int getDaylightOffset(void);
 bool getNewUuid(std::string *uuidstr);
 int getTodaysRsin(void);
 exposure_status getInfectionStatus(std::string *uuidstr);

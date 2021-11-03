@@ -30,6 +30,7 @@ bool insertExposureInformationToDatabase(int enin);
 void checkExposureInformation(std::vector<int> *expRsinVector);
 bool getExposureInformation(int expRsin, std::string *tekData);
 void removeExposureInformation(int sendedExpRsin);
+void wipeExposureInformation(void);
 int checkForKeysInDatabase(sqlite3 *db, signed char keys[][16], int key_amount, int key_length);
 bool printDatabases();
 bool checkForCollectedContactInformationsInDatabase(std::map<int, std::vector<std::string>> *contactInformationMap);

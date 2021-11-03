@@ -103,7 +103,7 @@ public class UserPostgreSql {
         // build query to watch out for infected rpis in user db
         // example with shorted rpis: search for infected rpi [1,2,3] in [[1,1,1],[1,2,3],[2,2,2]]
         // SELECT * FROM trackerUser WHERE (enin = 1234567) AND (status = 0) AND
-        //  ((rpiList LIKE %[1,2,3]%) OR (rpiList LIKE %[2,3,4]%))
+        //  ((rpiList IN ('[[1,2,3]]', '[[2,3,4]]'))
         // [2,3,4] is just an example for more rpis in one query
         sql.append("SELECT * FROM "
                 + User.CLASS + " WHERE ("
@@ -112,7 +112,7 @@ public class UserPostgreSql {
                 + User.RPILIST + " IN (");
 
         for (byte[] rpiArray : rpiList) {
-            sql.append("\'" + JSON.toString(rpiArray) + "\',");
+            sql.append("\'[" + JSON.toString(rpiArray) + "]\',");
         }
         sql.setLength(Math.max(sql.length() - 1, 0));
         sql.append("))");
@@ -182,21 +182,35 @@ public class UserPostgreSql {
     }
 
     public void flagInfectionStateAfterDataInput(String uuid, int rsin, Boolean infectedState) {
-        int infectionStateNumber = infectedState == true ? 2 : 3; // 2 = proofed infection, 3 = proofed no infection
-        int maxEnin = rsin + (144 - 1); // rsin = 00:00 am -> rsin + 143 = 23:50pm
-
-        String sqlCleanUp = "UPDATE " + User.CLASS + " SET " +
-                User.STATUS + " = " + infectionStateNumber + " " +
+        String sqlCleanUpPast = "UPDATE " + User.CLASS + " SET " +
+                User.STATUS + " = 3 " + /* 3 = proofed no infection */
                 " WHERE " + User.UUID + " = \'" + uuid + "\'" +
-                " AND " + User.ENIN + " <= \'" + maxEnin + "\'";
+                " AND " + User.ENIN + " < \'" + rsin + "\'";
 
         connection.flatMap(conn -> {
-            try (PreparedStatement statement = conn.prepareStatement(sqlCleanUp)) {
+            try (PreparedStatement statement = conn.prepareStatement(sqlCleanUpPast)) {
                 statement.executeUpdate();
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagInfectionStateAfterDataInput.", ex);
             }
             return Optional.empty();
         });
+
+        if (infectedState == true) {
+            String sqlFlagInfected = "UPDATE " + User.CLASS + " SET " +
+                    User.STATUS + " = 2 " + /* 2 = proofed infection */
+                    " WHERE " + User.UUID + " = \'" + uuid + "\'" +
+                    " AND " + User.ENIN + " >= \'" + rsin + "\'";
+
+            connection.flatMap(conn -> {
+                try (PreparedStatement statement = conn.prepareStatement(sqlFlagInfected)) {
+                    statement.executeUpdate();
+                } catch (SQLException ex) {
+                    LOG.log(Level.SEVERE, "Failed " + VerificationUser.CLASS + " save statement on DB flagInfectionStateAfterDataInput.", ex);
+                }
+                return Optional.empty();
+            });
+        }
+
     }
 }

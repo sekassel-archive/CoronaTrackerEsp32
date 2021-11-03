@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v2';
+var CACHE_NAME = 'cache-v3';
 var urlsToCache = [
   '/',
   '/index.html',
@@ -75,7 +75,7 @@ self.addEventListener('fetch', function(event) {
 
 self.addEventListener('activate', function(event) {
 
-  var cacheAllowlist = ['cache-v1'];
+  var cacheAllowlist = [CACHE_NAME];
 
   event.waitUntil(
     caches.keys().then(function(cacheNames) {

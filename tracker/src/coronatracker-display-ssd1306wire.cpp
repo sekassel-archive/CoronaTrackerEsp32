@@ -103,7 +103,7 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
 {
     initDisplay();
     Serial.println("Default display");
-    int HOUR = (timeinfo.tm_hour + 2) % 24; //tm_hour has a time offset of 2 hours
+    int HOUR = timeinfo.tm_hour + 1;
     String wDay = weekDayToString(timeinfo.tm_wday);
     String mDay = (timeinfo.tm_mday < 10 ? "0" : "") + (String)timeinfo.tm_mday;
     String month = ((timeinfo.tm_mon + 1) < 10 ? "0" : "") + (String)(timeinfo.tm_mon + 1); //tm_mon starts at 0
@@ -135,7 +135,7 @@ void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStat
     {
         display.drawString(0, 16, "Sleep");
     }
-    display.drawString(0, 32, "Seen devices: " + ((numberOfScanedDevices == -1) ? "-" : (String)numberOfScanedDevices));
+    display.drawString(0, 32, "Cached data: " + ((numberOfScanedDevices == -1) ? "-" : (String)numberOfScanedDevices));
     String status = "";
     if (exposureStatus == EXPOSURE_NO_DETECT)
     {

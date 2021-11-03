@@ -548,6 +548,30 @@ void removeExposureInformation(int sendedExpRsin)
     sqlite3_close(tek_db);
 }
 
+void wipeExposureInformation(void)
+{
+    // remove sended TEK from exposure TEKs
+    sqlite3 *tek_db;
+    if (sqlite3_open(TEK_DATABASE_SQLITE_PATH, &tek_db) != SQLITE_OK)
+    {
+        Serial.printf("ERROR opening tek database: %s\n", sqlite3_errmsg(tek_db));
+        return;
+    }
+
+    std::stringstream ss;
+    ss << "DELETE FROM exp;";
+    char *zErrMsg;
+    if (sqlite3_exec(tek_db, ss.str().c_str(), NULL, NULL, &zErrMsg) != SQLITE_OK)
+    {
+        Serial.printf("SQL error on delete: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
+        
+    Serial.printf("Deleted all old exposure entries because we are not infected\n");
+
+    sqlite3_close(tek_db);
+}
+
 bool getCurrentTek(signed char *tek, int *enin)
 {
     sqlite3 *tek_db;
