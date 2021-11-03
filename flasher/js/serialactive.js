@@ -220,6 +220,7 @@ async function changeBaud() {
   //await read(secReader);
 }
 
+var progress = 0;
 var filesFlashed = 0;
 const adress1 = Uint8Array.of(0x00, 0x10, 0x00, 0x00);
 const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
@@ -233,6 +234,26 @@ async function flashFileFromUrl(url, md5checksum) {
   //await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
   //const res = await read(secReader);
   //await read(secReader);
+
+  //What file flashing?
+  const filenameParagraph = document.createElement("p");
+  const node = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
+  filenameParagraph.appendChild(node);
+  const barRoot = document.getElementById("statusBarRoot");
+  barRoot.appendChild(filenameParagraph);
+
+  const background = document.createElement("div");
+  const bar = document.createElement("div");
+
+  background.style.width = "100%";
+  background.style.backgroundColor = "grey";
+
+  bar.style.width = "1%";
+  bar.style.backgroundColor = "green";
+  bar.style.height = "30px";
+
+  background.appendChild(bar);
+  barRoot.appendChild(background);
 
   return new Promise((resolve, reject) => {
     var fileReader = new FileReader();
@@ -297,8 +318,14 @@ async function flashFileFromUrl(url, md5checksum) {
         if (answer.data[answer.data.length - 4] > 0) {
           reject(new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`));
         }
+        progress = i * 100 / nOfDataPackets;
+        bar.style.width = progress + "%";
       }
+      progress = 100;
+      bar.style.width = progress + "%";
       console.log('sended');
+      barRoot.removeChild(background);
+      barRoot.removeChild(filenameParagraph);
 
       //get md5 checksum from esp
       //c0001310000000000000100000003e00000000000000000000c0
@@ -308,7 +335,7 @@ async function flashFileFromUrl(url, md5checksum) {
       console.log('Checksum from chip: ', md5checksumToCheck);
       filesFlashed = filesFlashed + 1;
       console.log('Checksum from file: ', md5checksum);
-      if(md5checksumToCheck.localeCompare(md5checksum) == 0) {
+      if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
         resolve();
       } else {
         reject(new Error('Checksum Fail'));
@@ -475,8 +502,12 @@ async function connect() {
   await flashFileFromUrl('http://127.0.0.1/firmwares/partitions.bin', hashesJson['partitions']);
   await flashFileFromUrl('http://127.0.0.1/firmwares/boot_app0.bin', hashesJson['bootapp']);
   await flashFileFromUrl('http://127.0.0.1/firmwares/firmware.bin', hashesJson['firmware']);
-
-  console.log(md5("test"));
+  
+  const sendedParagraph = document.createElement("p");
+  const node = document.createTextNode("flashing complete");
+  sendedParagraph.appendChild(node);
+  const barRoot = document.getElementById("statusBarRoot");
+  barRoot.appendChild(sendedParagraph);
 }
 
 async function syncAndRead(secReader) {
