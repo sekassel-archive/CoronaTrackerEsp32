@@ -240,6 +240,7 @@ async function flashFileFromUrl(url, md5checksum) {
   const node = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
   filenameParagraph.appendChild(node);
   const barRoot = document.getElementById("statusBarRoot");
+  barRoot.style.textAlign = 'center';
   barRoot.appendChild(filenameParagraph);
 
   //Add status bar
@@ -316,6 +317,11 @@ async function flashFileFromUrl(url, md5checksum) {
         //Update status bar
         progress = i * 100 / nOfDataPackets;
         bar.style.width = progress + "%";
+        bar.innerHTML = '';
+        const paragraph = document.createElement("p");
+        //paragraph.style = 'text-align: center;';
+        paragraph.appendChild(document.createTextNode(progress + "%"));
+        bar.appendChild(paragraph);
       }
       progress = 100;
       bar.style.width = progress + "%";
@@ -437,14 +443,14 @@ async function connect() {
   await reset();
 
   await secReader.cancel();
-  await readerClosed.catch(() => {});
+  await readerClosed.catch(() => { });
   await writer.close();
   await port.close();
 
   secReader = null;
   writer = null;
   port = null;
-  
+
   const sendedParagraph = document.createElement("p");
   const node = document.createTextNode("flashing complete");
   sendedParagraph.appendChild(node);
@@ -533,7 +539,7 @@ async function writeToStream(writer, ...lines) {
 
   }
   await writer.write(Uint8Array.of(lines[lines.length - 1]));
-  
+
   //writer.releaseLock();
 }
 
