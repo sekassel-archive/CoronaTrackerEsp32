@@ -1,0 +1,34 @@
+name: Deploy flasher
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build/Release the Docker image
+      run: |
+        cd flasher
+        docker login ${{ secrets.Docker_Registry }} -u ${{ secrets.Docker_User }} -p ${{ secrets.Docker_Pass }}
+        docker build -t ${{ secrets.Docker_Registry }}/cflasher:latest .
+        docker push ${{ secrets.Docker_Registry }}/cflasher:latest
+    - name: Deploy the Docker image to rancher
+      run: |
+        curl -X PATCH \
+          -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
+          -H 'Content-Type: application/json-patch+json' \
+          "${{ secrets.RANCHER_URL }}/k8s/clusters/${{ secrets.RANCHER_CLUSTER }}/apis/apps/v1/namespaces/corona-tracker/deployments/tracker-flasher" \
+          -d '[{ "op": "replace", "path": "/spec/template/spec/containers/0/image", "value": "'"${{ secrets.DOCKER_REGISTRY }}/cflasher:latest"'" }]'
+        curl -X POST \
+          -u "${{ secrets.RANCHER_USERNAME }}:${{ secrets.RANCHER_PASSWORD }}" \
+          -H 'Accept: application/json' \
+          -H 'Content-Type: application/json' \
+          "${{ secrets.RANCHER_URL }}/v3/projects/${{ secrets.RANCHER_CLUSTER }}:${{ secrets.RANCHER_PROJECT }}/workloads/deployment:corona-tracker:tracker-flasher?action=redeploy"
+          
