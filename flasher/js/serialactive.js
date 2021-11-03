@@ -320,8 +320,7 @@ async function flashFileFromUrl(url, md5checksum) {
       progress = 100;
       bar.style.width = progress + "%";
       console.log('sended');
-      barRoot.removeChild(background);
-      barRoot.removeChild(filenameParagraph);
+      barRoot.innerHTML = '';
       progress = 1;
       //get md5 checksum from esp
       //c0001310000000000000100000003e00000000000000000000c0
@@ -329,9 +328,9 @@ async function flashFileFromUrl(url, md5checksum) {
       const md5SlipFrame = await read(secReader);
       const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
       console.log('Checksum from chip: ', md5checksumToCheck);
-      filesFlashed = filesFlashed + 1;
       console.log('Checksum from file: ', md5checksum);
       if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
+        filesFlashed = filesFlashed + 1;
         resolve();
       } else {
         reject(new Error('Checksum Fail'));
@@ -402,6 +401,7 @@ document.getElementById('connectButton').addEventListener('click', () => {
 let inputStream = null;
 let abortController = null;
 async function connect() {
+  document.getElementById("statusBarRoot").innerHTML = '';
   port = await navigator.serial.requestPort();
   // - Wait for the port to open.
   await port.open({ baudRate: 115200 });
@@ -413,19 +413,37 @@ async function connect() {
   await new Promise(resolve => setTimeout(resolve, 100));
   await enterBootloader();
 
-  secReader = port.readable.pipeThrough(new TransformStream(new SlipFrameTransformer())).getReader();
+  const slipTransformer = new TransformStream(new SlipFrameTransformer());
+  readerClosed = port.readable.pipeTo(slipTransformer.writable);
+  secReader = slipTransformer.readable.getReader();
+
+  const baseUrl = 'http://localhost/';
+  //const baseUrl = 'https://flasher.uniks.de/';
 
   await syncAndRead(secReader);
   await spiAttach();
   await read(secReader);
   await spiSetParams();
   await read(secReader);
-  const hashesJsonText = await downloadBlobFromUrlAsText('https://flasher.uniks.de/hashes/hashes.json');
+  const hashesJsonText = await downloadBlobFromUrlAsText(baseUrl + 'hashes/hashes.json');
   const hashesJson = JSON.parse(hashesJsonText);
-  await flashFileFromUrl('https://flasher.uniks.de/firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
-  await flashFileFromUrl('https://flasher.uniks.de/firmwares/partitions.bin', hashesJson['partitions']);
-  await flashFileFromUrl('https://flasher.uniks.de/firmwares/boot_app0.bin', hashesJson['bootapp']);
-  await flashFileFromUrl('https://flasher.uniks.de/firmwares/firmware.bin', hashesJson['firmware']);
+  await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
+  await flashFileFromUrl(baseUrl + 'firmwares/partitions.bin', hashesJson['partitions']);
+  await flashFileFromUrl(baseUrl + 'firmwares/boot_app0.bin', hashesJson['bootapp']);
+  await flashFileFromUrl(baseUrl + 'firmwares/firmware.bin', hashesJson['firmware']);
+  filesFlashed = 0;
+
+  await endFlash();
+  await reset();
+
+  await secReader.cancel();
+  await readerClosed.catch(() => {});
+  await writer.close();
+  await port.close();
+
+  secReader = null;
+  writer = null;
+  port = null;
   
   const sendedParagraph = document.createElement("p");
   const node = document.createTextNode("flashing complete");
