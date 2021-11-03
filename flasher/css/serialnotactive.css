@@ -1,0 +1,36 @@
+body {
+  margin: 0;
+}
+
+.app {
+  text-align: center;
+}
+
+.applogo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.appheader {
+  background-color: #767b85;/*#282c34;*/
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: black;/*white;*/
+}
+
+.applink {
+  color: #61dafb;
+}
+
+hr {
+  border: 0;
+  width: 50%;
+  color: rgb(145, 154, 158);
+  background-color: rgb(145, 154, 158);
+  height: 2px;
+  margin: 20px;
+}
