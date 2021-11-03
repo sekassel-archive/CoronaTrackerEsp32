@@ -6,6 +6,7 @@ import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.postgres.db.model.User;
 import de.uniks.postgres.db.utils.InfectedUserPostgreSql;
 import de.uniks.postgres.db.utils.UserPostgreSql;
+import de.uniks.postgres.db.utils.UserVerificationPostgreSql;
 import org.springframework.util.StopWatch;
 
 import java.time.Instant;
@@ -52,7 +53,7 @@ public class CwaDataInterpreter {
             UserPostgreSql userDb = new UserPostgreSql();
 
             // cwa db get every 1h a new data set. So we'll need a update of cwaData in memory
-            //cwaData = CWARequests.getUnzippedInfectionData();
+            cwaData = CWARequests.getUnzippedInfectionData();
 
             // our own infectedUser from infectedUser TABLE
             infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
@@ -75,10 +76,22 @@ public class CwaDataInterpreter {
             LOG.log(Level.INFO, "Hourly cwa data update and check successfully processed at " + lastCheckTimeString);
             LOG.log(Level.INFO, "Total time needed: " + stopWatch.getTotalTimeSeconds() / 60 + " minutes.");
 
+            cleanUpDBs();
+
         } catch (Exception ex) {
             lastCheckTimeString = "Ups, something went wrong. Waiting for next scheduled infection check.";
             LOG.log(Level.SEVERE, "CWA Data couldn't process hourly update during getData from CWA Database!", ex);
         }
+    }
+
+    private static void cleanUpDBs() {
+        InfectedUserPostgreSql infectedUserPostgreSql = new InfectedUserPostgreSql();
+        UserPostgreSql userPostgreSql = new UserPostgreSql();
+        UserVerificationPostgreSql userVerificationPostgreSql = new UserVerificationPostgreSql();
+
+        infectedUserPostgreSql.cleanup();
+        userPostgreSql.cleanup();
+        userVerificationPostgreSql.cleanup();
     }
 
     private static ConcurrentHashMap<Integer, List<byte[]>> buildInfectedUserEninRpisMap(ConcurrentHashMap<Integer, List<byte[]>> cwaData, Collection<InfectedUser> infectedUserList) {

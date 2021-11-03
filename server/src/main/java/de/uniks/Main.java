@@ -21,7 +21,6 @@ public class Main {
 
         // delay 60 min, scan schedule every 2h
         future = scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlyTask, 60, 2 * 60, TimeUnit.MINUTES);
-        //TODO: cleanup for login entries in verificationUser DB sometimes
 
         try {
             Thread springThread = new Thread(SpringBoot::startSpring);

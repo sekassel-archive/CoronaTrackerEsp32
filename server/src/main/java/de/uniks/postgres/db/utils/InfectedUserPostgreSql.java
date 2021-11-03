@@ -5,6 +5,7 @@ import de.uniks.postgres.db.model.InfectedUser;
 import de.uniks.spark.payload.InfectedUserPostPayload;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -121,6 +122,25 @@ public class InfectedUserPostgreSql {
         return userCount.get() >= 1 ? true : false;
     }
 
+    public boolean isTekInputEntryPresent(InfectedUserPostPayload input) {
+        String sql = "SELECT COUNT(*)" +
+                " FROM " + InfectedUser.CLASS +
+                " WHERE " + InfectedUser.UUID + " = \'" + input.getUuid() + "\'" +
+                " AND " + InfectedUser.RSIN + " = \'" + input.getRsin() + "\'";
+        AtomicReference<Integer> userCount = new AtomicReference<>(0);
+        connection.ifPresent(conn -> {
+            try (Statement statement = conn.createStatement();
+                 ResultSet resultSet = statement.executeQuery(sql)) {
+                if (resultSet.next()) {
+                    userCount.set(resultSet.getInt("count"));
+                }
+            } catch (SQLException ex) {
+                LOG.log(Level.WARNING, "SQL Exception happened in isTekInputEntryPresent", ex);
+            }
+        });
+        return userCount.get() >= 1 ? true : false;
+    }
+
     public void completeTekInputEntry(InfectedUser infectedUser) {
         InfectedUser nonNullUser = Objects.requireNonNull(infectedUser, "The " + InfectedUser.CLASS + " to be updated should not be null");
         String sql = "UPDATE " + InfectedUser.CLASS + " "
@@ -145,17 +165,32 @@ public class InfectedUserPostgreSql {
         });
     }
 
-    public void delete(InfectedUser infUser) {
-        InfectedUser nonNullInfUser = Objects.requireNonNull(infUser, "The " + InfectedUser.CLASS + " to be deleted should not be null");
+    public void delete(String uuid) {
         String sql = "DELETE FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.UUID + " = ?";
 
         connection.ifPresent(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setString(1, nonNullInfUser.getUuid());
+                statement.setString(1, uuid);
                 statement.executeUpdate();
 
             } catch (SQLException ex) {
                 LOG.log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+
+    public void cleanup() {
+        String sql = "DELETE FROM " + InfectedUser.CLASS + " WHERE " + InfectedUser.RSIN + " < ?";
+        int eninNow = Math.toIntExact(Instant.now().getEpochSecond() / 600L);
+
+
+        connection.ifPresent(conn -> {
+            try (PreparedStatement statement = conn.prepareStatement(sql)) {
+                statement.setInt(1,  (eninNow - (144 * 14)));
+                statement.executeUpdate();
+
+            } catch (SQLException ex) {
+                LOG.log(Level.SEVERE, "Error while removing old InfectedUserData", ex);
             }
         });
     }
