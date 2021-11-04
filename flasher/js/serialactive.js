@@ -236,7 +236,7 @@ async function flashFileFromUrl(url, md5checksum) {
   //await read(secReader);
 
   //What file flashing?
-  const filenameParagraph = document.createElement("p");
+  const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
   const node = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
   filenameParagraph.appendChild(node);
   const barRoot = document.getElementById("statusBarRoot");
