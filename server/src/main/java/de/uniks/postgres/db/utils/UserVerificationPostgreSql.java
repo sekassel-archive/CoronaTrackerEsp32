@@ -118,8 +118,14 @@ public class UserVerificationPostgreSql {
 
         // here should always only exists one valid not verified login entry in db
         VerificationUser verificationUser = byUuid.get(0);
-        verificationUser.setPin(pin);
-        updateVerificationStatusEntry(verificationUser, true);
+
+        if (verificationUser.getPin() == null) {
+            verificationUser.setPin(pin);
+            updateVerificationStatusEntry(verificationUser, true);
+        } else {
+            //the pin was set before, prevent a second run in a row
+            Optional.empty();
+        }
 
         return Optional.of(verificationUser.getTimestamp());
     }
@@ -266,7 +272,7 @@ public class UserVerificationPostgreSql {
 
         connection.ifPresent(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sql)) {
-                statement.setInt(1,  (eninNow - (144 * 14)));
+                statement.setInt(1, (eninNow - (144 * 14)));
                 statement.executeUpdate();
 
             } catch (SQLException ex) {

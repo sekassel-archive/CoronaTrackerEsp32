@@ -186,7 +186,7 @@ public class UserPostgreSql {
         String sqlCleanUpPast = "UPDATE " + User.CLASS + " SET " +
                 User.STATUS + " = 3 " + /* 3 = proofed no infection */
                 " WHERE " + User.UUID + " = \'" + uuid + "\'" +
-                " AND " + User.ENIN + " < \'" + rsin + "\'";
+                " AND " + User.ENIN + " < \'" + (rsin + 144) + "\'";
 
         connection.flatMap(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sqlCleanUpPast)) {
@@ -208,7 +208,7 @@ public class UserPostgreSql {
             sqlFlagInfectedState = "UPDATE " + User.CLASS + " SET " +
                     User.STATUS + " = 0 " + /* 0 = needs to be checked in future */
                     " WHERE " + User.UUID + " = \'" + uuid + "\'" +
-                    " AND " + User.ENIN + " >= \'" + rsin + "\'";
+                    " AND " + User.ENIN + " >= \'" + (rsin + 144) + "\'";
         }
         connection.flatMap(conn -> {
             try (PreparedStatement statement = conn.prepareStatement(sqlFlagInfectedState)) {
