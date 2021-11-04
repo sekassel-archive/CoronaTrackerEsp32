@@ -572,7 +572,7 @@ async function read(reader) {
   //try {
   let timeoutHandle;
   const timeoutPromise = new Promise((resolve, reject) => {
-    timeoutHandle = setTimeout(() => reject('Timed out'), 9000);
+    timeoutHandle = setTimeout(() => reject('Timed out'), 15000);
   });
   if (readingPromise == null) {
     readingPromise = reader.read();
