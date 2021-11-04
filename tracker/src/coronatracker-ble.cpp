@@ -17,16 +17,30 @@ class MyAdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
         //Checking for other Coviddevices
         if (advertisedDevice.haveServiceData() && advertisedDevice.getServiceDataUUID().equals(serviceUUID))
         {
-            Serial.print("Found Covid Device: ");
-            Serial.println(advertisedDevice.toString().c_str());
-
             if (advertisedDevice.getServiceData().length() != 20)
             {
+                Serial.print("Found Covid Device: ");
+                Serial.println(advertisedDevice.toString().c_str());
                 Serial.println("Advertised Data has wrong length!");
                 return;
             }
+            auto scanData = advertisedDevice.getServiceData().substr(0, 16);
 
-            encounteredRolllingProximityIdentifiers.push_back(advertisedDevice.getServiceData().substr(0, 16));
+            std::vector<std::string>::iterator iter = encounteredRolllingProximityIdentifiers.begin();
+
+            while (iter != encounteredRolllingProximityIdentifiers.end())
+            {
+                if (scanData.compare(iter->c_str()) == 0)
+                {
+                    //Serial.println("Scaned device already saved! Skip this entry.");
+                    return;
+                }
+                iter++;
+            }
+
+            Serial.print("Found Covid Device: ");
+            Serial.println(advertisedDevice.toString().c_str());
+            encounteredRolllingProximityIdentifiers.push_back(scanData);
         }
     }
 };
