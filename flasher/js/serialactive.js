@@ -406,6 +406,7 @@ async function syncAndRead(secReader) {
     await syncAndRead(secReader);
     return;
   }
+  //Consume all sync responses from Chip until timeout occures
   var notFailed = true;
   while (notFailed) {
     try {
