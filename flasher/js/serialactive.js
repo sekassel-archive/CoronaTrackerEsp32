@@ -10,32 +10,6 @@ window.onload = () => {
   }
 }
 
-
-class LineBreakTransformer {
-  constructor() {
-    // A container for holding stream data until a new line.
-    this.chunks = "";
-  }
-
-  start() {
-    this.chunks = '';
-  }
-
-  transform(chunk, controller) {
-    // Append new chunks to existing chunks.
-    this.chunks += chunk;
-    // For each line breaks in chunks, send the parsed lines out.
-    const lines = this.chunks.split("\r\n");
-    this.chunks = lines.pop();
-    lines.forEach((line) => controller.enqueue(line));
-  }
-
-  flush(controller) {
-    // When the stream is closed, flush any remaining chunks out.
-    controller.enqueue(this.chunks);
-  }
-}
-
 class SlipFrame {
   constructor() {
     this.escaped = false;
@@ -173,51 +147,26 @@ class SlipFrameTransformer {
 
 var writer = null;
 var port = null;
-var serialActive = 'not active';
-if ('serial' in navigator) {
-  serialActive = 'active';
-}
 
 async function sync() {
-  // writeToStream(outputStream.getWriter(), '\x01');
-
-  //var result = null;
-  //while (result == null) {
+  
   await writeToStream(writer, 0xc0, 0x00, 0x08, 0x07, 0x07, 0x12, 0x20, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0xc0);
-  /*result = await Promise.race([
-    (async () => {
-      for(var i = 0; i < 8; i++){
-        read(secReader);
-      }
-    })(),
-    (async () => {
-      await new Promise((res) => setTimeout(res, 2000));
-      return null;
-    })()
-  ]);*/
-
-  //}
   //b'\x07\x07\x12\x20' + 32 * b'\x55'
 }
 
 async function spiAttach() {
   //c0000d0800000000000000000000000000c0
   await writeToStream(writer, 0xc0, 0x00, 0x0d, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
-  //const res = await read(secReader);
-  //console.log(res);
 }
 
 async function spiSetParams() {
   //c0000b1800000000000000000000004000000001000010000000010000ffff0000c0
-  //c0000b1800000000000000000000004000000001000010000000010000ffff0000c0
   await writeToStream(writer, 0xc0, 0x00, 0x0b, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xc0);
-  //await read(secReader);
 }
 
 async function changeBaud() {
   //c0000f0800000000000008070000000000c0
   writeToStream(writer, 0xc0, 0x00, 0x0f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
-  //await read(secReader);
 }
 
 var progress = 0;
@@ -231,9 +180,7 @@ async function flashFileFromUrl(url, md5checksum) {
   //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
   //c0 00 02 10 00 00 00 00 00 00 3e 00 00 10 00 00 00 00 04 00 00 00 10 00 00 c0
-  //await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
-  //const res = await read(secReader);
-  //await read(secReader);
+ 
 
   //What file flashing?
   const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
@@ -270,11 +217,6 @@ async function flashFileFromUrl(url, md5checksum) {
       console.log(fileContent.length)
       const sizeHexString = toHexString(fileContent.length);
       console.log(sizeHexString);
-
-      //console.log(md5(fileContent.buffer));
-      //console.log(JSON.stringify(fileContent, null, 2));
-      //console.log(fileContent.length);
-      //console.log(checkSum);
 
       //fill filecontent with ff to fit x*1024
       //if != 0
@@ -342,9 +284,7 @@ async function flashFileFromUrl(url, md5checksum) {
         reject(new Error('Checksum Fail'));
       }
     }
-    //fileReader.readAsArrayBuffer(file)
     downloadBlobFromUrl(url, fileReader);
-    //writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x3e, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0xc0);
   })
 
 
@@ -466,6 +406,7 @@ async function syncAndRead(secReader) {
     await syncAndRead(secReader);
     return;
   }
+  //Consume all sync responses from Chip until timeout occures
   var notFailed = true;
   while (notFailed) {
     try {
@@ -506,12 +447,6 @@ async function writeToStream(writer, ...lines) {
   console.log('[SEND]', lines);
   await writer.write(Uint8Array.of(lines[0]));
   for (var i = 1; i < lines.length - 1; i++) {
-    /*console.log('vor IS Array');
-    if (Array.isArray(lines[i])) {
-      await writer.write(lines[i])
-      return;
-    }
-    //console.log('nach IS Array');*/
     if (ArrayBuffer.isView(lines[i])) {
       const tmp = new Uint8Array(lines[i]);
       for (const tmpp of tmp) {
@@ -541,30 +476,6 @@ async function writeToStream(writer, ...lines) {
   await writer.write(Uint8Array.of(lines[lines.length - 1]));
 
   //writer.releaseLock();
-}
-
-let readLoopRuns = true;
-async function readLoop(reader) {
-  console.log('readloop begin');
-  while (readLoopRuns) {
-    try {
-      const { value, done } = await reader.read();
-      if (value) {
-        console.log(value /*JSON.stringify(value, null, 2)*/ + '\n');
-      }
-      if (done) {
-        console.log('[readLoop] DONE', done);
-        reader.releaseLock();
-        break;
-      }
-    } catch (e) {
-      console.log(e);
-      break;
-    }
-
-  }
-  console.log('readloop end');
-
 }
 
 var readingPromise = null;
