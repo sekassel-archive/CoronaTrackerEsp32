@@ -39,4 +39,14 @@ public class Main {
             return true;
         }
     }
+
+    public static boolean triggerSmallInfectionCheck() {
+        if (CwaDataInterpreter.lastCheckTimeString.equals(CwaDataInterpreter.INFECTION_CHECK_IN_PROGRESS)) {
+            return false;
+        } else {
+            future.cancel(true);
+            future = scheduler.scheduleAtFixedRate(CwaDataInterpreter::checkForInfectionsHourlySmallTask, 0, 8 * 60, TimeUnit.MINUTES);
+            return true;
+        }
+    }
 }

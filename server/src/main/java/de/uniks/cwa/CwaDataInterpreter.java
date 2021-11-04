@@ -44,6 +44,14 @@ public class CwaDataInterpreter {
      * Remove Warning, no infection check needed anymore
      */
     public static void checkForInfectionsHourlyTask() {
+        infectionCheckWorkflow(false);
+    }
+
+    public static void checkForInfectionsHourlySmallTask() {
+        infectionCheckWorkflow(true);
+    }
+
+    public static void infectionCheckWorkflow(boolean small) {
         try {
             stopWatch = new StopWatch();
             stopWatch.start();
@@ -53,14 +61,20 @@ public class CwaDataInterpreter {
             UserPostgreSql userDb = new UserPostgreSql();
 
             // cwa db get every 1h a new data set. So we'll need a update of cwaData in memory
-            //cwaData = CWARequests.getUnzippedInfectionData();
+            cwaData = CWARequests.getUnzippedInfectionData();
 
             // our own infectedUser from infectedUser TABLE
             infectedUserList = infectedUserDb.getAllCompleteInfectedUser();
 
             // we need to get our own infected user into the data set of the cwa and put it in a map like:
             // [enin: rpi(from cwa inf. user tek) .... rpi2 (from our inf. user db)],[enin2: ...] usw.
-            ConcurrentHashMap<Integer, List<byte[]>> eninRpisMap = buildInfectedUserEninRpisMap(cwaData, infectedUserList);
+            ConcurrentHashMap<Integer, List<byte[]>> eninRpisMap;
+
+            if (small == true) {
+                eninRpisMap = buildInfectedUserEninRpisMap(new ConcurrentHashMap<>(), infectedUserList);
+            } else {
+                eninRpisMap = buildInfectedUserEninRpisMap(cwaData, infectedUserList);
+            }
 
             // build sql statements to be queried on our db to check for users with matching rpi from enin rpi Map
             Optional<List<User>> infectedUserActionRequired = buildAndQueryInfectionCheckOnDb(userDb, eninRpisMap);

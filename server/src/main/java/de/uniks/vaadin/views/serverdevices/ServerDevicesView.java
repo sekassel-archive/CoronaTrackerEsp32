@@ -57,11 +57,26 @@ public class ServerDevicesView extends VerticalLayout {
         infectionCheckTimeField.setReadOnly(true);
 
         Button manualInfStartButton = new Button();
-        manualInfStartButton.setText("Trigger Infection Check");
+        Button manualSmallInfStartButton = new Button();
+
+        manualInfStartButton.setText("Infection Check");
         manualInfStartButton.setWidth("200px");
         manualInfStartButton.setDisableOnClick(true);
         manualInfStartButton.addClickListener(buttonClickEvent -> {
+            manualSmallInfStartButton.setEnabled(false);
             if (Main.triggerInfectionCheck()) {
+                Notification.show("Success! Restarted Infection Check Scheduler.");
+            } else {
+                Notification.show("Fail! Scheduler seems to be busy, try again later.");
+            }
+        });
+
+        manualSmallInfStartButton.setText("Small Infection Check");
+        manualSmallInfStartButton.setWidth("200px");
+        manualSmallInfStartButton.setDisableOnClick(true);
+        manualSmallInfStartButton.addClickListener(buttonClickEvent -> {
+            manualInfStartButton.setEnabled(false);
+            if (Main.triggerSmallInfectionCheck()) {
                 Notification.show("Success! Restarted Infection Check Scheduler.");
             } else {
                 Notification.show("Fail! Scheduler seems to be busy, try again later.");
@@ -74,6 +89,7 @@ public class ServerDevicesView extends VerticalLayout {
         component.addContent(infectionCheckField);
         component.addContent(infectionCheckTimeField);
         component.addContent(manualInfStartButton);
+        component.addContent(manualSmallInfStartButton);
         component.addThemeVariants(DetailsVariant.REVERSE, DetailsVariant.FILLED);
         component.setOpened(true);
         add(component);
