@@ -1,4 +1,4 @@
-# Server deployment instruction
+# Server deployment instructions
 
 Just push to the master branch, the script will publish your artifact to our server. 
 Avoid pushing wrong or inconsistent code to the master branch.
