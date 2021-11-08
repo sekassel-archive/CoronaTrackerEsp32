@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v7';
+var CACHE_NAME = 'cache-v12';
 var urlsToCache = [
   '/',
   '/index.html',
