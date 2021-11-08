@@ -362,61 +362,72 @@ let inputStream = null;
 let abortController = null;
 async function connect() {
   document.getElementById("statusBarRoot").innerHTML = '';
-  port = await navigator.serial.requestPort();
-  // - Wait for the port to open.
-  await port.open({ baudRate: 115200 });
-  let img = document.getElementById('statusPic').setAttribute("src", '../images/upload.gif');
-
-
   try {
-    writer = port.writable.getWriter();
+    port = await navigator.serial.requestPort();
+    document.getElementById('connectButton').style.display = 'none';
+    try {
+      // - Wait for the port to open.
+      await port.open({ baudRate: 115200 });
+      document.getElementById('statusPic').setAttribute("src", '../images/upload.gif');
 
-    await new Promise(resolve => setTimeout(resolve, 100));
-    await enterBootloader();
+      writer = port.writable.getWriter();
 
-    const slipTransformer = new TransformStream(new SlipFrameTransformer());
-    readerClosed = port.readable.pipeTo(slipTransformer.writable);
-    secReader = slipTransformer.readable.getReader();
+      await new Promise(resolve => setTimeout(resolve, 100));
+      await enterBootloader();
 
-    const baseUrl = 'http://localhost/';
-    //const baseUrl = 'https://flasher.uniks.de/';
+      const slipTransformer = new TransformStream(new SlipFrameTransformer());
+      readerClosed = port.readable.pipeTo(slipTransformer.writable);
+      secReader = slipTransformer.readable.getReader();
 
-    await syncAndRead(secReader);
-    new Error("Fail");
-    await spiAttach();
-    await read(secReader, 1500);
-    await spiSetParams();
-    await read(secReader, 1500);
-    const hashesJsonText = await downloadBlobFromUrlAsText(baseUrl + 'hashes/hashes.json');
-    const hashesJson = JSON.parse(hashesJsonText);
-    await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
-    await flashFileFromUrl(baseUrl + 'firmwares/partitions.bin', hashesJson['partitions']);
-    await flashFileFromUrl(baseUrl + 'firmwares/boot_app0.bin', hashesJson['bootapp']);
-    await flashFileFromUrl(baseUrl + 'firmwares/firmware.bin', hashesJson['firmware']);
-    filesFlashed = 0;
+      const baseUrl = 'http://localhost/';
+      //const baseUrl = 'https://flasher.uniks.de/';
 
-    await endFlash();
-    await reset();
-  } catch (e) {
-    console.log(e);
-  } finally {
-    await secReader.cancel().catch(() => { });
-    await readerClosed.catch(() => { });
-    await writer.close().catch(() => { });
-    await port.close().catch(() => { });
+      await syncAndRead(secReader);
+      await spiAttach();
+      await read(secReader, 1500);
+      await spiSetParams();
+      await read(secReader, 1500);
+      const hashesJsonText = await downloadBlobFromUrlAsText(baseUrl + 'hashes/hashes.json');
+      const hashesJson = JSON.parse(hashesJsonText);
+      await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
+      await flashFileFromUrl(baseUrl + 'firmwares/partitions.bin', hashesJson['partitions']);
+      await flashFileFromUrl(baseUrl + 'firmwares/boot_app0.bin', hashesJson['bootapp']);
+      await flashFileFromUrl(baseUrl + 'firmwares/firmware.bin', hashesJson['firmware']);
+      filesFlashed = 0;
 
-    secReader = null;
-    writer = null;
-    port = null;
-  }
+      await endFlash();
+      await reset();
 
-  const sendedParagraph = document.createElement("p");
-  const node = document.createTextNode("flashing complete");
-  sendedParagraph.appendChild(node);
-  const barRoot = document.getElementById("statusBarRoot");
-  barRoot.appendChild(sendedParagraph);
 
-  document.getElementById('statusPic').setAttribute("src", '../images/flashComplete.png');
+      const sendedParagraph = document.createElement("p");
+      const node = document.createTextNode("flashing complete");
+      sendedParagraph.appendChild(node);
+      const barRoot = document.getElementById("statusBarRoot");
+      barRoot.appendChild(sendedParagraph);
+
+      document.getElementById('statusPic').setAttribute("src", '../images/flashComplete.png');
+    } catch (e) {
+      console.log(e);
+
+      const failParagraph = document.createElement("p");
+      const node = document.createTextNode("an error occured while flashing. Please try again!");
+      failParagraph.appendChild(node);
+      failParagraph.style.color = 'red';
+      const barRoot = document.getElementById("statusBarRoot");
+      barRoot.innerHTML = '';
+      barRoot.appendChild(failParagraph);
+    } finally {
+      await secReader.cancel().catch(() => { });
+      await readerClosed.catch(() => { });
+      await writer.close().catch(() => { });
+      await port.close().catch(() => { });
+
+      secReader = null;
+      writer = null;
+      port = null;
+      document.getElementById('connectButton').style.display = 'block';
+    }
+  } catch { }
 }
 
 async function syncAndRead(secReader) {
