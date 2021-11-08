@@ -529,6 +529,7 @@ async function read(reader, timeOut) {
   readingPromise = null;
   if (value) {
     console.log(JSON.stringify(value, null, 2) + '\n');
+    //throw new Error('Test Errror');
     if (value.data[value.data.length - 4] > 0) {
       throw new Error(`fail from chip: code: ${value.data[value.data.length - 3]}`);
     }
