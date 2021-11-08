@@ -258,9 +258,6 @@ async function flashFileFromUrl(url, md5checksum) {
           await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
           const answer = await read(secReader, 15000);
-          if (answer.data[answer.data.length - 4] > 0) {
-            reject(new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`));
-          }
           //Update status bar
           progress = i * 100 / nOfDataPackets;
           bar.style.width = progress + "%";
@@ -279,7 +276,6 @@ async function flashFileFromUrl(url, md5checksum) {
         }
         node = document.createTextNode(progress.toFixed(2) + "%");
         console.log('sended');
-        barRoot.innerHTML = '';
         progress = 1;
         //get md5 checksum from esp
         //c0001310000000000000100000003e00000000000000000000c0
@@ -403,6 +399,7 @@ async function connect() {
       const node = document.createTextNode("flashing complete");
       sendedParagraph.appendChild(node);
       const barRoot = document.getElementById("statusBarRoot");
+      barRoot.innerHTML = '';
       barRoot.appendChild(sendedParagraph);
 
       document.getElementById('statusPic').setAttribute("src", '../images/flashComplete.png');
@@ -532,6 +529,9 @@ async function read(reader, timeOut) {
   readingPromise = null;
   if (value) {
     console.log(JSON.stringify(value, null, 2) + '\n');
+    if (value.data[value.data.length - 4] > 0) {
+      throw new Error(`fail from chip: code: ${value.data[value.data.length - 3]}`);
+    }
     return value;
   }
   if (done) {
