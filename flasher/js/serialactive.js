@@ -379,8 +379,8 @@ async function connect() {
       readerClosed = port.readable.pipeTo(slipTransformer.writable);
       secReader = slipTransformer.readable.getReader();
 
-      const baseUrl = 'http://localhost/';
-      //const baseUrl = 'https://flasher.uniks.de/';
+      //const baseUrl = 'http://localhost/';
+      const baseUrl = 'https://flasher.uniks.de/';
 
       await syncAndRead(secReader);
       await spiAttach();
