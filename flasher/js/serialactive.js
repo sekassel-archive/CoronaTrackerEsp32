@@ -396,6 +396,8 @@ async function connect() {
   sendedParagraph.appendChild(node);
   const barRoot = document.getElementById("statusBarRoot");
   barRoot.appendChild(sendedParagraph);
+
+  document.getElementById('statusPic').setAttribute("src", '../images/flashComplete.png');
 }
 
 async function syncAndRead(secReader) {
