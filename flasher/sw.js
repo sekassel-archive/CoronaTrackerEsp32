@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v14';
+var CACHE_NAME = 'cache-v17';
 var urlsToCache = [
   '/',
   '/index.html',
@@ -18,6 +18,7 @@ var urlsToCache = [
   '/images/notconnectedgif.gif',
   '/images/upload.gif',
   '/images/flashComplete.png',
+  '/images/failed.png',
   '/js/serialactive.js',
   '/pages/serialnotactive.html',
   '/css/serialisactive.css',

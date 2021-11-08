@@ -409,6 +409,8 @@ async function connect() {
     } catch (e) {
       console.log(e);
 
+      document.getElementById('statusPic').setAttribute("src", '../images/failed.png')
+
       const failParagraph = document.createElement("p");
       const node = document.createTextNode("an error occured while flashing. Please try again!");
       failParagraph.appendChild(node);

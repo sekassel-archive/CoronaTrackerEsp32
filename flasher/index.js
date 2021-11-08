@@ -114,6 +114,10 @@ app.get('/images/flashComplete.png', (req, res) => {
     res.sendFile('./images/flashComplete.png', { root: '.' });
 })
 
+app.get('/images/failed.png', (req, res) => {
+    res.sendFile('./images/failed.png', { root: '.' });
+})
+
 app.get('/images/upload.gif', (req, res) => {
     res.sendFile('./images/upload.gif', { root: '.' });
 })
