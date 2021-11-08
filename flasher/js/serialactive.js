@@ -184,15 +184,19 @@ async function flashFileFromUrl(url, md5checksum) {
 
   //What file flashing?
   const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
-  const node = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
-  filenameParagraph.appendChild(node);
+  const nodeFilename = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
+  filenameParagraph.appendChild(nodeFilename);
   const barRoot = document.getElementById("statusBarRoot");
-  barRoot.style.textAlign = 'center';
+  barRoot.style.position = 'relative';
   barRoot.appendChild(filenameParagraph);
 
   //Add status bar
   const background = document.createElement("div");
   const bar = document.createElement("div");
+  const paragraph = document.createElement("p");
+  paragraph.className = 'center';
+  background.appendChild(paragraph);
+  var node = null;
 
   background.style.width = "100%";
   background.style.backgroundColor = "grey";
@@ -234,7 +238,7 @@ async function flashFileFromUrl(url, md5checksum) {
       const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
       await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
-      await read(secReader);
+      await read(secReader, 15000);
 
       for (var i = 0; i < nOfDataPackets; i++) {
         var subArr = fileContent.subarray(i * 1024, i * 1024 + 1024);
@@ -252,28 +256,34 @@ async function flashFileFromUrl(url, md5checksum) {
 
         await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
-        const answer = await read(secReader);
+        const answer = await read(secReader, 15000);
         if (answer.data[answer.data.length - 4] > 0) {
           reject(new Error(`fail from chip: code: ${answer.data[answer.data.length - 3]}`));
         }
         //Update status bar
         progress = i * 100 / nOfDataPackets;
         bar.style.width = progress + "%";
-        bar.innerHTML = '';
-        const paragraph = document.createElement("p");
+        
+        if (paragraph.hasChildNodes()){
+          paragraph.removeChild(node);
+        }
+        node = document.createTextNode(progress.toFixed(2) + "%");
         //paragraph.style = 'text-align: center;';
-        paragraph.appendChild(document.createTextNode(progress + "%"));
-        bar.appendChild(paragraph);
+        paragraph.appendChild(node);
       }
       progress = 100;
       bar.style.width = progress + "%";
+      if (paragraph.hasChildNodes()){
+        paragraph.removeChild(node);
+      }
+      node = document.createTextNode(progress.toFixed(2) + "%");
       console.log('sended');
       barRoot.innerHTML = '';
       progress = 1;
       //get md5 checksum from esp
       //c0001310000000000000100000003e00000000000000000000c0
       await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
-      const md5SlipFrame = await read(secReader);
+      const md5SlipFrame = await read(secReader, 10000);
       const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
       console.log('Checksum from chip: ', md5checksumToCheck);
       console.log('Checksum from file: ', md5checksum);
@@ -363,14 +373,14 @@ async function connect() {
   readerClosed = port.readable.pipeTo(slipTransformer.writable);
   secReader = slipTransformer.readable.getReader();
 
-  //const baseUrl = 'http://localhost/';
-  const baseUrl = 'https://flasher.uniks.de/';
+  const baseUrl = 'http://localhost/';
+  //const baseUrl = 'https://flasher.uniks.de/';
 
   await syncAndRead(secReader);
   await spiAttach();
-  await read(secReader);
+  await read(secReader, 1500);
   await spiSetParams();
-  await read(secReader);
+  await read(secReader, 1500);
   const hashesJsonText = await downloadBlobFromUrlAsText(baseUrl + 'hashes/hashes.json');
   const hashesJson = JSON.parse(hashesJsonText);
   await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader']);
@@ -403,7 +413,7 @@ async function connect() {
 async function syncAndRead(secReader) {
   await sync();
   try {
-    await read(secReader);
+    await read(secReader, 1500);
   } catch (e) {
     await syncAndRead(secReader);
     return;
@@ -412,7 +422,7 @@ async function syncAndRead(secReader) {
   var notFailed = true;
   while (notFailed) {
     try {
-      await read(secReader);
+      await read(secReader, 1500);
     } catch (e) {
       notFailed = false;
     }
@@ -481,11 +491,11 @@ async function writeToStream(writer, ...lines) {
 }
 
 var readingPromise = null;
-async function read(reader) {
+async function read(reader, timeOut) {
   //try {
   let timeoutHandle;
   const timeoutPromise = new Promise((resolve, reject) => {
-    timeoutHandle = setTimeout(() => reject('Timed out'), 15000);
+    timeoutHandle = setTimeout(() => reject('Timed out'), timeOut);
   });
   if (readingPromise == null) {
     readingPromise = reader.read();

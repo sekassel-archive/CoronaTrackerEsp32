@@ -14,6 +14,12 @@ body{
   height: 40vmin;
   pointer-events: none;
 }
+.center {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  text-align: center;
+}
 
 .activeAppheader {
   background-color: #282c34;

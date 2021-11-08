@@ -110,6 +110,10 @@ app.get('/images/notconnectedgif.gif', (req, res) => {
     res.sendFile('./images/notconnectedgif.gif', { root: '.' });
 })
 
+app.get('/images/flashComplete.png', (req, res) => {
+    res.sendFile('./images/flashComplete.png', { root: '.' });
+})
+
 app.get('/images/upload.gif', (req, res) => {
     res.sendFile('./images/upload.gif', { root: '.' });
 })
