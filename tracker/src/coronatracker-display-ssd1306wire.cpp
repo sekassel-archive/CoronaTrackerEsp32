@@ -29,7 +29,7 @@ void displayVerificationCountdown(int number)
     display.display();
 }
 
-void displayReleaseButton()
+void displayReleaseButton(void)
 {
     initDisplay();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
@@ -45,8 +45,8 @@ void displayUuidAndTekForVerification(std::string uuid, std::string pin)
     display.setTextAlignment(TEXT_ALIGN_CENTER);
     display.setFont(ArialMT_Plain_10);
     display.drawString(64, 0, "UUID:");
-    display.drawString(64, 11, uuid.substr(0,18).c_str());
-    display.drawString(64, 22, uuid.substr(18,35).c_str());
+    display.drawString(64, 11, uuid.substr(0, 18).c_str());
+    display.drawString(64, 22, uuid.substr(18, 35).c_str());
     display.drawString(64, 33, "PIN:");
     display.drawString(64, 44, pin.c_str());
     display.display();
@@ -66,7 +66,7 @@ void displayVerificationSuccess(void)
 {
     initDisplay();
     display.setTextAlignment(TEXT_ALIGN_CENTER);
-    display.drawString(64, 0, "Successfully verified!");
+    display.drawString(64, 0, "Success!");
     display.drawString(64, 16, "Exchange data...");
     display.display();
 }

@@ -11,6 +11,11 @@
 #define ACTION_SLEEP 5
 
 void initDisplay();
+void displayVerificationCountdown(int number);
+void displayReleaseButton(void);
+void displayUuidAndTekForVerification(std::string uuid, std::string pin);
+void displayVerificationFailed(void);
+void displayVerificationSuccess(void);
 void configureWifiMessageOnDisplay();
 void wifiConfiguredOnDisplay(bool configured);
 void defaultDisplay(struct tm timeinfo, int action, exposure_status exposureStatus, int numberOfScanedDevices);

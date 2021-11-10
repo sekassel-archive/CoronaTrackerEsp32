@@ -17,6 +17,55 @@ void initDisplay()
   ledcWrite(0, 185);
 }
 
+void displayVerificationCountdown(int number)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(L_BASELINE);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("Start verification in", 2, 5, 1);
+    tft.drawString(String(number), 2, 15, 1);
+}
+
+void displayReleaseButton(void)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(L_BASELINE);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("Please stop", 2, 5, 1);
+    tft.drawString("pressing button", 2, 15, 1);
+    tft.drawString("to continue.", 2, 25, 1);
+}
+
+void displayUuidAndTekForVerification(std::string uuid, std::string pin)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(L_BASELINE);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("UUID:", 2, 5, 1);
+    tft.drawString(uuid.substr(0, 18).c_str(), 2, 15, 1);
+    tft.drawString(uuid.substr(18, 35).c_str(), 2, 25, 1);
+    tft.drawString("PIN:", 2, 35, 1);
+    tft.drawString(pin.c_str(), 2, 45, 1);
+}
+
+void displayVerificationFailed(void)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(L_BASELINE);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("Verification failed!", 2, 5, 1);
+    tft.drawString("Try again later.", 2, 15, 1);
+}
+
+void displayVerificationSuccess(void)
+{
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(L_BASELINE);
+    tft.setTextColor(TFT_WHITE);
+    tft.drawString("Success!", 2, 5, 1);
+    tft.drawString("Exchange data...", 2, 15, 1);
+}
+
 void configureWifiMessageOnDisplay()
 {
     tft.fillScreen(TFT_BLACK);
