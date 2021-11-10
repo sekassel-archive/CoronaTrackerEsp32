@@ -4,16 +4,6 @@ var http = require('http');
 var express = require('express');
 var app = express();
 
-app.get('/', (req, res) => {
-    res.sendFile('./index.html', { root: '.' });
-})
-app.get('/index.html', (req, res) => {
-    res.sendFile('./index.html', { root: '.' });
-})
-
-app.get('/pages/serialnotactive.html', (req, res) => {
-    res.sendFile('./pages/serialnotactive.html', { root: '.' });
-})
 
 app.get('/firmwares/firmware.bin', async (req, res) => {
     const axios = require('axios');
@@ -94,18 +84,6 @@ app.get('/css/serialisactive.css', (req, res) => {
     res.sendFile('./css/serialisactive.css', { root: '.' });
 })
 
-app.get('/css/style.css', (req, res) => {
-    res.sendFile('./css/style.css', { root: '.' });
-})
-
-app.get('/images/hello-icon-152.png', (req, res) => {
-    res.sendFile('./images/hello-icon-152.png', { root: '.' });
-})
-
-app.get('/favicon.ico', (req, res) => {
-    res.sendFile('./favicon.ico', { root: '.' });
-})
-
 app.get('/images/notconnectedgif.gif', (req, res) => {
     res.sendFile('./images/notconnectedgif.gif', { root: '.' });
 })
@@ -126,8 +104,20 @@ app.get('/images/noSerial.png', (req, res) => {
     res.sendFile('./images/noSerial.png', { root: '.' });
 })
 
-app.get('/images/hello-icon-144.png', (req, res) => {
-    res.sendFile('./images/hello-icon-144.png', { root: '.' });
+app.get('/images/android-chrome-192x192.png', (req, res) => {
+    res.sendFile('./images/android-chrome-192x192.png', { root: '.' });
+})
+
+app.get('/images/android-chrome-512x512.png', (req, res) => {
+    res.sendFile('./images/android-chrome-512x512.png', { root: '.' });
+})
+
+app.get('/js/serialactive.js', (req, res) => {
+    res.sendFile('./js/serialactive.js', { root: '.' });
+})
+
+app.get('/pages/serialnotactive.html', (req, res) => {
+    res.sendFile('./pages/serialnotactive.html', { root: '.' });
 })
 
 app.get('/manifest.json', (req, res) => {
@@ -138,8 +128,15 @@ app.get('/sw.js', (req, res) => {
     res.sendFile('./sw.js', { root: '.' });
 })
 
-app.get('/js/serialactive.js', (req, res) => {
-    res.sendFile('./js/serialactive.js', { root: '.' });
+app.get('/', (req, res) => {
+    res.sendFile('./index.html', { root: '.' });
+})
+app.get('/index.html', (req, res) => {
+    res.sendFile('./index.html', { root: '.' });
+})
+
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile('./favicon.ico', { root: '.' });
 })
 
 //app.listen(80, () => {console.log('Started')})

@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v18';
+var CACHE_NAME = 'cache-v20';
 var urlsToCache = [
   '/',
   '/index.html',
@@ -19,11 +19,12 @@ var urlsToCache = [
   '/images/upload.gif',
   '/images/flashComplete.png',
   '/images/failed.png',
+  '/images/android-chrome-192x192.png',
+  '/images/android-chrome-512x512.png',
   '/js/serialactive.js',
   '/pages/serialnotactive.html',
   '/css/serialisactive.css',
   '/css/serialnotactive.css',
-  '/css/style.css',
   '/firmwares/firmware.bin',
   '/firmwares/bootloader_dio_40m.bin',
   '/firmwares/partitions.bin',
