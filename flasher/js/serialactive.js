@@ -284,6 +284,7 @@ async function flashFileFromUrl(url, md5checksum) {
         const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
         console.log('Checksum from chip: ', md5checksumToCheck);
         console.log('Checksum from file: ', md5checksum);
+        barRoot.innerHTML = '';
         if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
           filesFlashed = filesFlashed + 1;
           resolve();
@@ -375,8 +376,8 @@ async function connect() {
       readerClosed = port.readable.pipeTo(slipTransformer.writable);
       secReader = slipTransformer.readable.getReader();
 
-      //const baseUrl = 'http://localhost/';
-      const baseUrl = 'https://flasher.uniks.de/';
+      const baseUrl = 'http://localhost/';
+      //const baseUrl = 'https://flasher.uniks.de/';
 
       await syncAndRead(secReader);
       await spiAttach();
