@@ -10,10 +10,10 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v20';
+var CACHE_NAME = 'cache-v21';
 var urlsToCache = [
-  '/',
-  '/index.html',
+  '/css/serialisactive.css',
+  '/css/serialnotactive.css',
   '/images/noSerial.png',
   '/images/notconnectedgif.gif',
   '/images/upload.gif',
@@ -23,12 +23,13 @@ var urlsToCache = [
   '/images/android-chrome-512x512.png',
   '/js/serialactive.js',
   '/pages/serialnotactive.html',
-  '/css/serialisactive.css',
-  '/css/serialnotactive.css',
+  '/',
+  '/index.html',
   '/firmwares/firmware.bin',
   '/firmwares/bootloader_dio_40m.bin',
   '/firmwares/partitions.bin',
   '/firmwares/boot_app0.bin',
+  '/hashes/hashes.json',
 ];
 
 self.addEventListener('install', function(event) {
