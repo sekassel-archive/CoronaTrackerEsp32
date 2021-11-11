@@ -275,6 +275,7 @@ async function flashFileFromUrl(url, md5checksum) {
           paragraph.removeChild(node);
         }
         node = document.createTextNode(progress.toFixed(2) + "%");
+        paragraph.appendChild(node);
         console.log('sended');
         progress = 1;
         //get md5 checksum from esp
@@ -399,6 +400,7 @@ async function connect() {
       const sendedParagraph = document.createElement("p");
       const node = document.createTextNode("flashing complete");
       sendedParagraph.appendChild(node);
+      sendedParagraph.style.color = 'green';
       const barRoot = document.getElementById("statusBarRoot");
       barRoot.innerHTML = '';
       barRoot.appendChild(sendedParagraph);
