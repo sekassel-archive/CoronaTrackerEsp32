@@ -293,7 +293,7 @@ async function flashFileFromUrl(url, md5checksum) {
           filesFlashed = filesFlashed + 1;
           resolve();
         } else {
-          reject(new Error('Checksum Fail'));
+          reject(new Error('Checksum from chip not equal to checksum from file'));
         }
       } catch (e) {
         reject(e);
@@ -324,7 +324,7 @@ function downloadBlobFromUrlAsText(url) {
       resolve(res);
     }
     fileReader.onerror = () => {
-      reject(new Error('Error in read file on downloadBlobFromUrlAsText'));
+      reject(new Error('Error in read file on downloadBlobFromUrlAsText, url: ' + url));
     }
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
@@ -334,7 +334,7 @@ function downloadBlobFromUrlAsText(url) {
       fileReader.readAsText(xhr.response);
     }
     xhr.onerror = () => {
-      reject(new Error('Error in http request from downloadBlobFromUrlAsText'));
+      reject(new Error('Error in http request from downloadBlobFromUrlAsText, url: ' + url));
     }
     xhr.send();
   })
@@ -418,7 +418,7 @@ async function connect() {
       document.getElementById('statusPic').setAttribute("src", '../images/failed.png')
 
       const failParagraph = document.createElement("p");
-      const node = document.createTextNode("an error occured while flashing. Please try again!");
+      const node = document.createTextNode("An error occured while flashing. Please try again!");
       failParagraph.appendChild(node);
       failParagraph.style.color = 'red';
       const barRoot = document.getElementById("statusBarRoot");
@@ -429,6 +429,9 @@ async function connect() {
       const node2 = document.createTextNode(`${e.name} message: ${e.message}`);
       failParagraph2.appendChild(node2);
       failParagraph2.style.color = 'red';
+      failParagraph2.style.borderStyle = 'solid';
+      failParagraph2.style.borderColor = 'red';
+      failParagraph2.style.fontWeight = 'bold';
       barRoot.appendChild(failParagraph2);
     } finally {
       await secReader.cancel().catch(() => { });
@@ -547,7 +550,7 @@ async function read(reader, timeOut) {
     if (DEBUGMODE) console.log(JSON.stringify(value, null, 2) + '\n');
     //throw new Error('Test Errror');
     if (value.data[value.data.length - 4] > 0) {
-      throw new Error(`fail from chip: code: ${value.data[value.data.length - 3]}`);
+      throw new Error(`Fail from chip: slip frame fail code: ${value.data[value.data.length - 3]}`);
     }
     return value;
   }
