@@ -403,10 +403,11 @@ async function connect() {
 
 
       const sendedParagraph = document.createElement("p");
-      const node = document.createTextNode("flashing complete");
+      const node = document.createTextNode("Flashing completed!");
       console.log("flashing complete");
       sendedParagraph.appendChild(node);
       sendedParagraph.style.color = 'green';
+      sendedParagraph.style.fontWeight = 'bold';
       const barRoot = document.getElementById("statusBarRoot");
       barRoot.innerHTML = '';
       barRoot.appendChild(sendedParagraph);
@@ -432,6 +433,7 @@ async function connect() {
       failParagraph2.style.borderStyle = 'solid';
       failParagraph2.style.borderColor = 'red';
       failParagraph2.style.fontWeight = 'bold';
+      failParagraph2.style.padding = '5px';
       barRoot.appendChild(failParagraph2);
     } finally {
       await secReader.cancel().catch(() => { });
