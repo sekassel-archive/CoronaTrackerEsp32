@@ -184,11 +184,14 @@ async function flashFileFromUrl(url, md5checksum) {
 
   //What file flashing?
   const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
-  const nodeFilename = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
+  const flashingFileString = "flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"";
+  const nodeFilename = document.createTextNode(flashingFileString);
   filenameParagraph.appendChild(nodeFilename);
   const barRoot = document.getElementById("statusBarRoot");
   barRoot.style.position = 'relative';
   barRoot.appendChild(filenameParagraph);
+
+  console.log(flashingFileString);
 
   //Add status bar
   const background = document.createElement("div");
@@ -283,8 +286,8 @@ async function flashFileFromUrl(url, md5checksum) {
         await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
         const md5SlipFrame = await read(secReader, 10000);
         const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
-        console.log('Checksum from chip: ', md5checksumToCheck);
-        console.log('Checksum from file: ', md5checksum);
+        if (DEBUGMODE) console.log('Checksum from chip: ', md5checksumToCheck);
+        if (DEBUGMODE) console.log('Checksum from file: ', md5checksum);
         barRoot.innerHTML = '';
         if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
           filesFlashed = filesFlashed + 1;
@@ -377,10 +380,12 @@ async function connect() {
       readerClosed = port.readable.pipeTo(slipTransformer.writable);
       secReader = slipTransformer.readable.getReader();
 
-      //const baseUrl = 'http://localhost/';
-      const baseUrl = 'https://flasher.uniks.de/';
+      const baseUrl = 'http://localhost/';
+      //const baseUrl = 'https://flasher.uniks.de/';
 
-      await syncAndRead(secReader, 1);
+      console.log('synchronize with chip');
+      await syncAndRead(secReader, 8);
+      console.log('synchronized, prepare flashing with spi');
       await spiAttach();
       await read(secReader, 1500);
       await spiSetParams();
@@ -399,6 +404,7 @@ async function connect() {
 
       const sendedParagraph = document.createElement("p");
       const node = document.createTextNode("flashing complete");
+      console.log("flashing complete");
       sendedParagraph.appendChild(node);
       sendedParagraph.style.color = 'green';
       const barRoot = document.getElementById("statusBarRoot");
@@ -418,6 +424,12 @@ async function connect() {
       const barRoot = document.getElementById("statusBarRoot");
       barRoot.innerHTML = '';
       barRoot.appendChild(failParagraph);
+
+      const failParagraph2 = document.createElement("p");
+      const node2 = document.createTextNode(`${e.name} message: ${e.message}`);
+      failParagraph2.appendChild(node2);
+      failParagraph2.style.color = 'red';
+      barRoot.appendChild(failParagraph2);
     } finally {
       await secReader.cancel().catch(() => { });
       await readerClosed.catch(() => { });
