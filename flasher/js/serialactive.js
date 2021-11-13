@@ -10,6 +10,8 @@ window.onload = () => {
   }
 }
 
+const DEBUGMODE = false;
+
 class SlipFrame {
   constructor() {
     this.escaped = false;
@@ -117,7 +119,6 @@ class SlipFrameTransformer {
         if (chunk === null) controller.terminate()
         else if (ArrayBuffer.isView(chunk)) {
           arr = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
-          //console.log(JSON.stringify(arr, null, 2));
         }
         else if (Array.isArray(chunk) && chunk.every(value => typeof value === 'number'))
           arr = new Uint8Array(chunk)
@@ -133,7 +134,6 @@ class SlipFrameTransformer {
         return
     }
 
-    //console.log(JSON.stringify(arr, null, 2))
     for (var i = 0; i < arr.length; i++) {
       this.slipFrame.insert(arr[i]);
       if (this.slipFrame.endSetted) {
@@ -219,9 +219,9 @@ async function flashFileFromUrl(url, md5checksum) {
           alert("Sorry, this browser does not support TextDecoder...");
 
         var enc = new TextDecoder("utf-8");
-        console.log(fileContent.length)
+        if (DEBUGMODE) console.log('File Content length', fileContent.length);
         const sizeHexString = toHexString(fileContent.length);
-        console.log(sizeHexString);
+        if (DEBUGMODE) console.log('Size Hex String', sizeHexString);
 
         //fill filecontent with ff to fit x*1024
         //if != 0
@@ -235,7 +235,7 @@ async function flashFileFromUrl(url, md5checksum) {
         }
 
         const nOfDataPackets = Math.floor(fileContent.length / 1024);
-        console.log('Number of Data Packets', nOfDataPackets);
+        if (DEBUGMODE) console.log('Number of Data Packets', nOfDataPackets);
         const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
         await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
@@ -249,11 +249,11 @@ async function flashFileFromUrl(url, md5checksum) {
           }
           var indexHexString = toHexString(i);
 
-          console.log(`len: ${subArr.length}`);
+          if (DEBUGMODE) console.log(`Subarray length: ${subArr.length}`);
 
-          console.log(`checksum: ${checkSum}`);
+          if (DEBUGMODE) console.log(`checksum: ${checkSum}`);
 
-          console.log(`Hex: ${indexHexString}`);
+          if (DEBUGMODE) console.log(`Index Hex String: ${indexHexString}`);
 
           await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
@@ -276,7 +276,7 @@ async function flashFileFromUrl(url, md5checksum) {
         }
         node = document.createTextNode(progress.toFixed(2) + "%");
         paragraph.appendChild(node);
-        console.log('sended');
+        console.log(`File ${url.substring(url.lastIndexOf("/") + 1, url.length)} sended`);
         progress = 1;
         //get md5 checksum from esp
         //c0001310000000000000100000003e00000000000000000000c0
@@ -478,7 +478,7 @@ async function reset() {
 }
 
 async function writeToStream(writer, ...lines) {
-  console.log('[SEND]', lines);
+  if (DEBUGMODE) console.log('[SEND]', lines);
   await writer.write(Uint8Array.of(lines[0]));
   for (var i = 1; i < lines.length - 1; i++) {
     if (ArrayBuffer.isView(lines[i])) {
@@ -531,7 +531,7 @@ async function read(reader, timeOut) {
   });
   readingPromise = null;
   if (value) {
-    console.log(JSON.stringify(value, null, 2) + '\n');
+    if (DEBUGMODE) console.log(JSON.stringify(value, null, 2) + '\n');
     //throw new Error('Test Errror');
     if (value.data[value.data.length - 4] > 0) {
       throw new Error(`fail from chip: code: ${value.data[value.data.length - 3]}`);
