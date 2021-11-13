@@ -112,6 +112,14 @@ app.get('/images/android-chrome-512x512.png', (req, res) => {
     res.sendFile('./images/android-chrome-512x512.png', { root: '.' });
 })
 
+app.get('/images/favicon-16x16.png', (req, res) => {
+    res.sendFile('./images/favicon-16x16.png', { root: '.' });
+})
+
+app.get('/images/favicon-32x32.png', (req, res) => {
+    res.sendFile('./images/favicon-32x32.png', { root: '.' });
+})
+
 app.get('/images/apple-touch-icon.png', (req, res) => {
     res.sendFile('./images/apple-touch-icon.png', { root: '.' });
 })
