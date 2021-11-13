@@ -380,7 +380,7 @@ async function connect() {
       //const baseUrl = 'http://localhost/';
       const baseUrl = 'https://flasher.uniks.de/';
 
-      await syncAndRead(secReader);
+      await syncAndRead(secReader, 1);
       await spiAttach();
       await read(secReader, 1500);
       await spiSetParams();
@@ -432,12 +432,13 @@ async function connect() {
   } catch { }
 }
 
-async function syncAndRead(secReader) {
+async function syncAndRead(secReader, ntimes) {
+  if (ntimes <= 0) throw new Error('Synchronization with Chip failed');
   await sync();
   try {
     await read(secReader, 1500);
   } catch (e) {
-    await syncAndRead(secReader);
+    await syncAndRead(secReader, ntimes - 1);
     return;
   }
   //Consume all sync responses from Chip until timeout occures
