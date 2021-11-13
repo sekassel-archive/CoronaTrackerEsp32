@@ -5,10 +5,12 @@ body {
 .app {
   text-align: center;
   background-color: #767b85;/*#282c34;*/
+  position: relative;
 }
 
-.applogo {
-  height: 40vmin;
+.notactivepic {
+  height: 40vh;
+  width: auto;
   pointer-events: none;
 }
 
@@ -39,7 +41,7 @@ hr {
 }
 
 footer {
-  position: absolute;
+  position: relative;
   bottom: 0;
   left: 0;
   right: 0;
