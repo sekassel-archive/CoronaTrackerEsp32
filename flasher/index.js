@@ -112,6 +112,10 @@ app.get('/images/android-chrome-512x512.png', (req, res) => {
     res.sendFile('./images/android-chrome-512x512.png', { root: '.' });
 })
 
+app.get('/images/apple-touch-icon.png', (req, res) => {
+    res.sendFile('./images/apple-touch-icon.png', { root: '.' });
+})
+
 app.get('/js/serialactive.js', (req, res) => {
     res.sendFile('./js/serialactive.js', { root: '.' });
 })
