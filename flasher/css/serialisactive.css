@@ -35,3 +35,33 @@ body{
 .applink {
   color: #61dafb;
 }
+
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 3px;
+  color: white;
+}
+
+ /* unvisited link */
+ a:link {
+  color: #f8d400;
+}
+
+/* visited link */
+a:visited {
+  color: #b59002;
+}
+
+/* mouse over link */
+a:hover {
+  color: #f8d400;
+}
+
+/* selected link */
+a:active {
+  color: #b59002;
+} 

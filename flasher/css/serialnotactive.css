@@ -4,6 +4,7 @@ body {
 
 .app {
   text-align: center;
+  background-color: #767b85;/*#282c34;*/
 }
 
 .applogo {
@@ -11,8 +12,11 @@ body {
   pointer-events: none;
 }
 
+.applink {
+  color: #61dafb;
+}
+
 .appheader {
-  background-color: #767b85;/*#282c34;*/
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -22,15 +26,45 @@ body {
   color: black;/*white;*/
 }
 
-.applink {
-  color: #61dafb;
-}
-
-hr {
+.horizontal {
   border: 0;
   width: 50%;
-  color: rgb(145, 154, 158);
-  background-color: rgb(145, 154, 158);
   height: 2px;
   margin: 20px;
 }
+
+hr {
+  color: rgb(145, 154, 158);
+  background-color: rgb(145, 154, 158);
+}
+
+footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  justify-content: center;
+  padding: 3px;
+  color: black;
+}
+
+/* unvisited link */
+a:link {
+ color: #f8d400;
+}
+
+/* visited link */
+a:visited {
+ color: #b59002;
+}
+
+/* mouse over link */
+a:hover {
+ color: #f8d400;
+}
+
+/* selected link */
+a:active {
+ color: #b59002;
+} 

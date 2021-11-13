@@ -10,6 +10,8 @@ window.onload = () => {
   }
 }
 
+const DEBUGMODE = false;
+
 class SlipFrame {
   constructor() {
     this.escaped = false;
@@ -117,7 +119,6 @@ class SlipFrameTransformer {
         if (chunk === null) controller.terminate()
         else if (ArrayBuffer.isView(chunk)) {
           arr = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
-          //console.log(JSON.stringify(arr, null, 2));
         }
         else if (Array.isArray(chunk) && chunk.every(value => typeof value === 'number'))
           arr = new Uint8Array(chunk)
@@ -133,7 +134,6 @@ class SlipFrameTransformer {
         return
     }
 
-    //console.log(JSON.stringify(arr, null, 2))
     for (var i = 0; i < arr.length; i++) {
       this.slipFrame.insert(arr[i]);
       if (this.slipFrame.endSetted) {
@@ -184,11 +184,14 @@ async function flashFileFromUrl(url, md5checksum) {
 
   //What file flashing?
   const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
-  const nodeFilename = document.createTextNode("flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"");
+  const flashingFileString = "flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"";
+  const nodeFilename = document.createTextNode(flashingFileString);
   filenameParagraph.appendChild(nodeFilename);
   const barRoot = document.getElementById("statusBarRoot");
   barRoot.style.position = 'relative';
   barRoot.appendChild(filenameParagraph);
+
+  console.log(flashingFileString);
 
   //Add status bar
   const background = document.createElement("div");
@@ -219,9 +222,9 @@ async function flashFileFromUrl(url, md5checksum) {
           alert("Sorry, this browser does not support TextDecoder...");
 
         var enc = new TextDecoder("utf-8");
-        console.log(fileContent.length)
+        if (DEBUGMODE) console.log('File Content length', fileContent.length);
         const sizeHexString = toHexString(fileContent.length);
-        console.log(sizeHexString);
+        if (DEBUGMODE) console.log('Size Hex String', sizeHexString);
 
         //fill filecontent with ff to fit x*1024
         //if != 0
@@ -235,7 +238,7 @@ async function flashFileFromUrl(url, md5checksum) {
         }
 
         const nOfDataPackets = Math.floor(fileContent.length / 1024);
-        console.log('Number of Data Packets', nOfDataPackets);
+        if (DEBUGMODE) console.log('Number of Data Packets', nOfDataPackets);
         const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
         await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16),/*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16),/*|*/ 0x00, 0x04, 0x00, 0x00,/*|*/ adresses[filesFlashed], 0xc0);
@@ -249,11 +252,11 @@ async function flashFileFromUrl(url, md5checksum) {
           }
           var indexHexString = toHexString(i);
 
-          console.log(`len: ${subArr.length}`);
+          if (DEBUGMODE) console.log(`Subarray length: ${subArr.length}`);
 
-          console.log(`checksum: ${checkSum}`);
+          if (DEBUGMODE) console.log(`checksum: ${checkSum}`);
 
-          console.log(`Hex: ${indexHexString}`);
+          if (DEBUGMODE) console.log(`Index Hex String: ${indexHexString}`);
 
           await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
@@ -276,21 +279,21 @@ async function flashFileFromUrl(url, md5checksum) {
         }
         node = document.createTextNode(progress.toFixed(2) + "%");
         paragraph.appendChild(node);
-        console.log('sended');
+        console.log(`File ${url.substring(url.lastIndexOf("/") + 1, url.length)} sended`);
         progress = 1;
         //get md5 checksum from esp
         //c0001310000000000000100000003e00000000000000000000c0
         await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
         const md5SlipFrame = await read(secReader, 10000);
         const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
-        console.log('Checksum from chip: ', md5checksumToCheck);
-        console.log('Checksum from file: ', md5checksum);
+        if (DEBUGMODE) console.log('Checksum from chip: ', md5checksumToCheck);
+        if (DEBUGMODE) console.log('Checksum from file: ', md5checksum);
         barRoot.innerHTML = '';
         if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
           filesFlashed = filesFlashed + 1;
           resolve();
         } else {
-          reject(new Error('Checksum Fail'));
+          reject(new Error('Checksum from chip not equal to checksum from file'));
         }
       } catch (e) {
         reject(e);
@@ -321,7 +324,7 @@ function downloadBlobFromUrlAsText(url) {
       resolve(res);
     }
     fileReader.onerror = () => {
-      reject(new Error('Error in read file on downloadBlobFromUrlAsText'));
+      reject(new Error('Error in read file on downloadBlobFromUrlAsText, url: ' + url));
     }
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
@@ -331,7 +334,7 @@ function downloadBlobFromUrlAsText(url) {
       fileReader.readAsText(xhr.response);
     }
     xhr.onerror = () => {
-      reject(new Error('Error in http request from downloadBlobFromUrlAsText'));
+      reject(new Error('Error in http request from downloadBlobFromUrlAsText, url: ' + url));
     }
     xhr.send();
   })
@@ -380,7 +383,9 @@ async function connect() {
       //const baseUrl = 'http://localhost/';
       const baseUrl = 'https://flasher.uniks.de/';
 
-      await syncAndRead(secReader);
+      console.log('synchronize with chip');
+      await syncAndRead(secReader, 8);
+      console.log('synchronized, prepare flashing with spi');
       await spiAttach();
       await read(secReader, 1500);
       await spiSetParams();
@@ -399,6 +404,7 @@ async function connect() {
 
       const sendedParagraph = document.createElement("p");
       const node = document.createTextNode("flashing complete");
+      console.log("flashing complete");
       sendedParagraph.appendChild(node);
       sendedParagraph.style.color = 'green';
       const barRoot = document.getElementById("statusBarRoot");
@@ -412,12 +418,21 @@ async function connect() {
       document.getElementById('statusPic').setAttribute("src", '../images/failed.png')
 
       const failParagraph = document.createElement("p");
-      const node = document.createTextNode("an error occured while flashing. Please try again!");
+      const node = document.createTextNode("An error occured while flashing. Please try again!");
       failParagraph.appendChild(node);
       failParagraph.style.color = 'red';
       const barRoot = document.getElementById("statusBarRoot");
       barRoot.innerHTML = '';
       barRoot.appendChild(failParagraph);
+
+      const failParagraph2 = document.createElement("p");
+      const node2 = document.createTextNode(`${e.name} message: ${e.message}`);
+      failParagraph2.appendChild(node2);
+      failParagraph2.style.color = 'red';
+      failParagraph2.style.borderStyle = 'solid';
+      failParagraph2.style.borderColor = 'red';
+      failParagraph2.style.fontWeight = 'bold';
+      barRoot.appendChild(failParagraph2);
     } finally {
       await secReader.cancel().catch(() => { });
       await readerClosed.catch(() => { });
@@ -432,12 +447,13 @@ async function connect() {
   } catch { }
 }
 
-async function syncAndRead(secReader) {
+async function syncAndRead(secReader, ntimes) {
+  if (ntimes <= 0) throw new Error('Synchronization with Chip failed');
   await sync();
   try {
     await read(secReader, 1500);
   } catch (e) {
-    await syncAndRead(secReader);
+    await syncAndRead(secReader, ntimes - 1);
     return;
   }
   //Consume all sync responses from Chip until timeout occures
@@ -478,7 +494,7 @@ async function reset() {
 }
 
 async function writeToStream(writer, ...lines) {
-  console.log('[SEND]', lines);
+  if (DEBUGMODE) console.log('[SEND]', lines);
   await writer.write(Uint8Array.of(lines[0]));
   for (var i = 1; i < lines.length - 1; i++) {
     if (ArrayBuffer.isView(lines[i])) {
@@ -531,10 +547,10 @@ async function read(reader, timeOut) {
   });
   readingPromise = null;
   if (value) {
-    console.log(JSON.stringify(value, null, 2) + '\n');
+    if (DEBUGMODE) console.log(JSON.stringify(value, null, 2) + '\n');
     //throw new Error('Test Errror');
     if (value.data[value.data.length - 4] > 0) {
-      throw new Error(`fail from chip: code: ${value.data[value.data.length - 3]}`);
+      throw new Error(`Fail from chip: slip frame fail code: ${value.data[value.data.length - 3]}`);
     }
     return value;
   }
