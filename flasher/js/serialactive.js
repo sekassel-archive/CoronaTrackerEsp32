@@ -404,7 +404,7 @@ async function connect() {
 
       const sendedParagraph = document.createElement("p");
       const node = document.createTextNode("Flashing completed!");
-      console.log("flashing complete");
+      console.log("flashing completed");
       sendedParagraph.appendChild(node);
       sendedParagraph.style.color = 'green';
       sendedParagraph.style.fontWeight = 'bold';
@@ -426,6 +426,12 @@ async function connect() {
       barRoot.innerHTML = '';
       barRoot.appendChild(failParagraph);
 
+      const failParagraph1 = document.createElement("p");
+      const node1 = document.createTextNode("(maybe reload page and reconnect chip)");
+      failParagraph1.appendChild(node1);
+      failParagraph1.style.color = 'red';
+      barRoot.appendChild(failParagraph1);
+
       const failParagraph2 = document.createElement("p");
       const node2 = document.createTextNode(`${e.name} message: ${e.message}`);
       failParagraph2.appendChild(node2);
@@ -444,6 +450,7 @@ async function connect() {
       secReader = null;
       writer = null;
       port = null;
+      filesFlashed = 0;
       document.getElementById('connectButton').style.display = 'block';
     }
   } catch { }
