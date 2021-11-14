@@ -128,6 +128,14 @@ app.get('/js/serialactive.js', (req, res) => {
     res.sendFile('./js/serialactive.js', { root: '.' });
 })
 
+app.get('/js/SlipFrame.js', (req, res) => {
+    res.sendFile('./js/SlipFrame.js', { root: '.' });
+})
+
+app.get('/js/SlipFrameTransformer.js', (req, res) => {
+    res.sendFile('./js/SlipFrameTransformer.js', { root: '.' });
+})
+
 app.get('/pages/serialnotactive.html', (req, res) => {
     res.sendFile('./pages/serialnotactive.html', { root: '.' });
 })

@@ -1,3 +1,5 @@
+import { SlipFrameTransformer } from './SlipFrameTransformer.js';
+
 window.onload = () => {
   'use strict';
 
@@ -11,139 +13,6 @@ window.onload = () => {
 }
 
 const DEBUGMODE = false;
-
-class SlipFrame {
-  constructor() {
-    this.escaped = false;
-    this.startSetted = false;
-    this.endSetted = false;
-    this.direction = -1;
-    this.command = -1;
-    this.size = new Uint8Array();
-    this.value = new Uint8Array();
-    this.data = null;
-    this.dataPosition = 0;
-  }
-
-  insert(value) {
-    switch (value) {
-      case 0xc0:
-        if (!this.startSetted) {
-          this.startSetted = true;
-          return;
-        } else {
-          this.endSetted = true;
-        }
-        break;
-      case 0xdb:
-        this.escaped = true;
-        break;
-      default:
-
-        if (this.startSetted && !this.endSetted) {
-          var value2 = value;
-          if (this.escaped) {
-            if (value == 0xdc) {
-              value2 = 0xc0;
-            } else if (value == 0xdd) {
-              value2 = 0xdb;
-            }
-            this.escaped = false;
-          }
-
-          if (this.direction == -1) {
-            this.direction = value2;
-            return;
-          }
-          if (this.command == -1) {
-            this.command = value2;
-            return;
-          }
-
-          if (this.size.length < 1) {
-            this.size = Uint8Array.of(value2)
-            return;
-          }
-          if (this.size.length < 2) {
-            this.size = Uint8Array.of(this.size[0], value2)
-            return;
-          }
-
-
-          if (this.value.length < 1) {
-            this.value = Uint8Array.of(value2)
-            return;
-          }
-          if (this.value.length < 2) {
-            this.value = Uint8Array.of(this.value[0], value2)
-            return;
-          }
-          if (this.value.length < 3) {
-            this.value = Uint8Array.of(this.value[0], this.value[1], value2)
-            return;
-          }
-          if (this.value.length < 4) {
-            this.value = Uint8Array.of(this.value[0], this.value[1], this.value[2], value2)
-            return;
-          }
-
-          if (this.data == null) {
-            this.data = new Uint8Array(this.size[0] + 16 * this.size[1])
-          }
-
-          this.data[this.dataPosition] = value2;
-          this.dataPosition = this.dataPosition + 1;
-        }
-
-        break;
-
-    }
-  }
-}
-
-class SlipFrameTransformer {
-  constructor() {
-    this.slipFrame = new SlipFrame();
-  }
-
-  start() {
-    this.slipFrame = new SlipFrame();
-  } // required.
-  async transform(chunk, controller) {
-    var arr = new Uint8Array();
-
-    chunk = await chunk;
-    switch (typeof chunk) {
-      case 'object':
-        // just say the stream is done I guess
-        if (chunk === null) controller.terminate()
-        else if (ArrayBuffer.isView(chunk)) {
-          arr = new Uint8Array(chunk.buffer, chunk.byteOffset, chunk.byteLength);
-        }
-        else if (Array.isArray(chunk) && chunk.every(value => typeof value === 'number'))
-          arr = new Uint8Array(chunk)
-        break
-      case 'symbol':
-        controller.error("Cannot send a symbol as a chunk part")
-        return
-      case 'undefined':
-        controller.error("Cannot send undefined as a chunk part")
-        return
-      default:
-        controller.enqueue(this.textencoder.encode(String(chunk)))
-        return
-    }
-
-    for (var i = 0; i < arr.length; i++) {
-      this.slipFrame.insert(arr[i]);
-      if (this.slipFrame.endSetted) {
-        controller.enqueue(this.slipFrame)
-        this.slipFrame = new SlipFrame();
-      }
-    }
-  }
-  flush() { /* do any destructor work here */ }
-}
 
 var writer = null;
 var port = null;
@@ -260,7 +129,7 @@ async function flashFileFromUrl(url, md5checksum) {
 
           await writeToStream(writer, 0xc0, 0x00, 0x03, 0x10, 0x04, checkSum /*0xcc*/, 0x00, 0x00, 0x00, /*lengthHexString[0], lengthHexString[1], lengthHexString[2], lengthHexString[3],*/ 0x00, 0x04, 0x00, 0x00, parseInt(indexHexString.substring(6, 8), 16), parseInt(indexHexString.substring(4, 6), 16), parseInt(indexHexString.substring(2, 4), 16), parseInt(indexHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, subArr, 0xc0);
 
-          const answer = await read(secReader, 15000);
+          await read(secReader, 15000);
           //Update status bar
           progress = i * 100 / nOfDataPackets;
           bar.style.width = progress + "%";
@@ -361,6 +230,7 @@ document.getElementById('connectButton').addEventListener('click', () => {
 
 let inputStream = null;
 let abortController = null;
+var readerClosed = null;
 async function connect() {
   document.getElementById("statusBarRoot").innerHTML = '';
   try {
@@ -573,19 +443,4 @@ async function read(reader, timeOut) {
     return;
   }*/
 
-}
-
-async function promiseWithTimeout(timeoutMs, promise) {
-  let timeoutHandle;
-  const timeoutPromise = new Promise((resolve, reject) => {
-    timeoutHandle = setTimeout(() => reject(), timeoutMs);
-  });
-
-  return Promise.race([
-    promise(),
-    timeoutPromise,
-  ]).then((result) => {
-    clearTimeout(timeoutHandle);
-    return result;
-  });
 }
