@@ -29,7 +29,7 @@ export class SlipFrameTransformer {
         controller.error("Cannot send undefined as a chunk part")
         return
       default:
-        controller.enqueue(this.textencoder.encode(String(chunk)))
+        controller.error("Cannot use chunk from chip")
         return
     }
 
@@ -41,5 +41,5 @@ export class SlipFrameTransformer {
       }
     }
   }
-  flush() { /* do any destructor work here */ }
+  flush() { this.slipFrame = null; }
 }
