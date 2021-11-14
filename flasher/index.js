@@ -136,6 +136,10 @@ app.get('/js/SlipFrameTransformer.js', (req, res) => {
     res.sendFile('./js/SlipFrameTransformer.js', { root: '.' });
 })
 
+app.get('/js/chipCommunication.js', (req, res) => {
+    res.sendFile('./js/chipCommunication.js', { root: '.' });
+})
+
 app.get('/pages/serialnotactive.html', (req, res) => {
     res.sendFile('./pages/serialnotactive.html', { root: '.' });
 })

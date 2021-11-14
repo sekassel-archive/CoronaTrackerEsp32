@@ -10,7 +10,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-var CACHE_NAME = 'cache-v32';
+var CACHE_NAME = 'cache-v33';
 var urlsToCache = [
   '/css/serialisactive.css',
   '/css/serialnotactive.css',
@@ -24,6 +24,7 @@ var urlsToCache = [
   '/js/serialactive.js',
   '/js/SlipFrame.js',
   '/js/SlipFrameTransformer.js',
+  '/js/chipCommunication.js',
   '/pages/serialnotactive.html',
   '/',
   '/index.html',
