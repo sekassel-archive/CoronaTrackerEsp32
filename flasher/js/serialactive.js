@@ -1,5 +1,5 @@
 import { SlipFrameTransformer } from './SlipFrameTransformer.js';
-import { enterBootloader, syncAndRead, spiAttach, read, spiSetParams, downloadBlobFromUrlAsText, flashFileFromUrl, resetFilesFlashed, endFlash, reset } from './chipCommunication.js';
+import { enterBootloader, syncAndRead, spiAttach, read, spiSetParams, downloadBlobFromUrlAsText, flashFileFromUrl, endFlash, reset } from './chipCommunication.js';
 
 window.onload = () => {
   'use strict';
@@ -14,6 +14,10 @@ window.onload = () => {
 }
 
 export const DEBUGMODE = false;
+const adress1 = Uint8Array.of(0x00, 0x10, 0x00, 0x00);
+const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
+const adress3 = Uint8Array.of(0x00, 0xe0, 0x00, 0x00);
+const adress4 = Uint8Array.of(0x00, 0x00, 0x01, 0x00);
 
 document.getElementById('connectButton').addEventListener('click', () => {
   connect();
@@ -56,11 +60,10 @@ async function connect() {
       await read(secReader, 1500);
       const hashesJsonText = await downloadBlobFromUrlAsText(baseUrl + 'hashes/hashes.json');
       const hashesJson = JSON.parse(hashesJsonText);
-      await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader'], writer, secReader);
-      await flashFileFromUrl(baseUrl + 'firmwares/partitions.bin', hashesJson['partitions'], writer, secReader);
-      await flashFileFromUrl(baseUrl + 'firmwares/boot_app0.bin', hashesJson['bootapp'], writer, secReader);
-      await flashFileFromUrl(baseUrl + 'firmwares/firmware.bin', hashesJson['firmware'], writer, secReader);
-      resetFilesFlashed();
+      await flashFileFromUrl(baseUrl + 'firmwares/bootloader_dio_40m.bin', hashesJson['bootloader'], writer, secReader, adress1);
+      await flashFileFromUrl(baseUrl + 'firmwares/partitions.bin', hashesJson['partitions'], writer, secReader, adress2);
+      await flashFileFromUrl(baseUrl + 'firmwares/boot_app0.bin', hashesJson['bootapp'], writer, secReader, adress3);
+      await flashFileFromUrl(baseUrl + 'firmwares/firmware.bin', hashesJson['firmware'], writer, secReader, adress4);
 
       await endFlash(writer);
       await reset(port);
@@ -114,7 +117,6 @@ async function connect() {
       secReader = null;
       writer = null;
       port = null;
-      resetFilesFlashed();
       document.getElementById('connectButton').style.display = 'block';
     }
   } catch { }

@@ -19,17 +19,12 @@ async function changeBaud(writer) {
   //c0000f0800000000000008070000000000c0
   writeToStream(writer, 0xc0, 0x00, 0x0f, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
 }
-var progress = 0;
-var filesFlashed = 0;
-const adress1 = Uint8Array.of(0x00, 0x10, 0x00, 0x00);
-const adress2 = Uint8Array.of(0x00, 0x80, 0x00, 0x00);
-const adress3 = Uint8Array.of(0x00, 0xe0, 0x00, 0x00);
-const adress4 = Uint8Array.of(0x00, 0x00, 0x01, 0x00);
-const adresses = Array.of(adress1, adress2, adress3, adress4);
-export async function flashFileFromUrl(url, md5checksum, writer, secReader) {
+
+export async function flashFileFromUrl(url, md5checksum, writer, secReader, adresse) {
   //      |  ||      ||15872 ||  16  || 1024 ||0x1000|
   //c00002100000000000003e0000100000000004000000100000c0
   //c0 00 02 10 00 00 00 00 00 00 3e 00 00 10 00 00 00 00 04 00 00 00 10 00 00 c0
+  var progress = 0;
   //What file flashing?
   const filenameParagraph = document.createElement("p"); //TODO: File (1/4)
   const flashingFileString = "flashing file: \"" + url.substring(url.lastIndexOf("/") + 1, url.length) + "\"";
@@ -92,7 +87,7 @@ export async function flashFileFromUrl(url, md5checksum, writer, secReader) {
           console.log('Number of Data Packets', nOfDataPackets);
         const nOfDataPacketsHexString = toHexString(nOfDataPackets);
 
-        await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/ parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), /*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16), /*|*/ 0x00, 0x04, 0x00, 0x00, /*|*/ adresses[filesFlashed], 0xc0);
+        await writeToStream(writer, 0xc0, 0x00, 0x02, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, /*|*/ parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), /*|*/ parseInt(nOfDataPacketsHexString.substring(6, 8), 16), parseInt(nOfDataPacketsHexString.substring(4, 6), 16), parseInt(nOfDataPacketsHexString.substring(2, 4), 16), parseInt(nOfDataPacketsHexString.substring(0, 2), 16), /*|*/ 0x00, 0x04, 0x00, 0x00, /*|*/ adresse, 0xc0);
         await read(secReader, 15000);
 
         for (var i = 0; i < nOfDataPackets; i++) {
@@ -134,10 +129,9 @@ export async function flashFileFromUrl(url, md5checksum, writer, secReader) {
         node = document.createTextNode(progress.toFixed(2) + "%");
         paragraph.appendChild(node);
         console.log(`File ${url.substring(url.lastIndexOf("/") + 1, url.length)} sended`);
-        progress = 1;
         //get md5 checksum from esp
         //c0001310000000000000100000003e00000000000000000000c0
-        await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresses[filesFlashed], parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
+        await writeToStream(writer, 0xc0, 0x00, 0x13, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, adresse, parseInt(sizeHexString.substring(6, 8), 16), parseInt(sizeHexString.substring(4, 6), 16), parseInt(sizeHexString.substring(2, 4), 16), parseInt(sizeHexString.substring(0, 2), 16), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc0);
         const md5SlipFrame = await read(secReader, 10000);
         const md5checksumToCheck = enc.decode(md5SlipFrame.data.buffer);
         if (DEBUGMODE)
@@ -146,7 +140,6 @@ export async function flashFileFromUrl(url, md5checksum, writer, secReader) {
           console.log('Checksum from file: ', md5checksum);
         barRoot.innerHTML = '';
         if (md5checksumToCheck.localeCompare(md5checksum) == 0) {
-          filesFlashed = filesFlashed + 1;
           resolve();
         } else {
           reject(new Error('Checksum from chip not equal to checksum from file'));
@@ -160,9 +153,6 @@ export async function flashFileFromUrl(url, md5checksum, writer, secReader) {
 
 
 }
-export function resetFilesFlashed() {
-  filesFlashed = 0;
-}
 function downloadBlobFromUrl(url, fileReader) {
   const xhr = new XMLHttpRequest();
   xhr.open('GET', url);
@@ -173,7 +163,7 @@ function downloadBlobFromUrl(url, fileReader) {
   };
   xhr.send();
 }
-export function downloadBlobFromUrlAsText(url) {
+export async function downloadBlobFromUrlAsText(url) {
   return new Promise((resolve, reject) => {
     const fileReader = new FileReader();
     fileReader.onload = () => {
